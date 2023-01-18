@@ -2,16 +2,15 @@
 set -e
 set -x
 
-pkgname=bash-2.05b
-make=/usr/local/bin/make
+pkgname=diffutils-2.7
 
 . gcc-2.7.2.3.inc
+#. gcc-2.95.3.inc
 . binutils-2.9.1.inc
 
 . common-start.inc
 
-./configure
-#make CFLAGS=
-$make
+PATH=/usr/local/bin:$PATH ./configure
+make
 
 . $pkgscripts/common-end.inc

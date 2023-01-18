@@ -2,7 +2,9 @@
 set -e
 set -x
 
-pkgname=patch-2.5.4
+#pkgname=grep-2.5.4
+pkgname=grep-2.0
+#tarball=$pkgname.tar.bz2
 
 . gcc-2.7.2.3.inc
 #. gcc-2.95.3.inc
@@ -13,5 +15,10 @@ pkgname=patch-2.5.4
 ./configure
 #make CFLAGS=
 make
+
+mkdir $pkgdir
+mkdir $pkgdir/bin
+mkdir $pkgdir/man
+mkdir $pkgdir/man/man1
 
 . $pkgscripts/common-end.inc

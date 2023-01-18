@@ -2,6 +2,7 @@
 [ "$pkgname" != "" ] || exit 1
 
 basedir="/u/root/src"
+archivedir="/archive"
 
 if [ "$tarball" = "" ]; then
 	tarball="$pkgname.tar.gz"
@@ -9,6 +10,10 @@ fi
 if [ "$tarballfull" = "" ]; then
 	tarballfull="$basedir/$tarball"
 fi
+if [ ! -f "$tarballfull" ]; then
+	tarballfull="$archivedir/$tarball"
+fi
+
 if [ "$srcdir" = "" ]; then
 	srcdir="$pkgname"
 fi
@@ -20,6 +25,7 @@ srcdirfull="$basedir/$srcdir"
 pkgdir="/u/root/pkg/$pkgname"
 
 gunzip=/usr/local/bin/gunzip
+bunzip2=/usr/local/bin/bunzip2
 
 pkgscripts=`pwd`
 
@@ -32,6 +38,8 @@ cd "$basedir" || exit 1
 
 if echo "$tarballfull" | fgrep '.tar.gz' > /dev/null; then
 	$gunzip -c "$tarballfull" | tar xf -
+elif echo "$tarballfull" | fgrep '.tar.bz2' > /dev/null; then
+	$bunzip2 -c "$tarballfull" | tar xf -
 else
 	tar xf "$tarballfull"
 fi

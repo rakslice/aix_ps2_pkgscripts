@@ -2,7 +2,7 @@
 set -e
 set -x
 
-pkgname=patch-2.5.4
+pkgname=make-3.82
 
 . gcc-2.7.2.3.inc
 #. gcc-2.95.3.inc
@@ -10,8 +10,8 @@ pkgname=patch-2.5.4
 
 . common-start.inc
 
-./configure
-#make CFLAGS=
-make
+#/usr/local/bin/bash 
+SHELL=/usr/local/bin/bash ./configure --build=i386-ibm-aix
+make CFLAGS=
 
 . $pkgscripts/common-end.inc
