@@ -1,0 +1,12 @@
+diff -ur stock/grep-2.5.4/src/grep.c grep-2.5.4/src/grep.c
+--- stock/grep-2.5.4/src/grep.c	Tue Feb  3 10:49:52 2009
++++ grep-2.5.4/src/grep.c	Sun Jan 15 04:44:30 2023
+@@ -1860,7 +1860,7 @@
+   textdomain (PACKAGE);
+ #endif
+ 
+-  atexit (close_stdout);
++  /* atexit (close_stdout); */
+ 
+   prepend_default_options (getenv ("GREP_OPTIONS"), &argc, &argv);
+ 

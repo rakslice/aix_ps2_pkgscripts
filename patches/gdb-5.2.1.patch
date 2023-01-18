@@ -1,0 +1,13 @@
+diff -ur stock/gdb-5.2.1/readline/rltty.c built/gdb-5.2.1/readline/rltty.c
+--- stock/gdb-5.2.1/readline/rltty.c	Mon Jan  8 06:57:30 2001
++++ built/gdb-5.2.1/readline/rltty.c	Fri Jun  8 21:54:51 2018
+@@ -1,6 +1,9 @@
+ /* rltty.c -- functions to prepare and restore the terminal for readline's
+    use. */
+ 
++#define   ONLCR   0000004
++
++
+ /* Copyright (C) 1992 Free Software Foundation, Inc.
+ 
+    This file is part of the GNU Readline Library, a library for

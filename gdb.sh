@@ -13,7 +13,7 @@ export PATH
 
 . common-start.inc
 
-/usr/local/bin/patch -p2 -i ../gdb-5.2.1.patch
+/usr/local/bin/patch -p2 -i $patches/gdb-5.2.1.patch
 
 #/usr/local/bin/bash 
 #./configure

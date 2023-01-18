@@ -29,6 +29,8 @@ bunzip2=/usr/local/bin/bunzip2
 
 pkgscripts=`pwd`
 
+patches=$pkgscripts/patches
+
 [ ! -d "$pkgdir" ] || exit 1
 [ ! -f "$pkgdir.pkg" ] || exit 1
 
