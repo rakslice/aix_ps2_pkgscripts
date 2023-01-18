@@ -21,4 +21,6 @@ export PATH
 # --build=i386-ibm-aix
 $make RANLIB_FOR_TARGET=ranlib RANLIB_FOR_BUILD=ranlib
 
+make_install_args="RANLIB=ranlib"
+
 . $pkgscripts/common-end.inc
