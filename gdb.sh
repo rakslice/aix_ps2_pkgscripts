@@ -5,6 +5,9 @@ set -x
 pkgname=gdb-5.2.1
 make=/usr/local/bin/make
 
+# requirements
+[ -f /usr/local/bin/gawk ] || exit 1
+
 . gcc-2.7.2.3.inc
 #. gcc-2.95.3.inc
 . binutils-2.9.1.inc
