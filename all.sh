@@ -21,3 +21,4 @@ sh perl.sh
 
 sh makedepend.sh
 sh openssl.sh
+sh pcre.sh

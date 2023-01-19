@@ -1,0 +1,13 @@
+diff -ur pcre-8.02/pcregrep.c pcre-8.02.built/pcregrep.c
+--- pcre-8.02/pcregrep.c	2009-10-05 03:40:30.000000000 -0700
++++ pcre-8.02.built/pcregrep.c	2018-06-05 00:39:49.000000000 -0700
+@@ -37,6 +37,9 @@
+ -----------------------------------------------------------------------------
+ */
+ 
++#include "memmove.h"
++#include "strtoul.c"
++
+ #ifdef HAVE_CONFIG_H
+ #include "config.h"
+ #endif
