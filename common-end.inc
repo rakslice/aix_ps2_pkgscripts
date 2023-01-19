@@ -12,7 +12,13 @@ tar cf "$pkgdir.pkg" "$pkgdir"
 
 cd "$pkgdir"
 if [ ! -d /usr/local ]; then mkdir /usr/local; fi
-cp -r * /usr/local
+
+# check whether we have DESTDIR style and do something appropriate
+if [ -d usr/local ]; then
+  cp -r usr/local/* /usr/local/
+else
+  cp -r * /usr/local/
+fi
 cd ..
 
 rm -rf "$srcdirfull"
