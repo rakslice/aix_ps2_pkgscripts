@@ -22,3 +22,7 @@ sh perl.sh
 sh makedepend.sh
 sh openssl.sh
 sh pcre.sh
+
+sh zlib.sh
+
+sh openssh.sh

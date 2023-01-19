@@ -1,0 +1,322 @@
+diff -ur stock/openssh-2.9p2/Makefile.in openssh-2.9p2/Makefile.in
+--- stock/openssh-2.9p2/Makefile.in	Thu Apr 26 17:31:08 2001
++++ openssh-2.9p2/Makefile.in	Thu Jan 19 04:09:52 2023
+@@ -47,7 +47,7 @@
+ 
+ LIBSSH_OBJS=atomicio.o authfd.o authfile.o bufaux.o buffer.o canohost.o channels.o cipher.o cli.o compat.o compress.o crc32.o deattack.o dh.o dispatch.o mac.o hostfile.o key.o kex.o kexdh.o kexgex.o log.o match.o misc.o mpaux.o nchan.o packet.o radix.o rijndael.o entropy.o readpass.o rsa.o ssh-dss.o ssh-rsa.o tildexpand.o ttymodes.o uidswap.o uuencode.o xmalloc.o 
+ 
+-SSHOBJS= ssh.o sshconnect.o sshconnect1.o sshconnect2.o sshtty.o readconf.o clientloop.o
++SSHOBJS= ssh.o sshconnect.o sshconnect1.o sshconnect2.o sshtty.o readconf.o clientloop.o md5c.o md5hl.o
+ 
+ SSHDOBJS= sshd.o auth.o auth1.o auth2.o auth-chall.o auth2-chall.o auth-rhosts.o auth-options.o auth-krb4.o auth-pam.o auth2-pam.o auth-passwd.o auth-rsa.o auth-rh-rsa.o auth-sia.o sshpty.o sshlogin.o loginrec.o servconf.o serverloop.o md5crypt.o session.o groupaccess.o
+ 
+diff -ur stock/openssh-2.9p2/entropy.c openssh-2.9p2/entropy.c
+--- stock/openssh-2.9p2/entropy.c	Sun Mar 18 14:38:16 2001
++++ openssh-2.9p2/entropy.c	Thu Jan 19 04:09:52 2023
+@@ -124,24 +124,24 @@
+ #ifdef PRNGD_PORT
+ 	fd = socket(addr.sin_family, SOCK_STREAM, 0);
+ 	if (fd == -1) {
+-		error("Couldn't create AF_INET socket: %s", strerror(errno));
++		error("Couldn't create AF_INET socket: %d", errno));
+ 		goto done;
+ 	}
+ #else
+ 	fd = socket(addr.sun_family, SOCK_STREAM, 0);
+ 	if (fd == -1) {
+-		error("Couldn't create AF_UNIX socket: %s", strerror(errno));
++		error("Couldn't create AF_UNIX socket: %d", errno);
+ 		goto done;
+ 	}
+ #endif
+ 
+ 	if (connect(fd, (struct sockaddr*)&addr, addr_len) == -1) {
+ #ifdef PRNGD_PORT
+-		error("Couldn't connect to PRNGD port %d: %s",
+-		    PRNGD_PORT, strerror(errno));
++		error("Couldn't connect to PRNGD port %d: %d",
++		    PRNGD_PORT, errno);
+ #else
+-		error("Couldn't connect to PRNGD socket \"%s\": %s",
+-		    addr.sun_path, strerror(errno));
++		error("Couldn't connect to PRNGD socket \"%s\": %d",
++		    addr.sun_path, errno);
+ #endif
+ 		goto done;
+ 	}
+@@ -156,8 +156,8 @@
+ 			errors++;
+ 			goto reopen;
+ 		}
+-		error("Couldn't write to PRNGD socket: %s",
+-		    strerror(errno));
++		error("Couldn't write to PRNGD socket: %d",
++		    errno);
+ 		goto done;
+ 	}
+ 
+@@ -167,8 +167,8 @@
+ 			errors++;
+ 			goto reopen;
+ 		}
+-		error("Couldn't read from PRNGD socket: %s",
+-		    strerror(errno));
++		error("Couldn't read from PRNGD socket: %d",
++		    errno);
+ 		goto done;
+ 	}
+ 
+@@ -189,14 +189,14 @@
+ 
+ 	random_pool = open(RANDOM_POOL, O_RDONLY);
+ 	if (random_pool == -1) {
+-		error("Couldn't open random pool \"%s\": %s",
+-			RANDOM_POOL, strerror(errno));
++		error("Couldn't open random pool \"%s\": %d",
++			RANDOM_POOL, errno);
+ 		return(0);
+ 	}
+ 
+ 	if (atomicio(read, random_pool, buf, len) != len) {
+-		error("Couldn't read from random pool \"%s\": %s",
+-			RANDOM_POOL, strerror(errno));
++		error("Couldn't read from random pool \"%s\": %d",
++			RANDOM_POOL, errno);
+ 		close(random_pool);
+ 		return(0);
+ 	}
+@@ -367,7 +367,7 @@
+ 	struct timeval tv;
+ 
+ 	if (gettimeofday(&tv, NULL) == -1)
+-		fatal("Couldn't gettimeofday: %s", strerror(errno));
++		fatal("Couldn't gettimeofday: %d", errno);
+ 
+ 	RAND_add(&tv, sizeof(tv), entropy_estimate);
+ 
+@@ -437,11 +437,11 @@
+ 	if (devnull == -1) {
+ 		devnull = open("/dev/null", O_RDWR);
+ 		if (devnull == -1)
+-			fatal("Couldn't open /dev/null: %s", strerror(errno));
++			fatal("Couldn't open /dev/null: %d", errno);
+ 	}
+ 
+ 	if (pipe(p) == -1)
+-		fatal("Couldn't open pipe: %s", strerror(errno));
++		fatal("Couldn't open pipe: %d", errno);
+ 
+ 	(void)gettimeofday(&tv_start, NULL); /* record start time */
+ 
+@@ -449,7 +449,7 @@
+ 		case -1: /* Error */
+ 			close(p[0]);
+ 			close(p[1]);
+-			fatal("Couldn't fork: %s", strerror(errno));
++			fatal("Couldn't fork: %d", errno);
+ 			/* NOTREACHED */
+ 		case 0: /* Child */
+ 			dup2(devnull, STDIN_FILENO);
+@@ -461,8 +461,8 @@
+ 
+ 			setuid(original_uid);
+ 			execv(src->path, (char**)(src->args));
+-			debug("(child) Couldn't exec '%s': %s", src->cmdstring,
+-			      strerror(errno));
++			debug("(child) Couldn't exec '%s': %d", src->cmdstring,
++			      errno);
+ 			_exit(-1);
+ 		default: /* Parent */
+ 			break;
+@@ -520,8 +520,8 @@
+ 		case -1:
+ 		default:
+ 			/* error */
+-			debug("Command '%s': select() failed: %s", src->cmdstring,
+-			      strerror(errno));
++			debug("Command '%s': select() failed: %d", src->cmdstring,
++			      errno);
+ 			error_abort = 1;
+ 			break;
+ 		}
+@@ -534,8 +534,8 @@
+ 	debug3("Time elapsed: %d msec", msec_elapsed);
+ 
+ 	if (waitpid(pid, &status, 0) == -1) {
+-	       error("Couldn't wait for child '%s' completion: %s", src->cmdstring,
+-		     strerror(errno));
++	       error("Couldn't wait for child '%s' completion: %d", src->cmdstring,
++		     errno);
+ 		return(0.0);
+ 	}
+ 
+@@ -582,8 +582,8 @@
+ 	if (lstat(filename, &st) == -1) {
+ 		/* Give up on hard errors */
+ 		if (errno != ENOENT)
+-			debug("WARNING: Couldn't stat random seed file \"%s\": %s",
+-			   filename, strerror(errno));
++			debug("WARNING: Couldn't stat random seed file \"%s\": %d",
++			   filename, errno);
+ 
+ 		return(0);
+ 	}
+@@ -619,8 +619,8 @@
+ 
+ 	pw = getpwuid(original_uid);
+ 	if (pw == NULL)
+-		fatal("Couldn't get password entry for current user (%i): %s",
+-			original_uid, strerror(errno));
++		fatal("Couldn't get password entry for current user (%i): %d",
++			original_uid, errno);
+ 
+ 	/* Try to ensure that the parent directory is there */
+ 	snprintf(filename, sizeof(filename), "%.512s/%s", pw->pw_dir,
+@@ -639,11 +639,11 @@
+ 
+ 	if ((fd = open(filename, O_WRONLY|O_TRUNC|O_CREAT, 0600)) == -1) {
+ 		debug("WARNING: couldn't access PRNG seedfile %.100s (%.100s)",
+-		   filename, strerror(errno));
++		   filename, errno);
+ 	} else {
+ 		if (atomicio(write, fd, &seed, sizeof(seed)) != sizeof(seed))
+ 			fatal("problem writing PRNG seedfile %.100s (%.100s)", filename,
+-				 strerror(errno));
++				 errno);
+ 
+ 		close(fd);
+ 	}
+@@ -658,8 +658,8 @@
+ 
+ 	pw = getpwuid(original_uid);
+ 	if (pw == NULL)
+-		fatal("Couldn't get password entry for current user (%i): %s",
+-			original_uid, strerror(errno));
++		fatal("Couldn't get password entry for current user (%i): %d",
++			original_uid, errno);
+ 
+ 	snprintf(filename, sizeof(filename), "%.512s/%s", pw->pw_dir,
+ 		SSH_PRNG_SEED_FILE);
+@@ -675,7 +675,7 @@
+ 	fd = open(filename, O_RDONLY);
+ 	if (fd == -1)
+ 		fatal("could not open PRNG seedfile %.100s (%.100s)", filename,
+-			strerror(errno));
++			errno);
+ 
+ 	if (atomicio(read, fd, &seed, sizeof(seed)) != sizeof(seed)) {
+ 		verbose("invalid or short read from PRNG seedfile %.100s - ignoring",
+@@ -708,8 +708,8 @@
+ 
+ 	f = fopen(cmdfilename, "r");
+ 	if (!f) {
+-		fatal("couldn't read entropy commands file %.100s: %.100s",
+-		    cmdfilename, strerror(errno));
++		fatal("couldn't read entropy commands file %.100s: %d",
++		    cmdfilename, errno);
+ 	}
+ 
+ 	entcmd = (entropy_source_t *)xmalloc(num_cmds * sizeof(entropy_source_t));
+@@ -907,7 +907,9 @@
+ #endif /* SAVED_IDS_WORK_WITH_SETEUID */
+ 
+ 	fatal_add_cleanup(prng_seed_cleanup, NULL);
++#if !defined(_AIX) || !defined(__i386__)
+ 	atexit(prng_write_seedfile);
++#endif
+ 
+ 	prng_initialised = 1;
+ }
+diff -ur stock/openssh-2.9p2/includes.h openssh-2.9p2/includes.h
+--- stock/openssh-2.9p2/includes.h	Fri Mar 16 17:15:39 2001
++++ openssh-2.9p2/includes.h	Thu Jan 19 04:09:52 2023
+@@ -21,6 +21,24 @@
+ 
+ #include "config.h"
+ 
++/* XXX FIXME AT things to add */
++
++#include <sys/types.h>
++#include <sys/socket.h>
++                       
++int socket(int domain, int type, int protocol);
++int close(int filedes);
++int write(int d, char *buf, unsigned int nbytes);
++int read(int d, char *buf, unsigned int nbyte);
++
++int pipe (int fildes[2]);
++
++#define   IXANY   0004000
++#define   ONLCR   0000004
++
++
++/* XXX END OF THINGS ADDED */
++
+ #include "openbsd-compat/bsd-nextstep.h"
+ 
+ #include <sys/types.h>
+diff -ur stock/openssh-2.9p2/ssh-agent.c openssh-2.9p2/ssh-agent.c
+--- stock/openssh-2.9p2/ssh-agent.c	Thu May  3 16:00:40 2001
++++ openssh-2.9p2/ssh-agent.c	Thu Jan 19 04:09:52 2023
+@@ -872,10 +872,12 @@
+ 		perror("setsid");
+ 		cleanup_exit(1);
+ 	}
++#if !defined(_AIX) || !defined(__i386__)
+ 	if (atexit(cleanup_socket) < 0) {
+ 		perror("atexit");
+ 		cleanup_exit(1);
+ 	}
++#endif
+ 	new_socket(AUTH_SOCKET, sock);
+ 	if (ac > 0) {
+ 		signal(SIGALRM, check_parent_exists);
+diff -ur stock/openssh-2.9p2/sshconnect.c openssh-2.9p2/sshconnect.c
+--- stock/openssh-2.9p2/sshconnect.c	Thu Apr 12 16:34:36 2001
++++ openssh-2.9p2/sshconnect.c	Thu Jan 19 04:09:52 2023
+@@ -15,6 +15,8 @@
+ #include "includes.h"
+ RCSID("$OpenBSD: sshconnect.c,v 1.104 2001/04/12 19:15:25 markus Exp $");
+ 
++#define IN_LOOPBACKNET INADDR_LOOPBACK
++
+ #include <openssl/bn.h>
+ 
+ #include "ssh.h"
+diff -ur stock/openssh-2.9p2/sshconnect1.c openssh-2.9p2/sshconnect1.c
+--- stock/openssh-2.9p2/sshconnect1.c	Tue Apr 17 11:08:16 2001
++++ openssh-2.9p2/sshconnect1.c	Thu Jan 19 04:09:52 2023
+@@ -12,6 +12,8 @@
+  * called by a name other than "ssh" or "Secure Shell".
+  */
+ 
++#include "stdint.h"
++
+ #include "includes.h"
+ RCSID("$OpenBSD: sshconnect1.c,v 1.31 2001/04/17 08:14:01 markus Exp $");
+ 
+@@ -25,6 +27,12 @@
+ #include <kafs.h>
+ #include "radix.h"
+ #endif
++
++#define MD5_Init MD5Init
++#define MD5_Update MD5Update
++#define MD5_Final MD5Final
++
++#include "md5.h"
+ 
+ #include "ssh.h"
+ #include "ssh1.h"
+diff -ur stock/openssh-2.9p2/sshd.c openssh-2.9p2/sshd.c
+--- stock/openssh-2.9p2/sshd.c	Sun Apr 15 19:00:02 2001
++++ openssh-2.9p2/sshd.c	Thu Jan 19 04:18:40 2023
+@@ -39,6 +39,8 @@
+  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+  */
+ 
++#include "md5.h"
++
+ #include "includes.h"
+ RCSID("$OpenBSD: sshd.c,v 1.195 2001/04/15 16:58:03 markus Exp $");
+ 
