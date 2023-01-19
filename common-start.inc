@@ -3,6 +3,7 @@
 
 basedir="/u/root/src"
 archivedir="/archive"
+nfsarchivedir="/nfs/archive"
 
 if [ "$tarball" = "" ]; then
 	tarball="$pkgname.tar.gz"
@@ -12,6 +13,9 @@ if [ "$tarballfull" = "" ]; then
 fi
 if [ ! -f "$tarballfull" ]; then
 	tarballfull="$archivedir/$tarball"
+fi
+if [ ! -f "$tarballfull" ]; then
+	tarballfull="$nfsarchivedir/$tarball"
 fi
 
 if [ "$srcdir" = "" ]; then
