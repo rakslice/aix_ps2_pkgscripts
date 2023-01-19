@@ -19,5 +19,6 @@ export PATH
 
 $make
 
+prefixvar=INSTALL_PREFIX
 
 . $pkgscripts/common-end.inc

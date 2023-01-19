@@ -18,3 +18,6 @@ sh grep.sh
 sh grep-2.5.4.sh
 
 sh perl.sh
+
+sh makedepend.sh
+sh openssl.sh
