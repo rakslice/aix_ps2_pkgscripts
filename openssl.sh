@@ -19,6 +19,6 @@ export PATH
 
 $make
 
-prefixvar=INSTALL_PREFIX
+make_install_args="INSTALLTOP=$pkgdir/ssl"
 
 . $pkgscripts/common-end.inc
