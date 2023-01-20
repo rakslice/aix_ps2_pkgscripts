@@ -29,3 +29,5 @@ sh openssh.sh
 sh prngd.sh
 
 sh sed.sh
+
+sh bash2.sh

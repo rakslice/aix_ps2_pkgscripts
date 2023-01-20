@@ -1,0 +1,83 @@
+diff -ur stock/bash-2.05b/bashtypes.h bash-2.05b/bashtypes.h
+--- stock/bash-2.05b/bashtypes.h	Wed Jan  2 11:03:01 2002
++++ bash-2.05b/bashtypes.h	Thu Jan 19 19:23:17 2023
+@@ -35,4 +35,13 @@
+ #  include <inttypes.h>
+ #endif
+ 
++#ifndef HAVE_STDINT_H
++   typedef long long int int64_t;
++   typedef long int int32_t;
++   typedef short int int16_t;
++   typedef long long unsigned int uint64_t;
++   typedef long unsigned int uint32_t;
++   typedef unsigned short uint16_t;
++#endif
++
+ #endif /* _BASHTYPES_H_ */
+diff -ur stock/bash-2.05b/execute_cmd.c bash-2.05b/execute_cmd.c
+--- stock/bash-2.05b/execute_cmd.c	Mon Mar 18 10:24:22 2002
++++ bash-2.05b/execute_cmd.c	Thu Jan 19 19:23:17 2023
+@@ -286,12 +286,18 @@
+     {
+       if (currently_executing_command->type == cm_simple)
+ 	return currently_executing_command->value.Simple->line;
++#ifdef COND_COMMAND
+       else if (currently_executing_command->type == cm_cond)
+ 	return currently_executing_command->value.Cond->line;
++#endif
++#ifdef DPAREN_ARITHMETIC
+       else if (currently_executing_command->type == cm_arith)
+ 	return currently_executing_command->value.Arith->line;
++#endif
++#ifdef ARITH_FOR_COMMAND
+       else if (currently_executing_command->type == cm_arith_for)
+ 	return currently_executing_command->value.ArithFor->line;
++#endif
+       else
+ 	return line_number;
+     }
+diff -ur stock/bash-2.05b/include/stdc.h bash-2.05b/include/stdc.h
+--- stock/bash-2.05b/include/stdc.h	Thu Mar  7 14:06:41 2002
++++ bash-2.05b/include/stdc.h	Thu Jan 19 19:23:17 2023
+@@ -85,4 +85,11 @@
+ #  define SH_VA_START(va, arg)  va_start(va)
+ #endif
+ 
++#ifndef HAVE_STDINT_H
++typedef long long int intmax_t;
++typedef unsigned long long int uintmax_t;
++typedef int RETSIGTYPE;
++typedef long int ssize_t;
++#endif
++
+ #endif /* !_STDC_H_ */
+diff -ur stock/bash-2.05b/lib/readline/rltty.c bash-2.05b/lib/readline/rltty.c
+--- stock/bash-2.05b/lib/readline/rltty.c	Mon Feb 18 09:37:29 2002
++++ bash-2.05b/lib/readline/rltty.c	Thu Jan 19 19:25:41 2023
+@@ -461,6 +461,11 @@
+ #endif
+ 
+ #if defined (_AIX)
++
++#if defined (__i386__)
++#define   ONLCR  0000004
++#endif
++
+ void
+ setopost(tp)
+ TIOTYPE *tp;
+diff -ur stock/bash-2.05b/print_cmd.c bash-2.05b/print_cmd.c
+--- stock/bash-2.05b/print_cmd.c	Tue Mar 12 11:39:30 2002
++++ bash-2.05b/print_cmd.c	Thu Jan 19 19:23:17 2023
+@@ -41,8 +41,10 @@
+ #include <y.tab.h>	/* use <...> so we pick it up from the build directory */
+ #include "builtins/common.h"
+ 
++#if 0
+ #if !HAVE_DECL_PRINTF
+ extern int printf __P((const char *, ...));	/* Yuck.  Double yuck. */
++#endif
+ #endif
+ 
+ extern int indirection_level;
