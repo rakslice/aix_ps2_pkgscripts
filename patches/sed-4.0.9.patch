@@ -1,0 +1,22 @@
+diff -ur stock/sed-4.0.9/intl/Makefile.in sed-4.0.9/intl/Makefile.in
+--- stock/sed-4.0.9/intl/Makefile.in	Wed Jan  7 05:57:18 2004
++++ sed-4.0.9/intl/Makefile.in	Thu Jan 19 18:43:52 2023
+@@ -39,6 +39,7 @@
+ 
+ INSTALL = @INSTALL@
+ INSTALL_DATA = @INSTALL_DATA@
++install_sh = @install_sh@
+ mkinstalldirs = $(mkdir_p)
+ mkdir_p = @mkdir_p@
+ 
+diff -ur stock/sed-4.0.9/po/Makefile.in.in sed-4.0.9/po/Makefile.in.in
+--- stock/sed-4.0.9/po/Makefile.in.in	Wed Jan  7 05:57:54 2004
++++ sed-4.0.9/po/Makefile.in.in	Thu Jan 19 18:44:35 2023
+@@ -30,6 +30,7 @@
+ INSTALL_DATA = @INSTALL_DATA@
+ mkinstalldirs = $(mkdir_p)
+ mkdir_p = @mkdir_p@
++install_sh = @install_sh@
+ 
+ CC = @CC@
+ GMSGFMT = @GMSGFMT@

@@ -26,3 +26,6 @@ sh pcre.sh
 sh zlib.sh
 
 sh openssh.sh
+sh prngd.sh
+
+sh sed.sh
