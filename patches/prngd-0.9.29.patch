@@ -1,0 +1,41 @@
+diff -ur stock/prngd-0.9.29/config.h prngd-0.9.29/config.h
+--- stock/prngd-0.9.29/config.h	Mon Jul 12 08:13:35 2004
++++ prngd-0.9.29/config.h	Thu Jan 19 05:48:06 2023
+@@ -183,6 +183,15 @@
+ #define PATH_SYSLOG     "/var/log/messages"
+ #endif
+ 
++#if defined(_AIX) && defined(__i386__)
++
++typedef long int ssize_t;
++
++void bcopy (char *source, char *target, int n);
++#  define memmove(s1,s2,n) bcopy((s2),(s1),(n))
++
++#endif
++
+ #endif
+ 
+ #ifdef NEXTSTEP
+diff -ur stock/prngd-0.9.29/error_log.c prngd-0.9.29/error_log.c
+--- stock/prngd-0.9.29/error_log.c	Tue Aug  7 01:07:26 2001
++++ prngd-0.9.29/error_log.c	Thu Jan 19 05:49:56 2023
+@@ -28,14 +28,16 @@
+ 	int rv;
+ 
+ 	openlog("prngd", LOG_PID|LOG_CONS|LOG_NOWAIT, SYSLOG_FACILITY);
+-#ifdef SUNOS4
++#if defined(SUNOS4)
+ 	rv = on_exit((void (*)()) closelog, NULL);
++#elif defined(_AIX) && defined(__i386__)
++	rv = 0;
+ #else
+ 	rv = atexit(closelog);
+ #endif
+ 
+ 	if (rv != 0) {
+-#ifdef SUNOS4
++#if defined(SUNOS4)
+ 		perror("prngd: failed to register closelog(3) with on_exit(3)");
+ #else
+ 		perror("prngd: failed to register closelog(3) with atexit(3)");

@@ -18,7 +18,7 @@ export PATH
 cp -r $pkgscripts/codefragments/md5/* .
 cp $pkgscripts/codefragments/stdint.h .
 
-./configure
+./configure --with-prngd-socket=/usr/local/var/run/egd-pool
 
 $make
 
