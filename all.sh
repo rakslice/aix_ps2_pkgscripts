@@ -31,3 +31,5 @@ sh prngd.sh
 sh sed.sh
 
 sh bash2.sh
+
+sh make-3.82.sh

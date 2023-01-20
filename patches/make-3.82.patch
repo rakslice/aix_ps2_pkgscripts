@@ -1,0 +1,14 @@
+diff --exclude=Makefile -ur stock/make-3.82/make.h make-3.82/make.h
+--- stock/make-3.82/make.h	Tue Jul 20 06:12:06 2010
++++ make-3.82/make.h	Thu Jan 19 20:31:32 2023
+@@ -43,6 +43,10 @@
+ # endif
+ #endif
+ 
++#if defined(_AIX) && defined(__i386__) 
++void bcopy (char *source, char *target, int n);
++#  define memmove(s1,s2,n) bcopy((s2),(s1),(n))
++#endif
+ 
+ #ifdef  CRAY
+ /* This must happen before #include <signal.h> so
