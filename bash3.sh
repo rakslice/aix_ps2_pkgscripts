@@ -18,9 +18,11 @@ export PATH
 
 cp $pkgscripts/codefragments/alttio.h .
 
-#./configure
-/u/root/bin/superconf
+ENV= CONFIG_SHELL=/archive/bash2 /archive/bash2 ./configure --with-bash-malloc --disable-nls
+
 #make CFLAGS=
 $make
+
+exit 1
 
 . $pkgscripts/common-end.inc
