@@ -19,7 +19,7 @@ export PATH
 
 cp $pkgscripts/codefragments/stdint.h .
 
-ENV= CONFIG_SHELL=/archive/bash2 /archive/bash2 ./configure "$@"
+ENV= CONFIG_SHELL=/archive/bash2 /archive/bash2 ./configure
 
 
 $make
