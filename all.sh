@@ -33,3 +33,8 @@ sh sed.sh
 sh bash2.sh
 
 sh make-3.82.sh
+
+sh bash3.sh
+
+sh jpeg.sh
+sh libpng.sh

@@ -1,0 +1,108 @@
+diff -ur libpng-1.6.34/contrib/libtests/pngstest.c libpng-1.6.34.built/contrib/libtests/pngstest.c
+--- libpng-1.6.34/contrib/libtests/pngstest.c	2017-09-29 01:40:57.000000000 -0700
++++ libpng-1.6.34.built/contrib/libtests/pngstest.c	2018-06-02 06:02:05.000000000 -0700
+@@ -21,6 +21,10 @@
+ #include <ctype.h>
+ #include <math.h>
+ 
++unsigned long strtoul(char *str, char **ptr, int base) {
++	return (unsigned long) strtol(str, ptr, base);
++}
++
+ #if defined(HAVE_CONFIG_H) && !defined(PNG_NO_CONFIG_H)
+ #  include <config.h>
+ #endif
+diff -ur libpng-1.6.34/contrib/libtests/pngvalid.c libpng-1.6.34.built/contrib/libtests/pngvalid.c
+--- libpng-1.6.34/contrib/libtests/pngvalid.c	2017-09-29 01:40:57.000000000 -0700
++++ libpng-1.6.34.built/contrib/libtests/pngvalid.c	2018-06-02 06:02:51.000000000 -0700
+@@ -22,6 +22,10 @@
+ #define _ISOC99_SOURCE 1 /* For floating point */
+ #define _GNU_SOURCE 1 /* For the floating point exception extension */
+ 
++#define memmove(dest, src, n) bcopy(src, dest, n)
++void bcopy(char * src, char * dest, int n);
++
++
+ #include <signal.h>
+ #include <stdio.h>
+ 
+diff -ur libpng-1.6.34/contrib/tools/pngcp.c libpng-1.6.34.built/contrib/tools/pngcp.c
+--- libpng-1.6.34/contrib/tools/pngcp.c	2017-09-29 01:40:57.000000000 -0700
++++ libpng-1.6.34.built/contrib/tools/pngcp.c	2018-06-02 06:03:14.000000000 -0700
+@@ -17,6 +17,8 @@
+  */
+ #include "pnglibconf.h" /* To find how libpng was configured. */
+ 
++#define FILENAME_MAX NAME_MAX 
++
+ #ifdef PNG_PNGCP_TIMING_SUPPORTED
+    /* WARNING:
+     *
+diff -ur libpng-1.6.34/contrib/tools/pngfix.c libpng-1.6.34.built/contrib/tools/pngfix.c
+--- libpng-1.6.34/contrib/tools/pngfix.c	2017-09-29 01:40:57.000000000 -0700
++++ libpng-1.6.34.built/contrib/tools/pngfix.c	2018-06-02 06:00:36.000000000 -0700
+@@ -18,7 +18,13 @@
+ #include <errno.h>
+ #include <assert.h>
+ 
++#define FILENAME_MAX NAME_MAX
++
++#define memmove(dest, src, n) bcopy(src, dest, n)
++void bcopy(char * src, char * dest, int n);
++
+ #define implies(x,y) assert(!(x) || (y))
++typedef long fpos_t;
+ 
+ #ifdef __GNUC__
+    /* This is used to fix the error:
+@@ -1201,6 +1207,17 @@
+    }
+ }
+ 
++int fgetpos(FILE *stream, fpos_t * pos) {
++        if (pos == NULL) return 1;
++	*pos = ftell(stream);
++        return 0;
++}
++
++int fsetpos(FILE *stream, fpos_t *pos) {
++	if (pos == NULL) return 1;
++	return fseek(stream, *pos, 0);
++}
++
+ /* Input file positioning - we jump around in the input file while reading
+  * stuff, these wrappers deal with the error handling.
+  */
+diff -ur libpng-1.6.34/pngconf.h libpng-1.6.34.built/pngconf.h
+--- libpng-1.6.34/pngconf.h	2017-09-29 01:40:57.000000000 -0700
++++ libpng-1.6.34.built/pngconf.h	2018-06-02 05:41:41.000000000 -0700
+@@ -342,10 +342,12 @@
+ #  if defined(__clang__) && defined(__has_attribute)
+    /* Clang defines both __clang__ and __GNUC__. Check __clang__ first. */
+ #    if !defined(PNG_USE_RESULT) && __has_attribute(__warn_unused_result__)
+-#      define PNG_USE_RESULT __attribute__((__warn_unused_result__))
++/*#      define PNG_USE_RESULT __attribute__((__warn_unused_result__)) */
++#define PNG_USE_RESULT
+ #    endif
+ #    if !defined(PNG_NORETURN) && __has_attribute(__noreturn__)
+-#      define PNG_NORETURN __attribute__((__noreturn__))
++/* #      define PNG_NORETURN __attribute__((__noreturn__))*/
++  #define PNG_NORETURN 
+ #    endif
+ #    if !defined(PNG_ALLOCATED) && __has_attribute(__malloc__)
+ #      define PNG_ALLOCATED __attribute__((__malloc__))
+@@ -367,10 +369,12 @@
+ 
+ #  elif defined(__GNUC__)
+ #    ifndef PNG_USE_RESULT
+-#      define PNG_USE_RESULT __attribute__((__warn_unused_result__))
++/* #      define PNG_USE_RESULT __attribute__((__warn_unused_result__))*/
++#define PNG_USE_RESULT  
+ #    endif
+ #    ifndef PNG_NORETURN
+-#      define PNG_NORETURN   __attribute__((__noreturn__))
++/* #      define PNG_NORETURN   __attribute__((__noreturn__))*/
++#define PNG_NORETURN  
+ #    endif
+ #    if __GNUC__ >= 3
+ #      ifndef PNG_ALLOCATED
