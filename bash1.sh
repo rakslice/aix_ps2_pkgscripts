@@ -18,11 +18,11 @@ makefile=cpp-Makefile
 mv "$makefile" "$makefile.orig"
 sed 's/^CFLAGS = -O -g/CFLAGS = -O/' "$makefile.orig" > "$makefile"
 
-make
+ENV= make
 
 . $pkgscripts/common-end.inc
 
 if [ ! -d /archive ]; then
 	mkdir /archive
 fi
-cp /usr/local/bin/bash /archive/
+cp /usr/local/bin/bash /archive/ || true
