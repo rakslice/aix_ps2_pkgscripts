@@ -23,6 +23,4 @@ ENV= CONFIG_SHELL=/archive/bash2 /archive/bash2 ./configure --with-bash-malloc -
 #make CFLAGS=
 $make
 
-exit 1
-
 . $pkgscripts/common-end.inc
