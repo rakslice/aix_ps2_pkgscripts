@@ -11,7 +11,9 @@ typedef long int32_t;
 typedef short int16_t;
 typedef char int8_t;
 
+#ifndef uintmax_t
 typedef uint64_t uintmax_t;
+#endif
 typedef int64_t intmax_t;
 
 #define HAVE_INT64_T 1
