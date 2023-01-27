@@ -25,3 +25,6 @@ export PATH
         #$make test
 
 . $pkgscripts/common-end.inc
+
+chmod +x /usr/local/bin/perl
+chmod +x /usr/bin/perl
