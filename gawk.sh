@@ -11,10 +11,7 @@ make=/usr/local/bin/make
 
 . common-start.inc
 
-#/usr/local/bin/bash 
 ./configure
-#/u/root/bin/superconf
-# --build=i386-ibm-aix
 $make
 
 . $pkgscripts/common-end.inc
