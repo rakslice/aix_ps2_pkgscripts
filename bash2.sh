@@ -26,5 +26,5 @@ $make
 if [ ! -d /archive ]; then
         mkdir /archive
 fi
-cp /usr/local/bin/bash /archive/bash2
+cp /usr/local/bin/bash /archive/bash2 || true
 
