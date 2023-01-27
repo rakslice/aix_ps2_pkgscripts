@@ -19,7 +19,7 @@ cat $patches/grep-2.5.4.patch
 ls src/grep.c
 /usr/local/bin/patch -p2 -i $patches/grep-2.5.4.patch
 
-SHELL=/archive/bash /u/root/bin/superconf
+SHELL=/archive/bash $pkgscripts/superconf
 
 ENV=
 export ENV

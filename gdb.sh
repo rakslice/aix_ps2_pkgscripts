@@ -20,7 +20,7 @@ export PATH
 
 #/usr/local/bin/bash 
 #./configure
-/u/root/bin/superconf
+$pkgscripts/superconf
 # --build=i386-ibm-aix
 $make RANLIB_FOR_TARGET=ranlib RANLIB_FOR_BUILD=ranlib
 

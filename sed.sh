@@ -18,7 +18,7 @@ export PATH
 
 /usr/local/bin/patch -p1 -i $patches/$pkgname.patch
 
-SHELL=/archive/bash /u/root/bin/superconf
+SHELL=/archive/bash $pkgscripts/superconf
 $make
 
 . $pkgscripts/common-end.inc
