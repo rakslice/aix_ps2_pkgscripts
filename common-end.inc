@@ -3,10 +3,14 @@ if [ "$prefixvar" = "" ]; then
 	prefixvar="prefix"
 fi
 
+if [ "$installtargets" = "" ]; then
+	installtargets="install"
+fi
+
 if [ ! -d "$pkgdir" ]; then
   mkdir "$pkgdir"
 fi
-"$make" install $prefixvar="$pkgdir" $make_install_args
+"$make" $installtargets $prefixvar="$pkgdir" $make_install_args
 
 tar cf "$pkgdir.pkg" "$pkgdir"
 

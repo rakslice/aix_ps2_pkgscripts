@@ -1,0 +1,25 @@
+diff -ur /nfs/stock/binutils-2.13.2/ld/ldlex.c /u/root/src/binutils-2.13.2/ld/ldlex.c
+--- /nfs/stock/binutils-2.13.2/ld/ldlex.c	Tue Oct 29 19:54:52 2002
++++ /u/root/src/binutils-2.13.2/ld/ldlex.c	Sat Jan 28 02:09:49 2023
+@@ -20,7 +20,10 @@
+ 
+ 
+ #ifdef __cplusplus
+-
++#if defined(_AIX) && defined(__i386__)
++#error here
++#undef abort
++#endif
+ #include <stdlib.h>
+ #ifndef _WIN32
+ #include <unistd.h>
+@@ -1395,6 +1398,9 @@
+ #else
+ #if __STDC__
+ #ifndef __cplusplus
++#if defined(_AIX) && defined(__i386__)
++#undef abort
++#endif
+ #include <stdlib.h>
+ #endif
+ #else

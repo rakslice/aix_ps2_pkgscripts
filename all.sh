@@ -57,3 +57,7 @@ sh md5sum.sh  # maybe move me up
 sh tar.sh
 
 sh less.sh
+
+sh freetype.sh
+
+sh binutils-2.13.2.sh
