@@ -54,3 +54,6 @@ sh libpng.sh
 
 sh md5sum.sh  # maybe move me up
 
+sh tar.sh
+
+sh less.sh
