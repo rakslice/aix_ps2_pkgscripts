@@ -1,0 +1,18 @@
+#!/bin/sh
+set -e
+set -x
+
+[ $# -ge 1 ] || exit 1
+
+pkgname="$1"
+
+shift
+
+[ -d /u/root/src/$pkgname ] || exit 1
+
+. incs
+
+cd /u/root/src/$pkgname
+
+CONFIG_SHELL=/archive/bash2 SHELL=/archive/bash2 /archive/bash2 ./configure "$@"
+
