@@ -1,0 +1,175 @@
+diff -ur /nfs/stock/libast-0.7/configure /u/root/src/libast-0.7/configure
+--- /nfs/stock/libast-0.7/configure	Mon Jan 23 10:20:35 2006
++++ /u/root/src/libast-0.7/configure	Sat Jan 28 22:37:56 2023
+@@ -19786,7 +19786,7 @@
+ _ACEOF
+ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+   $EGREP "$ac_pattern" >/dev/null 2>&1; then
+-  ac_cv_prog_gcc_traditional=yes
++  ac_cv_prog_gcc_traditional=no
+ else
+   ac_cv_prog_gcc_traditional=no
+ fi
+diff -ur /nfs/stock/libast-0.7/include/libast/sysdefs.h /u/root/src/libast-0.7/include/libast/sysdefs.h
+--- /nfs/stock/libast-0.7/include/libast/sysdefs.h	Mon Jan 23 10:25:21 2006
++++ /u/root/src/libast-0.7/include/libast/sysdefs.h	Sat Jan 28 22:37:56 2023
+@@ -71,7 +71,7 @@
+ 
+ /* Support for MMX instructions. */
+ #ifndef LIBAST_MMX_SUPPORT
+-#  define LIBAST_MMX_SUPPORT 1
++#  define LIBAST_MMX_SUPPORT 0
+ #endif
+ 
+ /* Regexp's based on Perl's PCRE, or... */
+@@ -107,16 +107,16 @@
+ #  define HAVE_RLIMIT_NPROC 0
+ #endif
+ #ifndef HAVE_SYMLINK_OPEN_ERRNO_BUG
+-#  define HAVE_SYMLINK_OPEN_ERRNO_BUG 0
++#  define HAVE_SYMLINK_OPEN_ERRNO_BUG 1
+ #endif
+ #ifndef HAVE_SYMLINK_OPEN_SECURITY_HOLE
+-#  define HAVE_SYMLINK_OPEN_SECURITY_HOLE 0
++#  define HAVE_SYMLINK_OPEN_SECURITY_HOLE 1
+ #endif
+ #ifndef HAVE_SNPRINTF_BUG
+-#  define HAVE_SNPRINTF_BUG 0
++#  define HAVE_SNPRINTF_BUG 1
+ #endif
+ #ifndef HAVE_VSNPRINTF_BUG
+-#  define HAVE_VSNPRINTF_BUG 0
++#  define HAVE_VSNPRINTF_BUG 1
+ #endif
+ 
+ /* Sizes of basic variables. */
+@@ -141,10 +141,10 @@
+ 
+ /* Substitutes for some non-standard functions. */
+ #ifndef HAVE_MEMMEM
+-#  define HAVE_MEMMEM 1
++#  define HAVE_MEMMEM 0
+ #endif
+ #ifndef HAVE_MEMMOVE
+-#  define HAVE_MEMMOVE 1
++#  define HAVE_MEMMOVE 0
+ #endif
+ #ifndef HAVE_PUTENV
+ #  define HAVE_PUTENV 1
+@@ -156,25 +156,25 @@
+ #  define HAVE_STRCASEPBRK 0
+ #endif
+ #ifndef HAVE_STRCASESTR
+-#  define HAVE_STRCASESTR 1
++#  define HAVE_STRCASESTR 0
+ #endif
+ #ifndef HAVE_STRNLEN
+-#  define HAVE_STRNLEN 1
++#  define HAVE_STRNLEN 0
+ #endif
+ #ifndef HAVE_STRREV
+ #  define HAVE_STRREV 0
+ #endif
+ #ifndef HAVE_STRSEP
+-#  define HAVE_STRSEP 1
++#  define HAVE_STRSEP 0
+ #endif
+ #ifndef HAVE_USLEEP
+ #  define HAVE_USLEEP 1
+ #endif
+ #ifndef HAVE_SNPRINTF
+-#  define HAVE_SNPRINTF 1
++#  define HAVE_SNPRINTF 0
+ #endif
+ #ifndef HAVE_VSNPRINTF
+-#  define HAVE_VSNPRINTF 1
++#  define HAVE_VSNPRINTF 0
+ #endif
+ 
+ /* Header checks used in libast.h */
+@@ -185,10 +185,10 @@
+ #  define HAVE_MALLOC_H 1
+ #endif
+ #ifndef HAVE_PCRE_H
+-#  define HAVE_PCRE_H 0
++#  define HAVE_PCRE_H 1
+ #endif
+ #ifndef HAVE_PCRE_PCRE_H
+-#  define HAVE_PCRE_PCRE_H 1
++#  define HAVE_PCRE_PCRE_H 0
+ #endif
+ #ifndef HAVE_REGEX_H
+ #  define HAVE_REGEX_H 0
+diff -ur /nfs/stock/libast-0.7/include/libast/types.h /u/root/src/libast-0.7/include/libast/types.h
+--- /nfs/stock/libast-0.7/include/libast/types.h	Mon Jan 23 10:25:28 2006
++++ /u/root/src/libast-0.7/include/libast/types.h	Sat Jan 28 22:38:13 2023
+@@ -36,6 +36,8 @@
+ #ifndef _LIBAST_TYPES_H_
+ #define _LIBAST_TYPES_H_
+ 
++typedef long size_t;
++
+ 
+ /**
+  * @defgroup DOXGRP_TYPES LibAST Portable Data Types
+@@ -778,6 +780,8 @@
+  * @see @link DOXGRP_TYPES Portable Data Types @endlink
+  */
+ typedef spif_uint16_t spif_sockport_t;
++
++typedef caddr_t socklen_t;
+ 
+ /**
+  * The length of a socket address structure.
+diff -ur /nfs/stock/libast-0.7/include/libast/types.h.in /u/root/src/libast-0.7/include/libast/types.h.in
+--- /nfs/stock/libast-0.7/include/libast/types.h.in	Tue Dec 28 22:39:10 2004
++++ /u/root/src/libast-0.7/include/libast/types.h.in	Sat Jan 28 22:39:49 2023
+@@ -36,6 +36,14 @@
+ #ifndef _LIBAST_TYPES_H_
+ #define _LIBAST_TYPES_H_
+ 
++#ifndef _IS_SIZE_T_
++#define _IS_SIZE_T_
++#ifndef __SIZE_TYPE__
++#define __SIZE_TYPE__ long
++#endif
++typedef __SIZE_TYPE__ size_t;
++#endif
++
+ 
+ /**
+  * @defgroup DOXGRP_TYPES LibAST Portable Data Types
+@@ -778,6 +786,8 @@
+  * @see @link DOXGRP_TYPES Portable Data Types @endlink
+  */
+ typedef spif_uint16_t spif_sockport_t;
++
++typedef caddr_t socklen_t;
+ 
+ /**
+  * The length of a socket address structure.
+diff -ur /nfs/stock/libast-0.7/include/libast.h /u/root/src/libast-0.7/include/libast.h
+--- /nfs/stock/libast-0.7/include/libast.h	Mon Jan 23 10:17:26 2006
++++ /u/root/src/libast-0.7/include/libast.h	Sat Jan 28 22:37:56 2023
+@@ -71,6 +71,9 @@
+ #include <netinet/tcp.h>
+ #include <netinet/udp.h>
+ 
++
++#include <stdarg.h>
++
+ #if LIBAST_X11_SUPPORT
+ # include <X11/Xatom.h>
+ # include <X11/X.h>
+diff -ur /nfs/stock/libast-0.7/src/snprintf.c /u/root/src/libast-0.7/src/snprintf.c
+--- /nfs/stock/libast-0.7/src/snprintf.c	Fri Jul 23 14:34:05 2004
++++ /u/root/src/libast-0.7/src/snprintf.c	Sat Jan 28 22:37:56 2023
+@@ -9,6 +9,8 @@
+ # undef HAVE_STDARG_H
+ #endif
+ 
++typedef long size_t;
++
+ static const char __attribute__((unused)) cvs_ident[] = "$Id: snprintf.c,v 1.6 2004/07/23 21:38:39 mej Exp $";
+ 
+ /* 
