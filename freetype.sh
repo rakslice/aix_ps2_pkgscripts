@@ -16,7 +16,9 @@ export PATH
 
 . common-start.inc
 
-#/usr/local/bin/patch -p1 -i $patches/$pkgname.patch
+cp $pkgscripts/codefragments/memmove.h include/freetype/config/
+
+/usr/local/bin/patch -p4 -i $patches/$pkgname.patch
 
 cd builds/unix
 

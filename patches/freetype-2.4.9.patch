@@ -1,0 +1,13 @@
+diff -ur /nfs/stock/freetype-2.4.9/include/freetype/config/ftstdlib.h /u/root/src/freetype-2.4.9/include/freetype/config/ftstdlib.h
+--- /nfs/stock/freetype-2.4.9/include/freetype/config/ftstdlib.h	Fri Sep 30 23:06:44 2011
++++ /u/root/src/freetype-2.4.9/include/freetype/config/ftstdlib.h	Sat Jan 28 21:54:40 2023
+@@ -79,6 +79,9 @@
+ #define ft_memchr   memchr
+ #define ft_memcmp   memcmp
+ #define ft_memcpy   memcpy
++#if defined(_AIX) && defined(__i386__)
++#include "memmove.h"
++#endif
+ #define ft_memmove  memmove
+ #define ft_memset   memset
+ #define ft_strcat   strcat
