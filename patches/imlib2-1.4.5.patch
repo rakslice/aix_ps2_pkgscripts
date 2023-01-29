@@ -1,0 +1,213 @@
+diff -ur /nfs/stock/imlib2-1.4.5/configure /u/root/src/imlib2-1.4.5/configure
+--- /nfs/stock/imlib2-1.4.5/configure	Mon Aug 15 11:31:20 2011
++++ /u/root/src/imlib2-1.4.5/configure	Sat Jan 28 22:09:50 2023
+@@ -12261,25 +12261,7 @@
+ 
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -std=gnu99" >&5
+ $as_echo_n "checking whether $CC accepts -std=gnu99... " >&6; }
+-cc_supports_gnu99="yes"
+-save_CPPFLAGS="$CPPFLAGS"
+-CPPFLAGS="$CPPFLAGS -std=gnu99"
+-cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+-/* end confdefs.h.  */
+-
+-int
+-main ()
+-{
+-
+-  ;
+-  return 0;
+-}
+-_ACEOF
+-if ac_fn_c_try_compile "$LINENO"; then :
+-
+-else
+-  cc_supports_gnu99="no";CPPFLAGS="$save_CPPFLAGS"
+-fi
++cc_supports_gnu99="no"
+ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $cc_supports_gnu99" >&5
+ $as_echo "$cc_supports_gnu99" >&6; }
+@@ -13113,7 +13095,7 @@
+ fi
+ 
+   x_cflags=$X_CFLAGS
+-  x_libs=$X_LIBS" -lX11 -lXext"
++  x_libs=$X_LIBS" -lXext -lX11"
+ 
+ $as_echo "#define BUILD_X11 1" >>confdefs.h
+ 
+diff -ur /nfs/stock/imlib2-1.4.5/src/bin/imlib2_grab.c /u/root/src/imlib2-1.4.5/src/bin/imlib2_grab.c
+--- /nfs/stock/imlib2-1.4.5/src/bin/imlib2_grab.c	Sat Apr  9 00:48:51 2011
++++ /u/root/src/imlib2-1.4.5/src/bin/imlib2_grab.c	Sat Jan 28 22:14:02 2023
+@@ -14,6 +14,8 @@
+ #include <errno.h>
+ #include "Imlib2.h"
+ 
++#include "strtoul.c"
++
+ Display            *disp;
+ Visual             *vis;
+ Colormap            cm;
+diff -ur /nfs/stock/imlib2-1.4.5/src/bin/imlib2_view.c /u/root/src/imlib2-1.4.5/src/bin/imlib2_view.c
+--- /nfs/stock/imlib2-1.4.5/src/bin/imlib2_view.c	Fri Apr  8 23:18:19 2011
++++ /u/root/src/imlib2-1.4.5/src/bin/imlib2_view.c	Sat Jan 28 22:09:50 2023
+@@ -5,6 +5,7 @@
+ #include <X11/extensions/shape.h>
+ #include <X11/Xatom.h>
+ #include <X11/Xos.h>
++#include <X11/keysym.h> 
+ #include <stdio.h>
+ #include <string.h>
+ #include <stdlib.h>
+diff -ur /nfs/stock/imlib2-1.4.5/src/lib/Makefile.in /u/root/src/imlib2-1.4.5/src/lib/Makefile.in
+--- /nfs/stock/imlib2-1.4.5/src/lib/Makefile.in	Mon Aug 15 11:31:19 2011
++++ /u/root/src/imlib2-1.4.5/src/lib/Makefile.in	Sat Jan 28 22:09:50 2023
+@@ -148,7 +148,8 @@
+ CCDEPMODE = @CCDEPMODE@
+ CFLAGS = @CFLAGS@
+ CPP = @CPP@
+-CPPFLAGS = @CPPFLAGS@
++CONFIGURE_ENABLE_SHARED = no
++CPPFLAGS = @CPPFLAGS@ -DCONFIG_ENABLE_SHARED_$(CONFIGURE_ENABLE_SHARED)
+ CYGPATH_W = @CYGPATH_W@
+ DEFS = @DEFS@
+ DEPDIR = @DEPDIR@
+diff -ur /nfs/stock/imlib2-1.4.5/src/lib/common.h /u/root/src/imlib2-1.4.5/src/lib/common.h
+--- /nfs/stock/imlib2-1.4.5/src/lib/common.h	Fri Apr 15 14:05:28 2011
++++ /u/root/src/imlib2-1.4.5/src/lib/common.h	Sat Jan 28 22:09:50 2023
+@@ -16,6 +16,8 @@
+ #include <sys/types.h>
+ #endif
+ 
++#include "memmove.h"
++
+ #if defined(__GNUC__) && (__GNUC__ >= 4)
+ #define __hidden __attribute__((visibility("hidden")))
+ #else
+diff -ur /nfs/stock/imlib2-1.4.5/src/lib/dynamic_filters.c /u/root/src/imlib2-1.4.5/src/lib/dynamic_filters.c
+--- /nfs/stock/imlib2-1.4.5/src/lib/dynamic_filters.c	Fri Apr  8 23:18:19 2011
++++ /u/root/src/imlib2-1.4.5/src/lib/dynamic_filters.c	Sat Jan 28 22:09:50 2023
+@@ -35,7 +35,11 @@
+    MALLOCSHOW;
+    ptr = malloc(sizeof(ImlibExternalFilter));
+    ptr->filename = strdup(file);
++#ifdef CONFIG_ENABLE_SHARED_no
++   ptr->handle = NULL;
++#else  
+    ptr->handle = dlopen(file, RTLD_NOW | RTLD_LOCAL);
++#endif
+    if (!ptr->handle)
+      {
+         FREESHOW;
+diff -ur /nfs/stock/imlib2-1.4.5/src/lib/font_load.c /u/root/src/imlib2-1.4.5/src/lib/font_load.c
+--- /nfs/stock/imlib2-1.4.5/src/lib/font_load.c	Fri Apr  8 23:18:19 2011
++++ /u/root/src/imlib2-1.4.5/src/lib/font_load.c	Sat Jan 28 22:09:50 2023
+@@ -221,6 +221,7 @@
+ int
+ imlib_font_insert_into_fallback_chain_imp(ImlibFont * fn, ImlibFont * fallback)
+ {
++   ImlibFont *tmp;
+    /* avoid infinite recursion */
+    if (fn == fallback)
+       return 1;
+@@ -229,7 +230,7 @@
+    imlib_font_remove_from_fallback_chain_imp(fallback);
+ 
+    /* insert fallback into fn's font chain */
+-   ImlibFont          *tmp = fn->fallback_next;
++   tmp = fn->fallback_next;
+ 
+    fn->fallback_next = fallback;
+    fallback->fallback_prev = fn;
+diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.c /u/root/src/imlib2-1.4.5/src/lib/image.c
+--- /nfs/stock/imlib2-1.4.5/src/lib/image.c	Fri Apr 15 14:05:28 2011
++++ /u/root/src/imlib2-1.4.5/src/lib/image.c	Sat Jan 28 22:09:50 2023
+@@ -566,7 +566,11 @@
+    l = malloc(sizeof(ImlibLoader));
+    l->num_formats = 0;
+    l->formats = NULL;
++#ifdef CONFIG_ENABLE_SHARED_no
++   l->handle = NULL;
++#else
+    l->handle = dlopen(file, RTLD_NOW | RTLD_LOCAL);
++#endif
+    if (!l->handle)
+      {
+         free(l);
+@@ -579,7 +583,9 @@
+    /* each loader must provide formats() and at least load() or save() */
+    if (!l_formats || (!l->load && !l->save))
+      {
++#ifndef CONFIG_ENABLE_SHARED_no
+         dlclose(l->handle);
++#endif
+         free(l);
+         return NULL;
+      }
+@@ -705,8 +711,10 @@
+ {
+    if (l->file)
+       free(l->file);
++#ifndef CONFIG_ENABLE_SHARED_no
+    if (l->handle)
+       dlclose(l->handle);
++#endif
+    if (l->formats)
+      {
+         int                 i;
+diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.h /u/root/src/imlib2-1.4.5/src/lib/image.h
+--- /nfs/stock/imlib2-1.4.5/src/lib/image.h	Fri Apr 15 14:05:28 2011
++++ /u/root/src/imlib2-1.4.5/src/lib/image.h	Sat Jan 28 22:09:50 2023
+@@ -8,7 +8,9 @@
+ #  define X_DISPLAY_MISSING
+ # endif
+ 
++#ifdef HAVE_DLFCN_H
+ # include <dlfcn.h>
++#endif
+ # include <Imlib2.h>
+ 
+ # ifndef RTLD_LOCAL
+diff -ur /nfs/stock/imlib2-1.4.5/src/lib/script.h /u/root/src/imlib2-1.4.5/src/lib/script.h
+--- /nfs/stock/imlib2-1.4.5/src/lib/script.h	Fri Apr 15 14:05:28 2011
++++ /u/root/src/imlib2-1.4.5/src/lib/script.h	Sat Jan 28 22:09:50 2023
+@@ -1,7 +1,9 @@
+ #ifndef _DYN_FUNCTION_H_
+ #define _DYN_FUNCTION_H_
+ 
++#ifdef HAVE_DLFCN_H
+ #include <dlfcn.h>
++#endif
+ 
+ #ifndef BUILD_X11
+ # ifndef X_DISPLAY_MISSING
+diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_tga.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_tga.c
+--- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_tga.c	Sat Apr  9 00:48:51 2011
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_tga.c	Sat Jan 28 22:20:06 2023
+@@ -11,7 +11,9 @@
+  */
+ #include "loader_common.h"
+ #include <sys/stat.h>
++#if 0
+ #include <sys/mman.h>
++#endif
+ #include "colormod.h"
+ #include "blend.h"
+ 
+@@ -218,12 +220,15 @@
+         close(fd);
+         return 0;
+      }
++#if 0
+    seg = mmap(0, ss.st_size, PROT_READ, MAP_SHARED, fd, 0);
+    if (seg == MAP_FAILED)
+      {
+         close(fd);
+         return 0;
+      }
++#endif
++   return 0;
+ 
+    filedata = seg;
+    header = (tga_header *) filedata;
