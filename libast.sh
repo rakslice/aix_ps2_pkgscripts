@@ -14,7 +14,7 @@ export PATH
 
 . common-start.inc
 
-#cp $pkgscripts/codefragments/memmove.h .
+cp $pkgscripts/codefragments/memmove.h include/
 
 /usr/local/bin/patch -p4 -i $patches/$pkgname.patch
 

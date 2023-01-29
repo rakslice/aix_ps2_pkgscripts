@@ -1,6 +1,6 @@
 diff -ur /nfs/stock/libast-0.7/configure /u/root/src/libast-0.7/configure
 --- /nfs/stock/libast-0.7/configure	Mon Jan 23 10:20:35 2006
-+++ /u/root/src/libast-0.7/configure	Sat Jan 28 22:37:56 2023
++++ /u/root/src/libast-0.7/configure	Sun Jan 29 00:12:25 2023
 @@ -19786,7 +19786,7 @@
  _ACEOF
  if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
@@ -12,7 +12,7 @@ diff -ur /nfs/stock/libast-0.7/configure /u/root/src/libast-0.7/configure
  fi
 diff -ur /nfs/stock/libast-0.7/include/libast/sysdefs.h /u/root/src/libast-0.7/include/libast/sysdefs.h
 --- /nfs/stock/libast-0.7/include/libast/sysdefs.h	Mon Jan 23 10:25:21 2006
-+++ /u/root/src/libast-0.7/include/libast/sysdefs.h	Sat Jan 28 22:37:56 2023
++++ /u/root/src/libast-0.7/include/libast/sysdefs.h	Sun Jan 29 00:12:25 2023
 @@ -71,7 +71,7 @@
  
  /* Support for MMX instructions. */
@@ -102,7 +102,7 @@ diff -ur /nfs/stock/libast-0.7/include/libast/sysdefs.h /u/root/src/libast-0.7/i
  #  define HAVE_REGEX_H 0
 diff -ur /nfs/stock/libast-0.7/include/libast/types.h /u/root/src/libast-0.7/include/libast/types.h
 --- /nfs/stock/libast-0.7/include/libast/types.h	Mon Jan 23 10:25:28 2006
-+++ /u/root/src/libast-0.7/include/libast/types.h	Sat Jan 28 22:38:13 2023
++++ /u/root/src/libast-0.7/include/libast/types.h	Sun Jan 29 00:12:25 2023
 @@ -36,6 +36,8 @@
  #ifndef _LIBAST_TYPES_H_
  #define _LIBAST_TYPES_H_
@@ -123,7 +123,7 @@ diff -ur /nfs/stock/libast-0.7/include/libast/types.h /u/root/src/libast-0.7/inc
   * The length of a socket address structure.
 diff -ur /nfs/stock/libast-0.7/include/libast/types.h.in /u/root/src/libast-0.7/include/libast/types.h.in
 --- /nfs/stock/libast-0.7/include/libast/types.h.in	Tue Dec 28 22:39:10 2004
-+++ /u/root/src/libast-0.7/include/libast/types.h.in	Sat Jan 28 22:39:49 2023
++++ /u/root/src/libast-0.7/include/libast/types.h.in	Sun Jan 29 00:12:25 2023
 @@ -36,6 +36,14 @@
  #ifndef _LIBAST_TYPES_H_
  #define _LIBAST_TYPES_H_
@@ -150,7 +150,7 @@ diff -ur /nfs/stock/libast-0.7/include/libast/types.h.in /u/root/src/libast-0.7/
   * The length of a socket address structure.
 diff -ur /nfs/stock/libast-0.7/include/libast.h /u/root/src/libast-0.7/include/libast.h
 --- /nfs/stock/libast-0.7/include/libast.h	Mon Jan 23 10:17:26 2006
-+++ /u/root/src/libast-0.7/include/libast.h	Sat Jan 28 22:37:56 2023
++++ /u/root/src/libast-0.7/include/libast.h	Sun Jan 29 00:12:25 2023
 @@ -71,6 +71,9 @@
  #include <netinet/tcp.h>
  #include <netinet/udp.h>
@@ -161,9 +161,21 @@ diff -ur /nfs/stock/libast-0.7/include/libast.h /u/root/src/libast-0.7/include/l
  #if LIBAST_X11_SUPPORT
  # include <X11/Xatom.h>
  # include <X11/X.h>
+diff -ur /nfs/stock/libast-0.7/include/libast_internal.h /u/root/src/libast-0.7/include/libast_internal.h
+--- /nfs/stock/libast-0.7/include/libast_internal.h	Thu Jul 22 04:38:47 2004
++++ /u/root/src/libast-0.7/include/libast_internal.h	Sun Jan 29 00:13:56 2023
+@@ -36,6 +36,8 @@
+ #ifndef _LIBAST_INTERNAL_H_
+ #define _LIBAST_INTERNAL_H_
+ 
++#include "memmove.h"
++
+ /* This GNU goop has to go before the system headers */
+ #ifdef __GNUC__
+ # ifndef __USE_GNU
 diff -ur /nfs/stock/libast-0.7/src/snprintf.c /u/root/src/libast-0.7/src/snprintf.c
 --- /nfs/stock/libast-0.7/src/snprintf.c	Fri Jul 23 14:34:05 2004
-+++ /u/root/src/libast-0.7/src/snprintf.c	Sat Jan 28 22:37:56 2023
++++ /u/root/src/libast-0.7/src/snprintf.c	Sun Jan 29 00:12:25 2023
 @@ -9,6 +9,8 @@
  # undef HAVE_STDARG_H
  #endif
