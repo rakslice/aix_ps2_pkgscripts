@@ -61,3 +61,5 @@ sh less.sh
 sh freetype.sh
 
 sh binutils-2.13.2.sh
+
+sh imlib2.sh
