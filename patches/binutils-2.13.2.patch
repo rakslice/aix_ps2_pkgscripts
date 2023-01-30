@@ -1,6 +1,102 @@
-diff -ur /nfs/stock/binutils-2.13.2/ld/ldlex.c /u/root/src/binutils-2.13.2/ld/ldlex.c
+diff -ur --exclude=*.info /nfs/stock/binutils-2.13.2/bfd/Makefile.in /u/root/src/binutils-2.13.2/bfd/Makefile.in
+--- /nfs/stock/binutils-2.13.2/bfd/Makefile.in	Thu Nov  7 08:55:27 2002
++++ /u/root/src/binutils-2.13.2/bfd/Makefile.in	Mon Jan 30 13:18:05 2023
+@@ -32,7 +32,7 @@
+ includedir = @includedir@
+ oldincludedir = /usr/include
+ 
+-DESTDIR =
++
+ 
+ pkgdatadir = $(datadir)/@PACKAGE@
+ pkglibdir = $(libdir)/@PACKAGE@
+diff -ur --exclude=*.info /nfs/stock/binutils-2.13.2/bfd/doc/Makefile.in /u/root/src/binutils-2.13.2/bfd/doc/Makefile.in
+--- /nfs/stock/binutils-2.13.2/bfd/doc/Makefile.in	Thu Nov  7 08:55:27 2002
++++ /u/root/src/binutils-2.13.2/bfd/doc/Makefile.in	Mon Jan 30 13:18:05 2023
+@@ -32,7 +32,7 @@
+ includedir = @includedir@
+ oldincludedir = /usr/include
+ 
+-DESTDIR =
++
+ 
+ pkgdatadir = $(datadir)/@PACKAGE@
+ pkglibdir = $(libdir)/@PACKAGE@
+diff -ur --exclude=*.info /nfs/stock/binutils-2.13.2/binutils/Makefile.in /u/root/src/binutils-2.13.2/binutils/Makefile.in
+--- /nfs/stock/binutils-2.13.2/binutils/Makefile.in	Mon Jul 15 18:04:30 2002
++++ /u/root/src/binutils-2.13.2/binutils/Makefile.in	Mon Jan 30 13:18:05 2023
+@@ -32,7 +32,7 @@
+ includedir = @includedir@
+ oldincludedir = /usr/include
+ 
+-DESTDIR =
++
+ 
+ pkgdatadir = $(datadir)/@PACKAGE@
+ pkglibdir = $(libdir)/@PACKAGE@
+diff -ur --exclude=*.info /nfs/stock/binutils-2.13.2/binutils/doc/Makefile.in /u/root/src/binutils-2.13.2/binutils/doc/Makefile.in
+--- /nfs/stock/binutils-2.13.2/binutils/doc/Makefile.in	Mon Jul 15 18:04:37 2002
++++ /u/root/src/binutils-2.13.2/binutils/doc/Makefile.in	Mon Jan 30 13:18:05 2023
+@@ -32,7 +32,7 @@
+ includedir = @includedir@
+ oldincludedir = /usr/include
+ 
+-DESTDIR =
++
+ 
+ pkgdatadir = $(datadir)/@PACKAGE@
+ pkglibdir = $(libdir)/@PACKAGE@
+diff -ur --exclude=*.info /nfs/stock/binutils-2.13.2/gas/Makefile.in /u/root/src/binutils-2.13.2/gas/Makefile.in
+--- /nfs/stock/binutils-2.13.2/gas/Makefile.in	Sat Jul 13 17:14:18 2002
++++ /u/root/src/binutils-2.13.2/gas/Makefile.in	Mon Jan 30 13:18:05 2023
+@@ -32,7 +32,7 @@
+ includedir = @includedir@
+ oldincludedir = /usr/include
+ 
+-DESTDIR =
++
+ 
+ pkgdatadir = $(datadir)/@PACKAGE@
+ pkglibdir = $(libdir)/@PACKAGE@
+diff -ur --exclude=*.info /nfs/stock/binutils-2.13.2/gas/doc/Makefile.in /u/root/src/binutils-2.13.2/gas/doc/Makefile.in
+--- /nfs/stock/binutils-2.13.2/gas/doc/Makefile.in	Sat Jul 13 17:14:34 2002
++++ /u/root/src/binutils-2.13.2/gas/doc/Makefile.in	Mon Jan 30 13:18:05 2023
+@@ -32,7 +32,7 @@
+ includedir = @includedir@
+ oldincludedir = /usr/include
+ 
+-DESTDIR =
++
+ 
+ pkgdatadir = $(datadir)/@PACKAGE@
+ pkglibdir = $(libdir)/@PACKAGE@
+diff -ur --exclude=*.info /nfs/stock/binutils-2.13.2/gprof/Makefile.in /u/root/src/binutils-2.13.2/gprof/Makefile.in
+--- /nfs/stock/binutils-2.13.2/gprof/Makefile.in	Sat Jul 13 17:14:42 2002
++++ /u/root/src/binutils-2.13.2/gprof/Makefile.in	Mon Jan 30 13:18:06 2023
+@@ -32,7 +32,7 @@
+ includedir = @includedir@
+ oldincludedir = /usr/include
+ 
+-DESTDIR =
++
+ 
+ pkgdatadir = $(datadir)/@PACKAGE@
+ pkglibdir = $(libdir)/@PACKAGE@
+diff -ur --exclude=*.info /nfs/stock/binutils-2.13.2/ld/Makefile.in /u/root/src/binutils-2.13.2/ld/Makefile.in
+--- /nfs/stock/binutils-2.13.2/ld/Makefile.in	Sat Jul 13 17:14:43 2002
++++ /u/root/src/binutils-2.13.2/ld/Makefile.in	Mon Jan 30 13:18:06 2023
+@@ -32,7 +32,7 @@
+ includedir = @includedir@
+ oldincludedir = /usr/include
+ 
+-DESTDIR =
++
+ 
+ pkgdatadir = $(datadir)/@PACKAGE@
+ pkglibdir = $(libdir)/@PACKAGE@
+diff -ur --exclude=*.info /nfs/stock/binutils-2.13.2/ld/ldlex.c /u/root/src/binutils-2.13.2/ld/ldlex.c
 --- /nfs/stock/binutils-2.13.2/ld/ldlex.c	Tue Oct 29 19:54:52 2002
-+++ /u/root/src/binutils-2.13.2/ld/ldlex.c	Sat Jan 28 02:09:49 2023
++++ /u/root/src/binutils-2.13.2/ld/ldlex.c	Mon Jan 30 13:01:29 2023
 @@ -20,7 +20,10 @@
  
  
@@ -23,3 +119,15 @@ diff -ur /nfs/stock/binutils-2.13.2/ld/ldlex.c /u/root/src/binutils-2.13.2/ld/ld
  #include <stdlib.h>
  #endif
  #else
+diff -ur --exclude=*.info /nfs/stock/binutils-2.13.2/opcodes/Makefile.in /u/root/src/binutils-2.13.2/opcodes/Makefile.in
+--- /nfs/stock/binutils-2.13.2/opcodes/Makefile.in	Mon Jul 15 18:04:40 2002
++++ /u/root/src/binutils-2.13.2/opcodes/Makefile.in	Mon Jan 30 13:18:05 2023
+@@ -32,7 +32,7 @@
+ includedir = @includedir@
+ oldincludedir = /usr/include
+ 
+-DESTDIR =
++
+ 
+ pkgdatadir = $(datadir)/@PACKAGE@
+ pkglibdir = $(libdir)/@PACKAGE@

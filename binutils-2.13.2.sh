@@ -17,7 +17,9 @@ export PATH
 
 /usr/local/bin/patch -p4 -i $patches/$pkgname.patch
 
-ENV= SHELL=/archive/bash2 /archive/bash2 ./configure
+pkgprefix=/opt/binutils-2.13.2
+
+ENV= SHELL=/archive/bash2 /archive/bash2 ./configure --prefix=$pkgprefix
 
 # The ranlib stuff is copied from the gdb build, as a workaround for 
 # RANLIB evaluating to @: in some of the subdirectory makefiles
