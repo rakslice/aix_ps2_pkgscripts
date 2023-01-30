@@ -1,0 +1,25 @@
+diff -ur /nfs/stock/tiff-3.9.1/libtiff/tif_getimage.c /u/root/src/tiff-3.9.1/libtiff/tif_getimage.c
+--- /nfs/stock/tiff-3.9.1/libtiff/tif_getimage.c	Sun Dec 21 13:23:41 2008
++++ /u/root/src/tiff-3.9.1/libtiff/tif_getimage.c	Mon Jan 30 06:03:06 2023
+@@ -32,6 +32,9 @@
+ #include "tiffiop.h"
+ #include <stdio.h>
+ 
++#include "memmove.h"
++
++
+ static int gtTileContig(TIFFRGBAImage*, uint32*, uint32, uint32);
+ static int gtTileSeparate(TIFFRGBAImage*, uint32*, uint32, uint32);
+ static int gtStripContig(TIFFRGBAImage*, uint32*, uint32, uint32);
+diff -ur /nfs/stock/tiff-3.9.1/tools/tiffcrop.c /u/root/src/tiff-3.9.1/tools/tiffcrop.c
+--- /nfs/stock/tiff-3.9.1/tools/tiffcrop.c	Thu Aug 20 15:31:00 2009
++++ /u/root/src/tiff-3.9.1/tools/tiffcrop.c	Mon Jan 30 06:21:47 2023
+@@ -1292,6 +1292,8 @@
+ 	}
+ }
+ 
++int optind;
++
+ 
+ /* Fucntions written by Richard Nolde, with exceptions noted. */
+ void  process_command_opts (int argc, char *argv[], char *mp, char *mode, uint32 *dirnum,
