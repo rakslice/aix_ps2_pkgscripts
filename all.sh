@@ -62,4 +62,6 @@ sh freetype.sh
 
 sh binutils-2.13.2.sh
 
-sh imlib2.sh
+sh imlib2-1.4.5.sh
+
+sh eterm.sh

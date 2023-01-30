@@ -1,6 +1,6 @@
 diff -ur /nfs/stock/imlib2-1.4.5/configure /u/root/src/imlib2-1.4.5/configure
 --- /nfs/stock/imlib2-1.4.5/configure	Mon Aug 15 11:31:20 2011
-+++ /u/root/src/imlib2-1.4.5/configure	Sun Jan 29 18:27:35 2023
++++ /u/root/src/imlib2-1.4.5/configure	Sun Jan 29 20:24:52 2023
 @@ -12261,25 +12261,7 @@
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -std=gnu99" >&5
@@ -39,7 +39,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/configure /u/root/src/imlib2-1.4.5/configure
  
 diff -ur /nfs/stock/imlib2-1.4.5/src/bin/imlib2_grab.c /u/root/src/imlib2-1.4.5/src/bin/imlib2_grab.c
 --- /nfs/stock/imlib2-1.4.5/src/bin/imlib2_grab.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/bin/imlib2_grab.c	Sun Jan 29 18:27:35 2023
++++ /u/root/src/imlib2-1.4.5/src/bin/imlib2_grab.c	Sun Jan 29 20:24:52 2023
 @@ -14,6 +14,8 @@
  #include <errno.h>
  #include "Imlib2.h"
@@ -51,7 +51,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/bin/imlib2_grab.c /u/root/src/imlib2-1.4.5/
  Colormap            cm;
 diff -ur /nfs/stock/imlib2-1.4.5/src/bin/imlib2_view.c /u/root/src/imlib2-1.4.5/src/bin/imlib2_view.c
 --- /nfs/stock/imlib2-1.4.5/src/bin/imlib2_view.c	Fri Apr  8 23:18:19 2011
-+++ /u/root/src/imlib2-1.4.5/src/bin/imlib2_view.c	Sun Jan 29 18:27:35 2023
++++ /u/root/src/imlib2-1.4.5/src/bin/imlib2_view.c	Sun Jan 29 20:24:52 2023
 @@ -5,6 +5,7 @@
  #include <X11/extensions/shape.h>
  #include <X11/Xatom.h>
@@ -62,7 +62,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/bin/imlib2_view.c /u/root/src/imlib2-1.4.5/
  #include <stdlib.h>
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/Makefile.in /u/root/src/imlib2-1.4.5/src/lib/Makefile.in
 --- /nfs/stock/imlib2-1.4.5/src/lib/Makefile.in	Mon Aug 15 11:31:19 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/Makefile.in	Sun Jan 29 18:38:21 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/Makefile.in	Sun Jan 29 21:02:33 2023
 @@ -87,6 +87,7 @@
  AM_V_lt = $(am__v_lt_$(V))
  am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -81,13 +81,12 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/Makefile.in /u/root/src/imlib2-1.4.5/sr
  CYGPATH_W = @CYGPATH_W@
  DEFS = @DEFS@
  DEPDIR = @DEPDIR@
-@@ -420,8 +422,12 @@
+@@ -420,8 +422,11 @@
  	  echo "rm -f \"$${dir}/so_locations\""; \
  	  rm -f "$${dir}/so_locations"; \
  	done
 +
-+#static_module_flags=/usr/local/lib/libpng.a
-+static_module_flags=-lpng
++static_module_flags=-lpng -lz -ljpeg
 +
  libImlib2.la: $(libImlib2_la_OBJECTS) $(libImlib2_la_DEPENDENCIES) 
 -	$(AM_V_CCLD)$(libImlib2_la_LINK) -rpath $(libdir) $(libImlib2_la_OBJECTS) $(libImlib2_la_LIBADD) $(LIBS)
@@ -97,7 +96,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/Makefile.in /u/root/src/imlib2-1.4.5/sr
  	-rm -f *.$(OBJEXT)
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/common.h /u/root/src/imlib2-1.4.5/src/lib/common.h
 --- /nfs/stock/imlib2-1.4.5/src/lib/common.h	Fri Apr 15 14:05:28 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/common.h	Sun Jan 29 18:27:35 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/common.h	Sun Jan 29 20:24:52 2023
 @@ -16,6 +16,8 @@
  #include <sys/types.h>
  #endif
@@ -109,7 +108,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/common.h /u/root/src/imlib2-1.4.5/src/l
  #else
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/dynamic_filters.c /u/root/src/imlib2-1.4.5/src/lib/dynamic_filters.c
 --- /nfs/stock/imlib2-1.4.5/src/lib/dynamic_filters.c	Fri Apr  8 23:18:19 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/dynamic_filters.c	Sun Jan 29 18:27:35 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/dynamic_filters.c	Sun Jan 29 20:24:52 2023
 @@ -35,7 +35,11 @@
     MALLOCSHOW;
     ptr = malloc(sizeof(ImlibExternalFilter));
@@ -124,7 +123,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/dynamic_filters.c /u/root/src/imlib2-1.
          FREESHOW;
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/font_load.c /u/root/src/imlib2-1.4.5/src/lib/font_load.c
 --- /nfs/stock/imlib2-1.4.5/src/lib/font_load.c	Fri Apr  8 23:18:19 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/font_load.c	Sun Jan 29 18:27:35 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/font_load.c	Sun Jan 29 20:24:52 2023
 @@ -221,6 +221,7 @@
  int
  imlib_font_insert_into_fallback_chain_imp(ImlibFont * fn, ImlibFont * fallback)
@@ -144,30 +143,60 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/font_load.c /u/root/src/imlib2-1.4.5/sr
     fallback->fallback_prev = fn;
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.c /u/root/src/imlib2-1.4.5/src/lib/image.c
 --- /nfs/stock/imlib2-1.4.5/src/lib/image.c	Fri Apr 15 14:05:28 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/image.c	Sun Jan 29 18:27:35 2023
-@@ -555,6 +555,21 @@
++++ /u/root/src/imlib2-1.4.5/src/lib/image.c	Sun Jan 29 20:45:26 2023
+@@ -555,6 +555,51 @@
  }
  #endif
  
 +#ifdef CONFIG_ENABLE_SHARED_no
++
 +#define define_module_functions(module_name) \
 +  extern char module_ ## module_name ## _load(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity, char immediate_load); \
 +  extern char module_ ## module_name ## _save(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity); \
 +  extern void module_ ## module_name ## _formats(ImlibLoader * l)
 +
++typedef char (*module_save_t)(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity);
 +
-+  #define STATIC_LOADER 1
 +
-+  define_module_functions(png);
-+  #include "../modules/loaders/loader_png.c"
++#define STATIC_LOADER 1
++
++#include "../modules/loaders/loader_zlib.c"
++#undef MODULE
++#include "../modules/loaders/loader_xpm.c"
++#undef MODULE
++#include "../modules/loaders/loader_tga.c"
++#undef MODULE
++#include "../modules/loaders/loader_pnm.c"
++#undef MODULE
++#include "../modules/loaders/loader_png.c"
++#undef MODULE
++#include "../modules/loaders/loader_lbm.c"
++#undef MODULE
++#include "../modules/loaders/loader_jpeg.c"
++#undef MODULE
++#include "../modules/loaders/loader_bz2.c"
++#undef MODULE
++#include "../modules/loaders/loader_bmp.c"
++#undef MODULE
++#include "../modules/loaders/loader_argb.c"
++#undef MODULE
++
++
++#define module_if_block(module_name) \
++   if (!strcasecmp(file, SYS_LOADERS_PATH "/loaders/lib" #module_name ".a")) { \
++   	l->load = &module_ ## module_name ## _load; \
++   	l->save = module_ ## module_name ## _save_val; \
++   	l_formats = &module_ ## module_name ## _formats; \
++   }
 +
 +#endif
++
 +
 +
  /* try dlopen()ing the file if we succeed finish filling out the malloced */
  /* loader struct and return it */
  ImlibLoader        *
-@@ -566,6 +581,7 @@
+@@ -566,6 +611,7 @@
     l = malloc(sizeof(ImlibLoader));
     l->num_formats = 0;
     l->formats = NULL;
@@ -175,18 +204,22 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.c /u/root/src/imlib2-1.4.5/src/li
     l->handle = dlopen(file, RTLD_NOW | RTLD_LOCAL);
     if (!l->handle)
       {
-@@ -575,11 +591,25 @@
+@@ -575,11 +621,29 @@
     l->load = dlsym(l->handle, "load");
     l->save = dlsym(l->handle, "save");
     l_formats = dlsym(l->handle, "formats");
 +#else
-+   fprintf(stderr, "__imlib_ProduceLoader(%s)\n", file);
-+   if (!strcasecmp(file, SYS_LOADERS_PATH "/loaders/libpng.a")) {
-+   	fprintf(stderr, "loaded png\n");
-+   	l->load = &module_png_load;
-+   	l->save = &module_png_save;
-+   	l_formats = &module_png_formats;
-+   } else {
++   module_if_block(zlib)
++   else module_if_block(xpm)
++   else module_if_block(tga)
++   else module_if_block(pnm)
++   else module_if_block(png)
++   else module_if_block(lbm)
++   else module_if_block(jpeg)
++   else module_if_block(bz2)
++   else module_if_block(bmp)
++   else module_if_block(argb)
++   else {
 +	return NULL;
 +   }
 +   l->handle = NULL;
@@ -201,7 +234,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.c /u/root/src/imlib2-1.4.5/src/li
          free(l);
          return NULL;
       }
-@@ -661,7 +691,11 @@
+@@ -661,7 +725,11 @@
  #ifdef __CYGWIN__
                          (!strcasecmp(ext, ".dll")) ||
  #endif
@@ -213,7 +246,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.c /u/root/src/imlib2-1.4.5/src/li
            {
               /* Don't add the same loader multiple times... */
               if (!__imlib_ItemInList(ret, size, list[i]))
-@@ -705,8 +739,10 @@
+@@ -705,8 +773,10 @@
  {
     if (l->file)
        free(l->file);
@@ -226,7 +259,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.c /u/root/src/imlib2-1.4.5/src/li
          int                 i;
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.h /u/root/src/imlib2-1.4.5/src/lib/image.h
 --- /nfs/stock/imlib2-1.4.5/src/lib/image.h	Fri Apr 15 14:05:28 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/image.h	Sun Jan 29 18:27:35 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/image.h	Sun Jan 29 20:24:52 2023
 @@ -8,7 +8,9 @@
  #  define X_DISPLAY_MISSING
  # endif
@@ -239,7 +272,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.h /u/root/src/imlib2-1.4.5/src/li
  # ifndef RTLD_LOCAL
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/script.h /u/root/src/imlib2-1.4.5/src/lib/script.h
 --- /nfs/stock/imlib2-1.4.5/src/lib/script.h	Fri Apr 15 14:05:28 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/script.h	Sun Jan 29 18:27:35 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/script.h	Sun Jan 29 20:24:52 2023
 @@ -1,7 +1,9 @@
  #ifndef _DYN_FUNCTION_H_
  #define _DYN_FUNCTION_H_
@@ -250,54 +283,297 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/script.h /u/root/src/imlib2-1.4.5/src/l
  
  #ifndef BUILD_X11
  # ifndef X_DISPLAY_MISSING
-diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_png.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_png.c
---- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_png.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_png.c	Sun Jan 29 18:27:35 2023
-@@ -13,7 +13,12 @@
- }
+diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_argb.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_argb.c
+--- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_argb.c	Sat Apr  9 00:48:51 2011
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_argb.c	Sun Jan 29 21:00:59 2023
+@@ -7,7 +7,8 @@
+  (((x) & 0xff000000 ) >> 24))
  
  char
 -load(ImlibImage * im, ImlibProgressFunction progress,
-+#ifdef STATIC_LOADER
-+module_png_load
-+#else
-+load
-+#endif
++FUNC(argb, load)
 +(ImlibImage * im, ImlibProgressFunction progress,
       char progress_granularity, char immediate_load)
  {
-    png_uint_32         w32, h32;
-@@ -232,7 +237,12 @@
+    int                 w = 0, h = 0, alpha = 0;
+@@ -105,7 +106,8 @@
  }
  
  char
 -save(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
-+#ifdef STATIC_LOADER
-+module_png_save
-+#else
-+save
-+#endif
++FUNC(argb, save)
 +(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
  {
     FILE               *f;
+    DATA32             *ptr;
+@@ -173,8 +175,11 @@
+    return 1;
+ }
+ 
++SET_SAVE(argb, save);
++
+ void
+-formats(ImlibLoader * l)
++FUNC(argb, formats)
++(ImlibLoader * l)
+ {
+    char               *list_formats[] = { "argb", "arg" };
+ 
+diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_bmp.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_bmp.c
+--- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_bmp.c	Sat Apr  9 00:48:51 2011
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_bmp.c	Sun Jan 29 20:58:54 2023
+@@ -103,7 +103,8 @@
+ }
+ 
+ char
+-load(ImlibImage * im, ImlibProgressFunction progress,
++FUNC(bmp, load)
++(ImlibImage * im, ImlibProgressFunction progress,
+      char progress_granularity, char immediate_load)
+ {
+    FILE               *f;
+@@ -847,7 +848,8 @@
+ }
+ 
+ char
+-save(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
++FUNC(bmp, save)
++(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
+ {
+    FILE               *f;
+    Imlib_Color         pixel_color;
+@@ -899,8 +901,11 @@
+    return 1;
+ }
+ 
++SET_SAVE(bmp, save);
++
+ void
+-formats(ImlibLoader * l)
++FUNC(bmp, formats)
++(ImlibLoader * l)
+ {
+    char               *list_formats[] = { "bmp" };
+ 
+diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_bz2.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_bz2.c
+--- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_bz2.c	Sat Apr  9 00:48:51 2011
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_bz2.c	Sun Jan 29 20:55:40 2023
+@@ -9,7 +9,7 @@
+ #define INBUF_SIZE 1024
+ 
+ static int
+-uncompress_file(FILE * fp, int dest)
++bz2_uncompress_file(FILE * fp, int dest)
+ {
+    BZFILE             *bf;
+    DATA8               outbuf[OUTBUF_SIZE];
+@@ -45,7 +45,8 @@
+ }
+ 
+ char
+-load(ImlibImage * im, ImlibProgressFunction progress,
++FUNC(bz2,load)
++(ImlibImage * im, ImlibProgressFunction progress,
+      char progress_granularity, char immediate_load)
+ {
+    ImlibLoader        *loader;
+@@ -86,7 +87,7 @@
+         return 0;
+      }
+ 
+-   res = uncompress_file(fp, dest);
++   res = bz2_uncompress_file(fp, dest);
+    fclose(fp);
+    close(dest);
+ 
+@@ -116,8 +117,11 @@
+    return 1;
+ }
+ 
++NO_SAVE(bz2);
++
+ void
+-formats(ImlibLoader * l)
++FUNC(bz2,formats)
++(ImlibLoader * l)
+ {
+    /* this is the only bit you have to change... */
+    char               *list_formats[] = { "bz2" };
+diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_common.h /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_common.h
+--- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_common.h	Tue Jul 28 10:35:59 2009
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_common.h	Sun Jan 29 20:51:55 2023
+@@ -11,4 +11,21 @@
+                          char progress_granularity);
+ EAPI void           formats(ImlibLoader * l);
+ 
++#ifdef STATIC_LOADER
++
++#define FUNC(module_name, func_name) module_ ## module_name ## _ ## func_name
++
++#define SET_SAVE(module_name, func_name) module_save_t module_ ## module_name ## _save_val = &FUNC(module_name, func_name)
++#define NO_SAVE(module_name) module_save_t module_ ## module_name ## _save_val = NULL
++
++#else
++
++#define FUNC(module_name, func_name) func_name
++
++#define SET_SAVE(module_name, func_name)
++#define NO_SAVE(module_name)
++
++#endif
++
++
+ #endif /* __LOADER_COMMON_H */
+diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_jpeg.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_jpeg.c
+--- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_jpeg.c	Fri Apr 15 14:05:28 2011
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_jpeg.c	Sun Jan 29 20:58:17 2023
+@@ -1,3 +1,5 @@
++#define MODULE jpeg
++
+ #include "loader_common.h"
+ #include <jpeglib.h>
+ #include <setjmp.h>
+@@ -43,7 +45,8 @@
+ }
+ 
+ char
+-load(ImlibImage * im, ImlibProgressFunction progress,
++FUNC(jpeg, load)
++(ImlibImage * im, ImlibProgressFunction progress,
+      char progress_granularity, char immediate_load)
+ {
+    int                 w, h;
+@@ -220,7 +223,8 @@
+ }
+ 
+ char
+-save(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
++FUNC(jpeg, save)
++(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
+ {
+    struct jpeg_compress_struct cinfo;
+    struct ImLib_JPEG_error_mgr jerr;
+@@ -344,8 +348,11 @@
+    progress = NULL;
+ }
+ 
++SET_SAVE(jpeg, save);
++
+ void
+-formats(ImlibLoader * l)
++FUNC(jpeg, formats)
++(ImlibLoader * l)
+ {
+    char               *list_formats[] = { "jpg", "jpeg", "jfif", "jfi" };
+ 
+diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_lbm.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_lbm.c
+--- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_lbm.c	Sat Apr  9 00:48:51 2011
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_lbm.c	Sun Jan 29 20:59:53 2023
+@@ -449,7 +449,8 @@
+  * Imlib2 doesn't support reading comment chunks like ANNO.
+  *------------------------------------------------------------------------------*/
+ char
+-load(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity,
++FUNC(lbm, load)
++(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity,
+      char immediate_load)
+ {
+    char               *env;
+@@ -630,12 +631,15 @@
+ }
+ #endif
+ 
++NO_SAVE(lbm);
++
+ /*------------------------------------------------------------------------------
+  * Identifies the file extensions this loader handles. Standard code from other
+  * loaders.
+  *------------------------------------------------------------------------------*/
+ void
+-formats(ImlibLoader * l)
++FUNC(lbm, formats)
++(ImlibLoader * l)
+ {
+    char               *list_formats[] = { "iff", "ilbm", "lbm" };
+    int                 i;
+diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_png.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_png.c
+--- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_png.c	Sat Apr  9 00:48:51 2011
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_png.c	Sun Jan 29 20:51:30 2023
+@@ -13,7 +13,7 @@
+ }
+ 
+ char
+-load(ImlibImage * im, ImlibProgressFunction progress,
++FUNC(png, load)(ImlibImage * im, ImlibProgressFunction progress,
+      char progress_granularity, char immediate_load)
+ {
+    png_uint_32         w32, h32;
+@@ -232,7 +232,7 @@
+ }
+ 
+ char
+-save(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
++FUNC(png, save)(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
+ {
+    FILE               *f;
     png_structp         png_ptr;
-@@ -413,7 +423,12 @@
+@@ -405,6 +405,8 @@
+    return 1;
+ }
+ 
++SET_SAVE(png, save);
++
+ /* fills the ImlibLoader struct with a string array of format file */
+ /* extensions this loader can load. eg: */
+ /* loader->formats = { "jpeg", "jpg"}; */
+@@ -413,7 +415,7 @@
  /* loader->formats = { "gif", "png", "jpeg", "jpg"} */
  /* if it can load those formats. */
  void
 -formats(ImlibLoader * l)
-+#ifdef STATIC_LOADER
-+module_png_formats
-+#else
-+formats
-+#endif
-+(ImlibLoader * l)
++FUNC(png, formats) (ImlibLoader * l)
  {
     /* this is the only bit you have to change... */
     char               *list_formats[] = { "png" };
+diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_pnm.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_pnm.c
+--- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_pnm.c	Sat Apr  9 00:48:51 2011
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_pnm.c	Sun Jan 29 20:57:29 2023
+@@ -27,7 +27,8 @@
+ }
+ 
+ char
+-load(ImlibImage * im, ImlibProgressFunction progress,
++FUNC(pnm, load)
++(ImlibImage * im, ImlibProgressFunction progress,
+      char progress_granularity, char immediate_load)
+ {
+    int                 rc;
+@@ -542,7 +543,8 @@
+ }
+ 
+ char
+-save(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
++FUNC(pnm, save)
++(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
+ {
+    int                 rc;
+    FILE               *f;
+@@ -629,8 +631,11 @@
+    goto quit;
+ }
+ 
++SET_SAVE(pnm, save);
++
+ void
+-formats(ImlibLoader * l)
++FUNC(pnm, formats)
++(ImlibLoader * l)
+ {
+    char               *list_formats[] = { "pnm", "ppm", "pgm", "pbm", "pam" };
+ 
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_tga.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_tga.c
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_tga.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_tga.c	Sun Jan 29 18:27:35 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_tga.c	Sun Jan 29 20:56:52 2023
 @@ -11,7 +11,9 @@
   */
  #include "loader_common.h"
@@ -308,7 +584,36 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_tga.c /u/root/src/im
  #include "colormod.h"
  #include "blend.h"
  
-@@ -218,12 +220,15 @@
+@@ -62,7 +64,8 @@
+  */
+ 
+ char
+-save(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
++FUNC(tga, save)
++(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity)
+ {
+    FILE               *f;
+    DATA32             *dataptr;
+@@ -177,6 +180,8 @@
+    return 1;
+ }
+ 
++SET_SAVE(tga, save);
++
+ /* Load up a TGA file 
+  * 
+  * As written this function only recognizes the following types of Targas: 
+@@ -188,7 +193,8 @@
+  */
+ 
+ char
+-load(ImlibImage * im, ImlibProgressFunction progress,
++FUNC(tga, load)
++(ImlibImage * im, ImlibProgressFunction progress,
+      char progress_granularity, char immediate_load)
+ {
+    int                 fd;
+@@ -218,12 +224,15 @@
          close(fd);
          return 0;
       }
@@ -324,3 +629,89 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_tga.c /u/root/src/im
  
     filedata = seg;
     header = (tga_header *) filedata;
+@@ -513,7 +522,8 @@
+ }
+ 
+ void
+-formats(ImlibLoader * l)
++FUNC(tga, formats)
++(ImlibLoader * l)
+ {
+    char               *list_formats[] = { "tga" };
+ 
+diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_xpm.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_xpm.c
+--- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_xpm.c	Fri Apr  8 23:18:33 2011
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_xpm.c	Sun Jan 29 20:53:14 2023
+@@ -91,7 +91,8 @@
+ }
+ 
+ char
+-load(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity,
++FUNC(xpm,load)
++(ImlibImage * im, ImlibProgressFunction progress, char progress_granularity,
+      char immediate_load)
+ {
+    DATA32             *ptr, *end;
+@@ -668,6 +669,8 @@
+    return 1;
+ }
+ 
++NO_SAVE(xpm);
++
+ /* fills the ImlibLoader struct with a strign array of format file */
+ /* extensions this loader can load. eg: */
+ /* loader->formats = { "jpeg", "jpg"}; */
+@@ -676,7 +679,8 @@
+ /* loader->formats = { "gif", "png", "jpeg", "jpg"} */
+ /* if it can load those formats. */
+ void
+-formats(ImlibLoader * l)
++FUNC(xpm, formats)
++(ImlibLoader * l)
+ {
+    /* this is the only bit you have to change... */
+    char               *list_formats[] = { "xpm" };
+diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_zlib.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_zlib.c
+--- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_zlib.c	Sat Apr  9 00:48:51 2011
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_zlib.c	Sun Jan 29 20:54:42 2023
+@@ -8,7 +8,7 @@
+ #define OUTBUF_SIZE 16484
+ 
+ static int
+-uncompress_file(int src, int dest)
++zlib_uncompress_file(int src, int dest)
+ {
+    gzFile              gf;
+    DATA8               outbuf[OUTBUF_SIZE];
+@@ -39,7 +39,8 @@
+ }
+ 
+ char
+-load(ImlibImage * im, ImlibProgressFunction progress,
++FUNC(zlib, load)
++(ImlibImage * im, ImlibProgressFunction progress,
+      char progress_granularity, char immediate_load)
+ {
+    ImlibLoader        *loader;
+@@ -83,7 +84,7 @@
+         return 0;
+      }
+ 
+-   res = uncompress_file(src, dest);
++   res = zlib_uncompress_file(src, dest);
+    close(src);
+    close(dest);
+ 
+@@ -113,8 +114,11 @@
+    return 1;
+ }
+ 
++NO_SAVE(zlib);
++
+ void
+-formats(ImlibLoader * l)
++FUNC(zlib, formats)
++(ImlibLoader * l)
+ {
+    /* this is the only bit you have to change... */
+    char               *list_formats[] = { "gz" };

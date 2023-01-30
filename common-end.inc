@@ -25,6 +25,8 @@ else
 fi
 cd ..
 
-rm -rf "$srcdirfull"
+if [ -z "$leave_source" ]; then
+  rm -rf "$srcdirfull"
+fi
 rm -rf "$pkgdir"
 
