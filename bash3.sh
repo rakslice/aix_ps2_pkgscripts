@@ -14,7 +14,7 @@ export PATH
 
 . common-start.inc
 
-/usr/local/bin/patch -p2 -i $patches/bash-3.2.57.old.patch
+/usr/local/bin/patch -p4 -i $patches/bash-3.2.57.patch
 
 cp $pkgscripts/codefragments/alttio.h .
 

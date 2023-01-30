@@ -1,0 +1,538 @@
+diff -ur --exclude y.tab.c --exclude y.tab.h /nfs/stock/bash-3.2.57/builtins/read.def /u/root/src/bash-3.2.57/builtins/read.def
+--- /nfs/stock/bash-3.2.57/builtins/read.def	Wed Mar 17 06:01:23 2010
++++ /u/root/src/bash-3.2.57/builtins/read.def	Mon Jan 30 04:48:30 2023
+@@ -127,14 +127,14 @@
+      WORD_LIST *list;
+ {
+   register char *varname;
+-  int size, i, nr, pass_next, saw_escape, eof, opt, retval, code, print_ps2;
++  int size, i, nr, pass_next, saw_escape, eof, opt, retval, code, print_pstwo;
+   int input_is_tty, input_is_pipe, unbuffered_read, skip_ctlesc, skip_ctlnul;
+   int raw, edit, nchars, silent, have_timeout, fd;
+   unsigned int tmout;
+   intmax_t intval;
+   char c;
+   char *input_string, *orig_input_string, *ifs_chars, *prompt, *arrayname;
+-  char *e, *t, *t1, *ps2, *tofree;
++  char *e, *t, *tone, *pstwo, *tofree;
+   struct stat tsb;
+   SHELL_VAR *var;
+ #if defined (ARRAY_VARS)
+@@ -148,7 +148,7 @@
+   USE_VAR(size);
+   USE_VAR(i);
+   USE_VAR(pass_next);
+-  USE_VAR(print_ps2);
++  USE_VAR(print_pstwo);
+   USE_VAR(saw_escape);
+   USE_VAR(input_is_pipe);
+ /*  USE_VAR(raw); */
+@@ -164,7 +164,7 @@
+   USE_VAR(rlind);
+ #endif
+   USE_VAR(list);
+-  USE_VAR(ps2);
++  USE_VAR(pstwo);
+ 
+   i = 0;		/* Index into the string that we are reading. */
+   raw = edit = 0;	/* Not reading raw input by default. */
+@@ -390,8 +390,8 @@
+   setmode (0, O_TEXT);
+ #endif
+ 
+-  ps2 = 0;
+-  for (print_ps2 = eof = retval = 0;;)
++  pstwo = 0;
++  for (print_pstwo = eof = retval = 0;;)
+     {
+ #if defined (READLINE)
+       if (edit)
+@@ -417,13 +417,13 @@
+ 	{
+ #endif
+ 
+-      if (print_ps2)
++      if (print_pstwo)
+ 	{
+-	  if (ps2 == 0)
+-	    ps2 = get_string_value ("PS2");
+-	  fprintf (stderr, "%s", ps2 ? ps2 : "");
++	  if (pstwo == 0)
++	    pstwo = get_string_value ("PS2");
++	  fprintf (stderr, "%s", pstwo ? ps2 : "");
+ 	  fflush (stderr);
+-	  print_ps2 = 0;
++	  print_pstwo = 0;
+ 	}
+ 
+       if (unbuffered_read)
+@@ -457,7 +457,7 @@
+ 	    {
+ 	      i--;		/* back up over the CTLESC */
+ 	      if (interactive && input_is_tty && raw == 0)
+-		print_ps2 = 1;
++		print_pstwo = 1;
+ 	    }
+ 	  else
+ 	    goto add_char;
+@@ -632,9 +632,9 @@
+ 	     somewhere while reading the string. */
+ 	  if (t && saw_escape)
+ 	    {
+-	      t1 = dequote_string (t);
+-	      var = bind_read_variable (varname, t1);
+-	      xfree (t1);
++	      tone = dequote_string (t);
++	      var = bind_read_variable (varname, tone);
++	      xfree (tone);
+ 	    }
+ 	  else
+ 	    var = bind_read_variable (varname, t);
+@@ -679,12 +679,12 @@
+   tofree = NULL;
+   if (*input_string)
+     {
+-      t1 = input_string;
++      tone = input_string;
+       t = get_word_from_string (&input_string, ifs_chars, &e);
+       if (*input_string == 0)
+ 	tofree = input_string = t;
+       else
+-	input_string = strip_trailing_ifs_whitespace (t1, ifs_chars, saw_escape);
++	input_string = strip_trailing_ifs_whitespace (tone, ifs_chars, saw_escape);
+     }
+ #endif
+ 
+diff -ur --exclude y.tab.c --exclude y.tab.h /nfs/stock/bash-3.2.57/config-bot.h /u/root/src/bash-3.2.57/config-bot.h
+--- /nfs/stock/bash-3.2.57/config-bot.h	Tue Apr  3 12:47:13 2007
++++ /u/root/src/bash-3.2.57/config-bot.h	Mon Jan 30 04:48:30 2023
+@@ -193,3 +193,5 @@
+ 
+ /* If you don't want bash to provide a default mail file to check. */
+ /* #undef DEFAULT_MAIL_DIRECTORY */
++
++#include "alttio.h"
+diff -ur --exclude y.tab.c --exclude y.tab.h /nfs/stock/bash-3.2.57/configure /u/root/src/bash-3.2.57/configure
+--- /nfs/stock/bash-3.2.57/configure	Fri Dec 14 18:12:29 2007
++++ /u/root/src/bash-3.2.57/configure	Mon Jan 30 04:48:31 2023
+@@ -4216,7 +4216,7 @@
+ _ACEOF
+ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+   $EGREP "$ac_pattern" >/dev/null 2>&1; then
+-  ac_cv_prog_gcc_traditional=yes
++  ac_cv_prog_gcc_traditional=no
+ else
+   ac_cv_prog_gcc_traditional=no
+ fi
+@@ -8260,7 +8260,7 @@
+ 
+ 
+ for ac_func in feof_unlocked fgets_unlocked getc_unlocked getcwd getegid \
+-geteuid getgid getuid mempcpy munmap putenv setenv setlocale stpcpy \
++geteuid getgid getuid mempcpy munmap putenv setenv stpcpy \
+ strcasecmp strdup strtoul tsearch __argz_count __argz_stringify __argz_next \
+ __fsetlocking
+ do
+@@ -12385,7 +12385,7 @@
+ for ac_func in bcopy bzero confstr fnmatch \
+ 		getaddrinfo gethostbyname getservbyname getservent inet_aton \
+ 		memmove pathconf putenv raise regcomp regexec \
+-		setenv setlinebuf setlocale setvbuf siginterrupt strchr \
++		setenv setlinebuf setvbuf siginterrupt strchr \
+ 		sysconf tcgetattr times ttyname tzset unsetenv
+ do
+ as_ac_var=`echo "ac_cv_func_$ac_func" | $as_tr_sh`
+diff -ur --exclude y.tab.c --exclude y.tab.h /nfs/stock/bash-3.2.57/lib/readline/mbutil.c /u/root/src/bash-3.2.57/lib/readline/mbutil.c
+--- /nfs/stock/bash-3.2.57/lib/readline/mbutil.c	Mon Jul 27 14:09:56 2009
++++ /u/root/src/bash-3.2.57/lib/readline/mbutil.c	Mon Jan 30 04:48:31 2023
+@@ -46,9 +46,9 @@
+ #include "rldefs.h"
+ #include "rlmbutil.h"
+ 
+-#if defined (TIOCSTAT_IN_SYS_IOCTL)
++#if defined (ALT_TIOCSTAT_IN_SYS_IOCTL)
+ #  include <sys/ioctl.h>
+-#endif /* TIOCSTAT_IN_SYS_IOCTL */
++#endif /* ALT_TIOCSTAT_IN_SYS_IOCTL */
+ 
+ /* Some standard library routines. */
+ #include "readline.h"
+diff -ur --exclude y.tab.c --exclude y.tab.h /nfs/stock/bash-3.2.57/lib/readline/rltty.c /u/root/src/bash-3.2.57/lib/readline/rltty.c
+--- /nfs/stock/bash-3.2.57/lib/readline/rltty.c	Mon Dec 26 14:21:50 2005
++++ /u/root/src/bash-3.2.57/lib/readline/rltty.c	Mon Jan 30 04:48:31 2023
+@@ -144,12 +144,12 @@
+ set_winsize (tty)
+      int tty;
+ {
+-#if defined (TIOCGWINSZ)
++#if defined (ALT_TIOCGWINSZ)
+   struct winsize w;
+ 
+-  if (ioctl (tty, TIOCGWINSZ, &w) == 0)
+-      (void) ioctl (tty, TIOCSWINSZ, &w);
+-#endif /* TIOCGWINSZ */
++  if (ioctl (tty, ALT_TIOCGWINSZ, &w) == 0)
++      (void) ioctl (tty, ALT_TIOCSWINSZ, &w);
++#endif /* ALT_TIOCGWINSZ */
+ }
+ 
+ #if defined (NO_TTY_DRIVER)
+@@ -167,10 +167,10 @@
+ struct bsdtty {
+   struct sgttyb sgttyb;	/* Basic BSD tty driver information. */
+   int lflag;		/* Local mode flags, like LPASS8. */
+-#if defined (TIOCGETC)
++#if defined (ALT_TIOCGETC)
+   struct tchars tchars;	/* Terminal special characters, including ^S and ^Q. */
+ #endif
+-#if defined (TIOCGLTC)
++#if defined (ALT_TIOCGLTC)
+   struct ltchars ltchars; /* 4.2 BSD editing characters */
+ #endif
+   int flags;		/* Bitmap saying which parts of the struct are valid. */
+@@ -236,22 +236,22 @@
+   tiop->flags = tiop->lflag = 0;
+ 
+   errno = 0;
+-  if (ioctl (tty, TIOCGETP, &(tiop->sgttyb)) < 0)
++  if (ioctl (tty, ALT_TIOCGETP, &(tiop->sgttyb)) < 0)
+     return -1;
+   tiop->flags |= SGTTY_SET;
+ 
+-#if defined (TIOCLGET)
+-  if (ioctl (tty, TIOCLGET, &(tiop->lflag)) == 0)
++#if defined (ALT_TIOCLGET)
++  if (ioctl (tty, ALT_TIOCLGET, &(tiop->lflag)) == 0)
+     tiop->flags |= LFLAG_SET;
+ #endif
+ 
+-#if defined (TIOCGETC)
+-  if (ioctl (tty, TIOCGETC, &(tiop->tchars)) == 0)
++#if defined (ALT_TIOCGETC)
++  if (ioctl (tty, ALT_TIOCGETC, &(tiop->tchars)) == 0)
+     tiop->flags |= TCHARS_SET;
+ #endif
+ 
+-#if defined (TIOCGLTC)
+-  if (ioctl (tty, TIOCGLTC, &(tiop->ltchars)) == 0)
++#if defined (ALT_TIOCGLTC)
++  if (ioctl (tty, ALT_TIOCGLTC, &(tiop->ltchars)) == 0)
+     tiop->flags |= LTCHARS_SET;
+ #endif
+ 
+@@ -265,31 +265,31 @@
+ {
+   if (tiop->flags & SGTTY_SET)
+     {
+-      ioctl (tty, TIOCSETN, &(tiop->sgttyb));
++      ioctl (tty, ALT_TIOCSETN, &(tiop->sgttyb));
+       tiop->flags &= ~SGTTY_SET;
+     }
+   readline_echoing_p = 1;
+ 
+-#if defined (TIOCLSET)
++#if defined (ALT_TIOCLSET)
+   if (tiop->flags & LFLAG_SET)
+     {
+-      ioctl (tty, TIOCLSET, &(tiop->lflag));
++      ioctl (tty, ALT_TIOCLSET, &(tiop->lflag));
+       tiop->flags &= ~LFLAG_SET;
+     }
+ #endif
+ 
+-#if defined (TIOCSETC)
++#if defined (ALT_TIOCSETC)
+   if (tiop->flags & TCHARS_SET)
+     {
+-      ioctl (tty, TIOCSETC, &(tiop->tchars));
++      ioctl (tty, ALT_TIOCSETC, &(tiop->tchars));
+       tiop->flags &= ~TCHARS_SET;
+     }
+ #endif
+ 
+-#if defined (TIOCSLTC)
++#if defined (ALT_TIOCSLTC)
+   if (tiop->flags & LTCHARS_SET)
+     {
+-      ioctl (tty, TIOCSLTC, &(tiop->ltchars));
++      ioctl (tty, ALT_TIOCSLTC, &(tiop->ltchars));
+       tiop->flags &= ~LTCHARS_SET;
+     }
+ #endif
+@@ -308,10 +308,10 @@
+      our settings. */
+   tiop->sgttyb = oldtio.sgttyb;
+   tiop->lflag = oldtio.lflag;
+-#if defined (TIOCGETC)
++#if defined (ALT_TIOCGETC)
+   tiop->tchars = oldtio.tchars;
+ #endif
+-#if defined (TIOCGLTC)
++#if defined (ALT_TIOCGLTC)
+   tiop->ltchars = oldtio.ltchars;
+ #endif
+   tiop->flags = oldtio.flags;
+@@ -333,14 +333,14 @@
+       tiop->sgttyb.sg_flags |= ANYP;
+ 
+       /* Hack on local mode flags if we can. */
+-#if defined (TIOCLGET)
++#if defined (ALT_TIOCLGET)
+ #  if defined (LPASS8)
+       tiop->lflag |= LPASS8;
+ #  endif /* LPASS8 */
+-#endif /* TIOCLGET */
++#endif /* ALT_TIOCLGET */
+     }
+ 
+-#if defined (TIOCGETC)
++#if defined (ALT_TIOCGETC)
+ #  if defined (USE_XON_XOFF)
+   /* Get rid of terminal output start and stop characters. */
+   tiop->tchars.t_stopc = -1; /* C-s */
+@@ -360,13 +360,13 @@
+   tiop->tchars.t_quitc = -1; /* C-\ */
+   tiop->tchars.t_intrc = -1; /* C-c */
+ #  endif /* NO_KILL_INTR */
+-#endif /* TIOCGETC */
++#endif /* ALT_TIOCGETC */
+ 
+-#if defined (TIOCGLTC)
++#if defined (ALT_TIOCGLTC)
+   /* Make the interrupt keys go away.  Just enough to make people happy. */
+   tiop->ltchars.t_dsuspc = -1;	/* C-y */
+   tiop->ltchars.t_lnextc = -1;	/* C-v */
+-#endif /* TIOCGLTC */
++#endif /* ALT_TIOCGLTC */
+ }
+ 
+ #else  /* !defined (NEW_TTY_DRIVER) */
+@@ -468,6 +468,8 @@
+ }
+ #endif
+ 
++#define   ONLCR   0000004
++
+ #if defined (_AIX)
+ void
+ setopost(tp)
+@@ -772,14 +774,14 @@
+ #else /* !__MING32__ */
+ 
+   int fildes = fileno (rl_outstream);
+-#if defined (TIOCSTART)
++#if defined (ALT_TIOCSTART)
+ #if defined (apollo)
+-  ioctl (&fildes, TIOCSTART, 0);
++  ioctl (&fildes, ALT_TIOCSTART, 0);
+ #else
+-  ioctl (fildes, TIOCSTART, 0);
++  ioctl (fildes, ALT_TIOCSTART, 0);
+ #endif /* apollo */
+ 
+-#else /* !TIOCSTART */
++#else /* !ALT_TIOCSTART */
+ #  if defined (TERMIOS_TTY_DRIVER)
+ #    if defined (__ksr1__)
+   if (ksrflow)
+@@ -795,7 +797,7 @@
+   ioctl (fildes, TCXONC, TCOON);
+ #    endif /* TCXONC */
+ #  endif /* !TERMIOS_TTY_DRIVER */
+-#endif /* !TIOCSTART */
++#endif /* !ALT_TIOCSTART */
+ 
+   return 0;
+ #endif /* !__MINGW32__ */
+@@ -811,13 +813,13 @@
+ 
+   int fildes = fileno (rl_instream);
+ 
+-#if defined (TIOCSTOP)
++#if defined (ALT_TIOCSTOP)
+ # if defined (apollo)
+-  ioctl (&fildes, TIOCSTOP, 0);
++  ioctl (&fildes, ALT_TIOCSTOP, 0);
+ # else
+-  ioctl (fildes, TIOCSTOP, 0);
++  ioctl (fildes, ALT_TIOCSTOP, 0);
+ # endif /* apollo */
+-#else /* !TIOCSTOP */
++#else /* !ALT_TIOCSTOP */
+ # if defined (TERMIOS_TTY_DRIVER)
+ #  if defined (__ksr1__)
+   ksrflow = 1;
+@@ -828,7 +830,7 @@
+   ioctl (fildes, TCXONC, TCOON);
+ #   endif /* TCXONC */
+ # endif /* !TERMIOS_TTY_DRIVER */
+-#endif /* !TIOCSTOP */
++#endif /* !ALT_TIOCSTOP */
+ 
+   return 0;
+ #endif /* !__MINGW32__ */
+@@ -876,13 +878,13 @@
+       SET_SPECIAL (ttybuff.sgttyb.sg_kill, rl_unix_line_discard);
+     }
+ 
+-#  if defined (TIOCGLTC)
++#  if defined (ALT_TIOCGLTC)
+   if (ttybuff.flags & LTCHARS_SET)
+     {
+       SET_SPECIAL (ttybuff.ltchars.t_werasc, rl_unix_word_rubout);
+       SET_SPECIAL (ttybuff.ltchars.t_lnextc, rl_quoted_insert);
+     }
+-#  endif /* TIOCGLTC */
++#  endif /* ALT_TIOCGLTC */
+ }
+ 
+ #else /* !NEW_TTY_DRIVER */
+diff -ur --exclude y.tab.c --exclude y.tab.h /nfs/stock/bash-3.2.57/lib/readline/rlwinsize.h /u/root/src/bash-3.2.57/lib/readline/rlwinsize.h
+--- /nfs/stock/bash-3.2.57/lib/readline/rlwinsize.h	Thu Aug  5 04:13:02 1999
++++ /u/root/src/bash-3.2.57/lib/readline/rlwinsize.h	Mon Jan 30 04:48:31 2023
+@@ -1,5 +1,5 @@
+ /* rlwinsize.h -- an attempt to isolate some of the system-specific defines
+-   for `struct winsize' and TIOCGWINSZ. */
++   for `struct winsize' and ALT_TIOCGWINSZ. */
+ 
+ /* Copyright (C) 1997 Free Software Foundation, Inc.
+ 
+@@ -31,9 +31,9 @@
+ 
+ /* Try to find the definitions of `struct winsize' and TIOGCWINSZ */
+ 
+-#if defined (GWINSZ_IN_SYS_IOCTL) && !defined (TIOCGWINSZ)
++#if defined (GWINSZ_IN_SYS_IOCTL) && !defined (ALT_TIOCGWINSZ)
+ #  include <sys/ioctl.h>
+-#endif /* GWINSZ_IN_SYS_IOCTL && !TIOCGWINSZ */
++#endif /* GWINSZ_IN_SYS_IOCTL && !ALT_TIOCGWINSZ */
+ 
+ #if defined (STRUCT_WINSIZE_IN_TERMIOS) && !defined (STRUCT_WINSIZE_IN_SYS_IOCTL)
+ #  include <termios.h>
+diff -ur --exclude y.tab.c --exclude y.tab.h /nfs/stock/bash-3.2.57/lib/readline/terminal.c /u/root/src/bash-3.2.57/lib/readline/terminal.c
+--- /nfs/stock/bash-3.2.57/lib/readline/terminal.c	Thu Sep 28 06:11:10 2006
++++ /u/root/src/bash-3.2.57/lib/readline/terminal.c	Mon Jan 30 04:48:31 2023
+@@ -51,9 +51,9 @@
+ /* System-specific feature definitions and include files. */
+ #include "rldefs.h"
+ 
+-#if defined (GWINSZ_IN_SYS_IOCTL) && !defined (TIOCGWINSZ)
++#if defined (GWINSZ_IN_SYS_IOCTL) && !defined (ALT_TIOCGWINSZ)
+ #  include <sys/ioctl.h>
+-#endif /* GWINSZ_IN_SYS_IOCTL && !TIOCGWINSZ */
++#endif /* GWINSZ_IN_SYS_IOCTL && !ALT_TIOCGWINSZ */
+ 
+ #include "rltty.h"
+ #include "tcap.h"
+@@ -225,19 +225,19 @@
+      int tty, ignore_env;
+ {
+   char *ss;
+-#if defined (TIOCGWINSZ)
++#if defined (ALT_TIOCGWINSZ)
+   struct winsize window_size;
+-#endif /* TIOCGWINSZ */
++#endif /* ALT_TIOCGWINSZ */
+   int wr, wc;
+ 
+   wr = wc = -1;
+-#if defined (TIOCGWINSZ)
+-  if (ioctl (tty, TIOCGWINSZ, &window_size) == 0)
++#if defined (ALT_TIOCGWINSZ)
++  if (ioctl (tty, ALT_TIOCGWINSZ, &window_size) == 0)
+     {
+       wc = (int) window_size.ws_col;
+       wr = (int) window_size.ws_row;
+     }
+-#endif /* TIOCGWINSZ */
++#endif /* ALT_TIOCGWINSZ */
+ 
+ #if defined (__EMX__)
+   _emx_get_screensize (&wc, &wr);
+diff -ur --exclude y.tab.c --exclude y.tab.h /nfs/stock/bash-3.2.57/lib/sh/shtty.c /u/root/src/bash-3.2.57/lib/sh/shtty.c
+--- /nfs/stock/bash-3.2.57/lib/sh/shtty.c	Wed Mar  1 13:02:06 2000
++++ /u/root/src/bash-3.2.57/lib/sh/shtty.c	Mon Jan 30 04:48:31 2023
+@@ -44,7 +44,7 @@
+ #  ifdef TERMIO_TTY_DRIVER
+   return ioctl(fd, TCGETA, ttp);
+ #  else
+-  return ioctl(fd, TIOCGETP, ttp);
++  return ioctl(fd, ALT_TIOCGETP, ttp);
+ #  endif
+ #endif
+ }
+@@ -60,7 +60,7 @@
+ #  ifdef TERMIO_TTY_DRIVER
+   return ioctl(fd, TCSETAW, ttp);
+ #  else
+-  return ioctl(fd, TIOCSETN, ttp);
++  return ioctl(fd, ALT_TIOCSETN, ttp);
+ #  endif
+ #endif
+ }
+diff -ur --exclude y.tab.c --exclude y.tab.h /nfs/stock/bash-3.2.57/lib/sh/winsize.c /u/root/src/bash-3.2.57/lib/sh/winsize.c
+--- /nfs/stock/bash-3.2.57/lib/sh/winsize.c	Thu Jul 27 19:57:45 2006
++++ /u/root/src/bash-3.2.57/lib/sh/winsize.c	Mon Jan 30 04:48:31 2023
+@@ -33,16 +33,18 @@
+ #if !defined (STRUCT_WINSIZE_IN_SYS_IOCTL)
+ /* For struct winsize on SCO */
+ /*   sys/ptem.h has winsize but needs mblk_t from sys/stream.h */
+-#  if defined (HAVE_SYS_PTEM_H) && defined (TIOCGWINSZ) && defined (SIGWINCH)
++#  if defined (HAVE_SYS_PTEM_H) && defined (ALT_TIOCGWINSZ) && defined (SIGWINCH)
+ #    if defined (HAVE_SYS_STREAM_H)
+ #      include <sys/stream.h>
+ #    endif
+ #    include <sys/ptem.h>
+-#  endif /* HAVE_SYS_PTEM_H && TIOCGWINSZ && SIGWINCH */
++#  endif /* HAVE_SYS_PTEM_H && ALT_TIOCGWINSZ && SIGWINCH */
+ #endif /* !STRUCT_WINSIZE_IN_SYS_IOCTL */
+ 
+ #include <stdio.h>
+ 
++#include "shtty.h"
++
+ /* Return the fd from which we are actually getting input. */
+ #define input_tty() (shell_tty != -1) ? shell_tty : fileno (stderr)
+ 
+@@ -52,6 +54,8 @@
+ 
+ extern int shell_tty;
+ 
++static TTYSTRUCT shell_tty_info;
++
+ #if defined (READLINE)
+ extern void rl_set_screen_size __P((int, int));
+ #endif
+@@ -62,14 +66,17 @@
+      int from_sig;
+      int *rp, *cp;
+ {
+-#if defined (TIOCGWINSZ)
++#if defined (ALT_TIOCGWINSZ)
+   struct winsize win;
+   int tty;
+ 
+   tty = input_tty ();
+-  if (tty >= 0 && (ioctl (tty, TIOCGWINSZ, &win) == 0) &&
++  if (tty >= 0 && (ioctl (tty, ALT_TIOCGWINSZ, &win) == 0) &&
+       win.ws_row > 0 && win.ws_col > 0)
+     {
++#if defined(_AIX) && defined(__i386__)
++	shell_tty_info.c_winsize = win;
++#endif
+       sh_set_lines_and_columns (win.ws_row, win.ws_col);
+ #if defined (READLINE)
+       rl_set_screen_size (win.ws_row, win.ws_col);
+diff -ur --exclude y.tab.c --exclude y.tab.h /nfs/stock/bash-3.2.57/sig.c /u/root/src/bash-3.2.57/sig.c
+--- /nfs/stock/bash-3.2.57/sig.c	Thu Aug 23 09:42:39 2007
++++ /u/root/src/bash-3.2.57/sig.c	Mon Jan 30 04:55:39 2023
+@@ -526,7 +526,8 @@
+ #if defined (MUST_REINSTALL_SIGHANDLERS)
+   set_signal_handler (SIGWINCH, sigwinch_sighandler);
+ #endif /* MUST_REINSTALL_SIGHANDLERS */
+-  sigwinch_received = 1;
++  //sigwinch_received = 1;
++  get_new_window_size (1, (int *)0, (int *)0);
+   SIGRETURN (0);
+ }
+ #endif /* SIGWINCH */
