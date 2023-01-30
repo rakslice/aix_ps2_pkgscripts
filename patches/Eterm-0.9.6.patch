@@ -1,6 +1,6 @@
 diff -ur /nfs/stock/Eterm-0.9.6/configure /u/root/src/Eterm-0.9.6/configure
 --- /nfs/stock/Eterm-0.9.6/configure	Tue Mar 15 22:10:27 2011
-+++ /u/root/src/Eterm-0.9.6/configure	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/configure	Sun Jan 29 21:12:58 2023
 @@ -8504,7 +8504,7 @@
    shrext_cmds='`test .$module = .yes && echo .so || echo .dylib`'
    # Apple's gcc prints 'gcc -print-search-dirs' doesn't operate the same.
@@ -56,7 +56,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/configure /u/root/src/Eterm-0.9.6/configure
  LDFLAGS=`echo $LDFLAGS | tr ' ' '\n' | uniq | grep -v NONE | tr '\n' ' '`
 diff -ur /nfs/stock/Eterm-0.9.6/src/Makefile.in /u/root/src/Eterm-0.9.6/src/Makefile.in
 --- /nfs/stock/Eterm-0.9.6/src/Makefile.in	Tue Mar 15 22:10:30 2011
-+++ /u/root/src/Eterm-0.9.6/src/Makefile.in	Sun Jan 29 20:27:43 2023
++++ /u/root/src/Eterm-0.9.6/src/Makefile.in	Sun Jan 29 21:12:58 2023
 @@ -147,7 +147,7 @@
  LDFLAGS = @LDFLAGS@
  LIBAST_CONFIG = @LIBAST_CONFIG@
@@ -68,7 +68,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/Makefile.in /u/root/src/Eterm-0.9.6/src/Make
  LN_S = @LN_S@
 diff -ur /nfs/stock/Eterm-0.9.6/src/command.c /u/root/src/Eterm-0.9.6/src/command.c
 --- /nfs/stock/Eterm-0.9.6/src/command.c	Tue Mar 15 22:05:03 2011
-+++ /u/root/src/Eterm-0.9.6/src/command.c	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/command.c	Mon Jan 30 05:01:44 2023
 @@ -23,10 +23,14 @@
  
  static const char cvs_ident[] = "$Id: command.c 59413 2011-05-15 21:19:59Z mej $";
@@ -208,7 +208,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/command.c /u/root/src/Eterm-0.9.6/src/comman
 -    D_CMD(("Sending TIOCSWINSZ to fd %d:  %hdx%hd (%hdx%hd)\n", fd, ws.ws_row, ws.ws_col, ws.ws_xpixel, ws.ws_ypixel));
 -    ioctl(fd, TIOCSWINSZ, &ws);
 +    D_CMD(("Sending ALT_TIOCSWINSZ to fd %d:  %hdx%hd (%hdx%hd)\n", fd, ws.ws_row, ws.ws_col, ws.ws_xpixel, ws.ws_ypixel));
-+    printf("Sending ALT_TIOCSWINSZ (%d) to fd %d:  %hdx%hd (%hdx%hd)\n", ALT_TIOCSWINSZ, fd, ws.ws_row, ws.ws_col, ws.ws_xpixel, ws.ws_ypixel);
++    /*printf("Sending ALT_TIOCSWINSZ (%d) to fd %d:  %hdx%hd (%hdx%hd)\n", ALT_TIOCSWINSZ, fd, ws.ws_row, ws.ws_col, ws.ws_xpixel, ws.ws_ypixel);*/
 +    /*printf("ALT_TIOCSWINSZ is %d\n", ALT_TIOCSWINSZ); */
 +    ioctl(fd, ALT_TIOCSWINSZ, &ws);
  }
@@ -216,7 +216,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/command.c /u/root/src/Eterm-0.9.6/src/comman
  void
 diff -ur /nfs/stock/Eterm-0.9.6/src/command.h /u/root/src/Eterm-0.9.6/src/command.h
 --- /nfs/stock/Eterm-0.9.6/src/command.h	Fri Nov 20 19:58:10 2009
-+++ /u/root/src/Eterm-0.9.6/src/command.h	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/command.h	Sun Jan 29 21:12:58 2023
 @@ -111,9 +111,9 @@
  #  define GET_TERMIOS(fd,tios)	tcgetattr(fd, tios)
  #  define SET_TERMIOS(fd,tios)	do {cfsetospeed(tios, BAUDRATE); cfsetispeed(tios, BAUDRATE); tcsetattr(fd, TCSANOW, tios);} while (0)
@@ -243,7 +243,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/command.h /u/root/src/Eterm-0.9.6/src/comman
  
 diff -ur /nfs/stock/Eterm-0.9.6/src/events.c /u/root/src/Eterm-0.9.6/src/events.c
 --- /nfs/stock/Eterm-0.9.6/src/events.c	Tue Mar 15 21:16:59 2011
-+++ /u/root/src/Eterm-0.9.6/src/events.c	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/events.c	Sun Jan 29 21:12:58 2023
 @@ -217,7 +217,7 @@
      }
      if (BITFIELD_IS_SET(vt_options, VT_OPTIONS_URG_ALERT)) {
@@ -264,7 +264,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/events.c /u/root/src/Eterm-0.9.6/src/events.
          }
 diff -ur /nfs/stock/Eterm-0.9.6/src/feature.h /u/root/src/Eterm-0.9.6/src/feature.h
 --- /nfs/stock/Eterm-0.9.6/src/feature.h	Wed Oct  7 18:49:32 2009
-+++ /u/root/src/Eterm-0.9.6/src/feature.h	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/feature.h	Sun Jan 29 21:12:58 2023
 @@ -319,4 +319,8 @@
  # undef UTMP_SUPPORT
  #endif
@@ -276,7 +276,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/feature.h /u/root/src/Eterm-0.9.6/src/featur
  #endif	/* _FEATURE_H_ */
 diff -ur /nfs/stock/Eterm-0.9.6/src/libscream.c /u/root/src/Eterm-0.9.6/src/libscream.c
 --- /nfs/stock/Eterm-0.9.6/src/libscream.c	Fri Nov 20 19:58:10 2009
-+++ /u/root/src/Eterm-0.9.6/src/libscream.c	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/libscream.c	Sun Jan 29 21:12:58 2023
 @@ -45,6 +45,8 @@
  #include "config.h"
  #include "feature.h"
@@ -288,7 +288,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/libscream.c /u/root/src/Eterm-0.9.6/src/libs
  #  include <libast.h>
 diff -ur /nfs/stock/Eterm-0.9.6/src/options.c /u/root/src/Eterm-0.9.6/src/options.c
 --- /nfs/stock/Eterm-0.9.6/src/options.c	Tue Mar 15 21:16:59 2011
-+++ /u/root/src/Eterm-0.9.6/src/options.c	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/options.c	Sun Jan 29 21:12:58 2023
 @@ -806,6 +806,11 @@
      exit(EXIT_SUCCESS);
  }
@@ -303,7 +303,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/options.c /u/root/src/Eterm-0.9.6/src/option
  {
 diff -ur /nfs/stock/Eterm-0.9.6/src/options.h /u/root/src/Eterm-0.9.6/src/options.h
 --- /nfs/stock/Eterm-0.9.6/src/options.h	Tue Mar 15 21:16:59 2011
-+++ /u/root/src/Eterm-0.9.6/src/options.h	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/options.h	Sun Jan 29 21:12:58 2023
 @@ -162,4 +162,6 @@
  
  _XFUNCPROTOEND
@@ -313,7 +313,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/options.h /u/root/src/Eterm-0.9.6/src/option
  #endif	/* _OPTIONS_H_ */
 diff -ur /nfs/stock/Eterm-0.9.6/src/pixmap.c /u/root/src/Eterm-0.9.6/src/pixmap.c
 --- /nfs/stock/Eterm-0.9.6/src/pixmap.c	Tue Mar 15 22:09:23 2011
-+++ /u/root/src/Eterm-0.9.6/src/pixmap.c	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/pixmap.c	Sun Jan 29 21:12:59 2023
 @@ -76,11 +76,11 @@
  
  Pixmap buffer_pixmap = None;
@@ -348,7 +348,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/pixmap.c /u/root/src/Eterm-0.9.6/src/pixmap.
  shaped_window_apply_mask(Drawable d, Pixmap mask)
 diff -ur /nfs/stock/Eterm-0.9.6/src/screen.c /u/root/src/Eterm-0.9.6/src/screen.c
 --- /nfs/stock/Eterm-0.9.6/src/screen.c	Tue Mar 15 21:16:59 2011
-+++ /u/root/src/Eterm-0.9.6/src/screen.c	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/screen.c	Sun Jan 29 21:12:59 2023
 @@ -1553,7 +1553,7 @@
  
      if (BITFIELD_IS_SET(vt_options, VT_OPTIONS_URG_ALERT)) {
@@ -360,7 +360,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/screen.c /u/root/src/Eterm-0.9.6/src/screen.
      }
 diff -ur /nfs/stock/Eterm-0.9.6/src/system.h /u/root/src/Eterm-0.9.6/src/system.h
 --- /nfs/stock/Eterm-0.9.6/src/system.h	Tue Jan  6 01:05:36 2009
-+++ /u/root/src/Eterm-0.9.6/src/system.h	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/system.h	Sun Jan 29 21:12:59 2023
 @@ -26,10 +26,12 @@
  
  #define ETERM_SYSTEM_WAIT
@@ -376,7 +376,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/system.h /u/root/src/Eterm-0.9.6/src/system.
  typedef RETSIGTYPE (*eterm_sighandler_t)(int);
 diff -ur /nfs/stock/Eterm-0.9.6/src/term.c /u/root/src/Eterm-0.9.6/src/term.c
 --- /nfs/stock/Eterm-0.9.6/src/term.c	Tue Mar 15 21:16:59 2011
-+++ /u/root/src/Eterm-0.9.6/src/term.c	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/term.c	Sun Jan 29 21:12:59 2023
 @@ -723,7 +723,7 @@
  
                          /* Tab key is normal unless it's shift-tab. */
@@ -388,7 +388,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/term.c /u/root/src/Eterm-0.9.6/src/term.c
                              strcpy(kbuf, "\033[Z");
 diff -ur /nfs/stock/Eterm-0.9.6/src/windows.c /u/root/src/Eterm-0.9.6/src/windows.c
 --- /nfs/stock/Eterm-0.9.6/src/windows.c	Tue Mar 15 21:16:59 2011
-+++ /u/root/src/Eterm-0.9.6/src/windows.c	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/src/windows.c	Sun Jan 29 21:12:59 2023
 @@ -363,6 +363,23 @@
      XRecolorCursor(Xdisplay, TermWin_cursor, &fg, &bg);
  }
@@ -415,7 +415,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/src/windows.c /u/root/src/Eterm-0.9.6/src/window
  Create_Windows(int argc, char *argv[])
 diff -ur /nfs/stock/Eterm-0.9.6/utils/Etbg_update_list /u/root/src/Eterm-0.9.6/utils/Etbg_update_list
 --- /nfs/stock/Eterm-0.9.6/utils/Etbg_update_list	Tue Jan  6 01:05:36 2009
-+++ /u/root/src/Eterm-0.9.6/utils/Etbg_update_list	Sun Jan 29 19:40:21 2023
++++ /u/root/src/Eterm-0.9.6/utils/Etbg_update_list	Sun Jan 29 21:12:59 2023
 @@ -34,7 +34,7 @@
  cd $PIXDIR
  
@@ -469,7 +469,7 @@ diff -ur /nfs/stock/Eterm-0.9.6/utils/Etbg_update_list /u/root/src/Eterm-0.9.6/u
  done
 diff -ur /nfs/stock/Eterm-0.9.6/utils/Makefile.in /u/root/src/Eterm-0.9.6/utils/Makefile.in
 --- /nfs/stock/Eterm-0.9.6/utils/Makefile.in	Tue Mar 15 22:10:31 2011
-+++ /u/root/src/Eterm-0.9.6/utils/Makefile.in	Sun Jan 29 20:28:14 2023
++++ /u/root/src/Eterm-0.9.6/utils/Makefile.in	Sun Jan 29 21:12:59 2023
 @@ -135,7 +135,7 @@
  LDFLAGS = @LDFLAGS@
  LIBAST_CONFIG = @LIBAST_CONFIG@
