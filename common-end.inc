@@ -15,13 +15,19 @@ fi
 tar cf "$pkgdir.pkg" "$pkgdir"
 
 cd "$pkgdir"
-if [ ! -d /usr/local ]; then mkdir /usr/local; fi
+
+if [ -z "$pkgprefix" ]; then
+	pkgprefix=/usr/local
+fi
+if [ ! -d $pkgprefix ]; then mkdir $pkgprefix; fi
 
 # check whether we have DESTDIR style and do something appropriate
-if [ -d usr/local ]; then
-  cp -r usr/local/* /usr/local/
+[ "`echo "$pkgprefix" | cut -c1`" = "/" ] || exit 1
+pkgprefixrel="`echo "$pkgprefix" | cut -c2-`"
+if [ -d $pkgprefixrel ]; then
+  cp -r $pkgprefixrel/* $pkgprefix
 else
-  cp -r * /usr/local/
+  cp -r * $pkgprefix
 fi
 cd ..
 
