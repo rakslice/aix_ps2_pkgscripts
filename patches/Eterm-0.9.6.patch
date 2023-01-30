@@ -1,0 +1,481 @@
+diff -ur /nfs/stock/Eterm-0.9.6/configure /u/root/src/Eterm-0.9.6/configure
+--- /nfs/stock/Eterm-0.9.6/configure	Tue Mar 15 22:10:27 2011
++++ /u/root/src/Eterm-0.9.6/configure	Sun Jan 29 19:13:53 2023
+@@ -8504,7 +8504,7 @@
+   shrext_cmds='`test .$module = .yes && echo .so || echo .dylib`'
+   # Apple's gcc prints 'gcc -print-search-dirs' doesn't operate the same.
+   if test "$GCC" = yes; then
+-    sys_lib_search_path_spec=`$CC -print-search-dirs | tr "\n" "$PATH_SEPARATOR" | sed -e 's/libraries:/@libraries:/' | tr "@" "\n" | grep "^libraries:" | sed -e "s/^libraries://" -e "s,=/,/,g" -e "s,$PATH_SEPARATOR, ,g" -e "s,.*,& /lib /usr/lib /usr/local/lib,g"`
++    sys_lib_search_path_spec=`$CC -print-search-dirs | tr "\\n" "$PATH_SEPARATOR" | sed -e 's/libraries:/@libraries:/' | tr "@" "\n" | grep "^libraries:" | sed -e "s/^libraries://" -e "s,=/,/,g" -e "s,$PATH_SEPARATOR, ,g" -e "s,.*,& /lib /usr/lib /usr/local/lib,g"`
+   else
+     sys_lib_search_path_spec='/lib /usr/lib /usr/local/lib'
+   fi
+@@ -9587,6 +9587,7 @@
+   case $lt_cv_dlopen in
+   dlopen)
+     save_CPPFLAGS="$CPPFLAGS"
++    save_CPPFLAGS="-E -I/usr/local/include -I/usr/local/include"
+     test "x$ac_cv_header_dlfcn_h" = xyes && CPPFLAGS="$CPPFLAGS -DHAVE_DLFCN_H"
+ 
+     save_LDFLAGS="$LDFLAGS"
+@@ -15095,7 +15096,7 @@
+   shrext_cmds='`test .$module = .yes && echo .so || echo .dylib`'
+   # Apple's gcc prints 'gcc -print-search-dirs' doesn't operate the same.
+   if test "$GCC" = yes; then
+-    sys_lib_search_path_spec=`$CC -print-search-dirs | tr "\n" "$PATH_SEPARATOR" | sed -e 's/libraries:/@libraries:/' | tr "@" "\n" | grep "^libraries:" | sed -e "s/^libraries://" -e "s,=/,/,g" -e "s,$PATH_SEPARATOR, ,g" -e "s,.*,& /lib /usr/lib /usr/local/lib,g"`
++    sys_lib_search_path_spec=`$CC -print-search-dirs | tr "\\n" "$PATH_SEPARATOR" | sed -e 's/libraries:/@libraries:/' | tr "@" "\n" | grep "^libraries:" | sed -e "s/^libraries://" -e "s,=/,/,g" -e "s,$PATH_SEPARATOR, ,g" -e "s,.*,& /lib /usr/lib /usr/local/lib,g"`
+   else
+     sys_lib_search_path_spec='/lib /usr/lib /usr/local/lib'
+   fi
+@@ -19171,7 +19172,7 @@
+ _ACEOF
+ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+   $EGREP "$ac_pattern" >/dev/null 2>&1; then
+-  ac_cv_prog_gcc_traditional=yes
++  ac_cv_prog_gcc_traditional=no
+ else
+   ac_cv_prog_gcc_traditional=no
+ fi
+@@ -24380,7 +24381,7 @@
+   echo $ECHO_N "(cached) $ECHO_C" >&6
+ else
+   ac_check_lib_save_LIBS=$LIBS
+-LIBS="-lImlib2 $GRLIBS $LIBS"
++LIBS="-lImlib2 -lpng -lfreetype -lz -lbz2 $GRLIBS $LIBS"
+ cat >conftest.$ac_ext <<_ACEOF
+ /* confdefs.h.  */
+ _ACEOF
+@@ -26185,7 +26186,7 @@
+ 
+ 
+ CPPFLAGS=`eval eval eval eval eval echo "-I$includedir -I$prefix/include $CPPFLAGS"`
+-CPPFLAGS=`echo $CPPFLAGS | tr ' ' '\n' | uniq | grep -v NONE | tr '\n' ' '`
++CPPFLAGS=`echo $CPPFLAGS | tr ' ' '\\n' | uniq | grep -v NONE | tr '\\n' ' '`
+ CFLAGS=${CFLAGS--O}
+ LDFLAGS=`eval eval eval eval eval echo "-L$libdir -L$prefix/lib ${LDFLAGS--O}"`
+ LDFLAGS=`echo $LDFLAGS | tr ' ' '\n' | uniq | grep -v NONE | tr '\n' ' '`
+diff -ur /nfs/stock/Eterm-0.9.6/src/Makefile.in /u/root/src/Eterm-0.9.6/src/Makefile.in
+--- /nfs/stock/Eterm-0.9.6/src/Makefile.in	Tue Mar 15 22:10:30 2011
++++ /u/root/src/Eterm-0.9.6/src/Makefile.in	Sun Jan 29 19:32:52 2023
+@@ -147,7 +147,7 @@
+ LDFLAGS = @LDFLAGS@
+ LIBAST_CONFIG = @LIBAST_CONFIG@
+ LIBOBJS = @LIBOBJS@
+-LIBS = @LIBS@
++LIBS = @LIBS@ -lpng
+ LIBTOOL = @LIBTOOL@
+ LIBTOOLIZE = @LIBTOOLIZE@
+ LN_S = @LN_S@
+diff -ur /nfs/stock/Eterm-0.9.6/src/command.c /u/root/src/Eterm-0.9.6/src/command.c
+--- /nfs/stock/Eterm-0.9.6/src/command.c	Tue Mar 15 22:05:03 2011
++++ /u/root/src/Eterm-0.9.6/src/command.c	Sun Jan 29 19:13:53 2023
+@@ -23,10 +23,14 @@
+ 
+ static const char cvs_ident[] = "$Id: command.c 59413 2011-05-15 21:19:59Z mej $";
+ 
++#define ONLCR 0000004
++
+ /* includes: */
+ #include "config.h"
+ #include "feature.h"
+ 
++#include "alttio.h"
++
+ /* System Headers */
+ #include <stdio.h>
+ #include <stdlib.h>
+@@ -1446,6 +1450,7 @@
+             ptydev[len - 2] = ttydev[len - 2] = *c2;
+             if ((fd = open(ptydev, O_RDWR)) >= 0) {
+                 if (access(ttydev, R_OK | W_OK) == 0)
++		    /* printf("using pty %s tty %s\n", ptydev, ttydev); */
+                     return (fd);
+                 close(fd);
+             }
+@@ -1475,7 +1480,9 @@
+         fd = gen_get_pty();
+     }
+     if (fd != -1) {
+-        fcntl(fd, F_SETFL, O_NDELAY);
++        /* fcntl(fd, F_SETFL, O_NDELAY); */
++        /* XXX FIXME trying different flags */
++        fcntl(fd, F_SETFL, O_NDELAY | _O_EDELAY);
+         return (fd);
+     } else {
+         libast_print_error("Can't open pseudo-tty -- %s\n", strerror(errno));
+@@ -1591,7 +1598,7 @@
+ 
+ #ifdef ultrix
+     if ((fd = open("/dev/tty", O_RDONLY)) >= 0) {
+-        ioctl(fd, TIOCNOTTY, 0);
++        ioctl(fd, ALT_TIOCNOTTY, 0);
+         close(fd);
+     } else {
+ # ifdef NO_SETSID
+@@ -1607,19 +1614,19 @@
+     /* no error, we could run with no tty to begin with */
+ #else /* ultrix */
+ 
+-# ifdef TIOCSCTTY
+-    ioctl(0, TIOCSCTTY, 0);
++# ifdef ALT_TIOCSCTTY
++    ioctl(0, ALT_TIOCSCTTY, 0);
+ # endif
+ 
+     /* set process group */
+ # if defined (_POSIX_VERSION) || defined (__svr4__)
+     tcsetpgrp(0, pid);
+-# elif defined (TIOCSPGRP)
+-    ioctl(0, TIOCSPGRP, &pid);
++# elif defined (ALT_TIOCSPGRP)
++    ioctl(0, ALT_TIOCSPGRP, &pid);
+ # endif
+ 
+     /* svr4 problems: reports no tty, no job control */
+-    /* # if !defined (__svr4__) && defined (TIOCSPGRP) */
++    /* # if !defined (__svr4__) && defined (ALT_TIOCSPGRP) */
+ 
+     close(open(ttydev, O_RDWR, 0));
+     /* # endif */
+@@ -1805,14 +1812,14 @@
+      */
+ 
+     /* get parameters -- gtty */
+-    if (ioctl(0, TIOCGETP, &(tio->sg)) < 0) {
++    if (ioctl(0, ALT_TIOCGETP, &(tio->sg)) < 0) {
+         tio->sg.sg_erase = CERASE;      /* ^H */
+         tio->sg.sg_kill = CKILL;        /* ^U */
+     }
+     tio->sg.sg_flags = (CRMOD | ECHO | EVENP | ODDP);
+ 
+     /* get special characters */
+-    if (ioctl(0, TIOCGETC, &(tio->tc)) < 0) {
++    if (ioctl(0, ALT_TIOCGETC, &(tio->tc)) < 0) {
+         tio->tc.t_intrc = CINTR;        /* ^C */
+         tio->tc.t_quitc = CQUIT;        /* ^\ */
+         tio->tc.t_startc = CSTART;      /* ^Q */
+@@ -1821,7 +1828,7 @@
+         tio->tc.t_brkc = -1;
+     }
+     /* get local special chars */
+-    if (ioctl(0, TIOCGLTC, &(tio->lc)) < 0) {
++    if (ioctl(0, ALT_TIOCGLTC, &(tio->lc)) < 0) {
+         tio->lc.t_suspc = CSUSP;        /* ^Z */
+         tio->lc.t_dsuspc = CDSUSP;      /* ^Y */
+         tio->lc.t_rprntc = CRPRNT;      /* ^R */
+@@ -1830,7 +1837,7 @@
+         tio->lc.t_lnextc = CLNEXT;      /* ^V */
+     }
+     /* get line discipline */
+-    ioctl(0, TIOCGETD, &(tio->line));
++    ioctl(0, ALT_TIOCGETD, &(tio->line));
+ # ifdef NTTYDISC
+     tio->line = NTTYDISC;
+ # endif /* NTTYDISC */
+@@ -2270,7 +2277,7 @@
+ # if defined (__sun__)
+     on_exit(clean_exit, NULL);  /* non-ANSI exit handler */
+ # else
+-    libast_print_error("no atexit(), UTMP entries can't be cleaned\n");
++    /* libast_print_error("no atexit(), UTMP entries can't be cleaned\n"); */
+ # endif
+ #endif
+ 
+@@ -2287,7 +2294,7 @@
+         PrivateModes |= PrivMode_scrollbar;
+         SavedModes |= PrivMode_scrollbar;
+     }
+-    tt_winsize(ptyfd);
++    tt_winsize(ptyfd); 
+ #if DEBUG >= DEBUG_TTYMODE && defined(HAVE_TERMIOS_H)
+     if (DEBUG_LEVEL >= DEBUG_TTYMODE) {
+         debug_ttymode(&tio);
+@@ -2348,8 +2355,8 @@
+                 if (fd >= 0)
+                     close(fd);
+             }
+-#elif defined(TIOCCONS)
+-            ioctl(0, TIOCCONS, &fd);
++#elif defined(ALT_TIOCCONS)
++            ioctl(0, ALT_TIOCCONS, &fd);
+ #endif /* SRIOCSREDIR */
+             privileges(REVERT);
+         }
+@@ -3203,8 +3210,10 @@
+     ws.ws_xpixel = (unsigned short) TERM_WINDOW_GET_WIDTH();
+     ws.ws_ypixel = (unsigned short) TERM_WINDOW_GET_HEIGHT();
+ #endif
+-    D_CMD(("Sending TIOCSWINSZ to fd %d:  %hdx%hd (%hdx%hd)\n", fd, ws.ws_row, ws.ws_col, ws.ws_xpixel, ws.ws_ypixel));
+-    ioctl(fd, TIOCSWINSZ, &ws);
++    D_CMD(("Sending ALT_TIOCSWINSZ to fd %d:  %hdx%hd (%hdx%hd)\n", fd, ws.ws_row, ws.ws_col, ws.ws_xpixel, ws.ws_ypixel));
++    printf("Sending ALT_TIOCSWINSZ (%d) to fd %d:  %hdx%hd (%hdx%hd)\n", ALT_TIOCSWINSZ, fd, ws.ws_row, ws.ws_col, ws.ws_xpixel, ws.ws_ypixel);
++    /*printf("ALT_TIOCSWINSZ is %d\n", ALT_TIOCSWINSZ); */
++    ioctl(fd, ALT_TIOCSWINSZ, &ws);
+ }
+ 
+ void
+diff -ur /nfs/stock/Eterm-0.9.6/src/command.h /u/root/src/Eterm-0.9.6/src/command.h
+--- /nfs/stock/Eterm-0.9.6/src/command.h	Fri Nov 20 19:58:10 2009
++++ /u/root/src/Eterm-0.9.6/src/command.h	Sun Jan 29 19:13:53 2023
+@@ -111,9 +111,9 @@
+ #  define GET_TERMIOS(fd,tios)	tcgetattr(fd, tios)
+ #  define SET_TERMIOS(fd,tios)	do {cfsetospeed(tios, BAUDRATE); cfsetispeed(tios, BAUDRATE); tcsetattr(fd, TCSANOW, tios);} while (0)
+ # else
+-#  ifdef TIOCSETA
+-#   define GET_TERMIOS(fd,tios)	ioctl(fd, TIOCGETA, tios)
+-#   define SET_TERMIOS(fd,tios)	do {tios->c_cflag |= BAUDRATE; ioctl(fd, TIOCSETA, tios);} while (0)
++#  ifdef ALT_TIOCSETA
++#   define GET_TERMIOS(fd,tios)	ioctl(fd, ALT_TIOCGETA, tios)
++#   define SET_TERMIOS(fd,tios)	do {tios->c_cflag |= BAUDRATE; ioctl(fd, ALT_TIOCSETA, tios);} while (0)
+ #  else
+ #   define GET_TERMIOS(fd,tios)	ioctl(fd, TCGETS, tios)
+ #   define SET_TERMIOS(fd,tios)	do {tios->c_cflag |= BAUDRATE; ioctl(fd, TCSETS, tios);} while (0)
+@@ -121,8 +121,8 @@
+ # endif
+ # define SET_TTYMODE(fd,tios)	SET_TERMIOS(fd, tios)
+ #else
+-# define SET_TTYMODE(fd,tt) do {tt->sg.sg_ispeed = tt->sg.sg_ospeed = BAUDRATE; ioctl(fd, TIOCSETP, &(tt->sg)); ioctl(fd, TIOCSETC, &(tt->tc)); \
+-                                ioctl(fd, TIOCSLTC, &(tt->lc)); ioctl(fd, TIOCSETD, &(tt->line)); ioctl(fd, TIOCLSET, &(tt->local)); \
++# define SET_TTYMODE(fd,tt) do {tt->sg.sg_ispeed = tt->sg.sg_ospeed = BAUDRATE; ioctl(fd, ALT_TIOCSETP, &(tt->sg)); ioctl(fd, ALT_TIOCSETC, &(tt->tc)); \
++                                ioctl(fd, ALT_TIOCSLTC, &(tt->lc)); ioctl(fd, ALT_TIOCSETD, &(tt->line)); ioctl(fd, ALT_TIOCLSET, &(tt->local)); \
+                                } while (0)
+ #endif /* HAVE_TERMIOS_H */
+ 
+diff -ur /nfs/stock/Eterm-0.9.6/src/events.c /u/root/src/Eterm-0.9.6/src/events.c
+--- /nfs/stock/Eterm-0.9.6/src/events.c	Tue Mar 15 21:16:59 2011
++++ /u/root/src/Eterm-0.9.6/src/events.c	Sun Jan 29 19:13:53 2023
+@@ -217,7 +217,7 @@
+     }
+     if (BITFIELD_IS_SET(vt_options, VT_OPTIONS_URG_ALERT)) {
+         wm_hints = XGetWMHints(Xdisplay, TermWin.parent);
+-        wm_hints->flags &= ~XUrgencyHint;
++        /* wm_hints->flags &= ~XUrgencyHint;  */
+         XSetWMHints(Xdisplay, TermWin.parent, wm_hints);
+         XFree(wm_hints);
+     }
+@@ -498,7 +498,7 @@
+ #endif
+         if (BITFIELD_IS_SET(vt_options, VT_OPTIONS_URG_ALERT)) {
+             wm_hints = XGetWMHints(Xdisplay, TermWin.parent);
+-            wm_hints->flags &= ~XUrgencyHint;
++            /* wm_hints->flags &= ~XUrgencyHint; */
+             XSetWMHints(Xdisplay, TermWin.parent, wm_hints);
+             XFree(wm_hints);
+         }
+diff -ur /nfs/stock/Eterm-0.9.6/src/feature.h /u/root/src/Eterm-0.9.6/src/feature.h
+--- /nfs/stock/Eterm-0.9.6/src/feature.h	Wed Oct  7 18:49:32 2009
++++ /u/root/src/Eterm-0.9.6/src/feature.h	Sun Jan 29 19:13:53 2023
+@@ -319,4 +319,8 @@
+ # undef UTMP_SUPPORT
+ #endif
+ 
++#if defined(_AIX) && defined(__i386__)
++#include "memmove.h"
++#endif
++
+ #endif	/* _FEATURE_H_ */
+diff -ur /nfs/stock/Eterm-0.9.6/src/libscream.c /u/root/src/Eterm-0.9.6/src/libscream.c
+--- /nfs/stock/Eterm-0.9.6/src/libscream.c	Fri Nov 20 19:58:10 2009
++++ /u/root/src/Eterm-0.9.6/src/libscream.c	Sun Jan 29 19:13:53 2023
+@@ -45,6 +45,8 @@
+ #include "config.h"
+ #include "feature.h"
+ 
++typedef long int ssize_t;
++
+ /* use libast if we have it */
+ #ifdef DEBUG_ESCREEN
+ #  include <libast.h>
+diff -ur /nfs/stock/Eterm-0.9.6/src/options.c /u/root/src/Eterm-0.9.6/src/options.c
+--- /nfs/stock/Eterm-0.9.6/src/options.c	Tue Mar 15 21:16:59 2011
++++ /u/root/src/Eterm-0.9.6/src/options.c	Sun Jan 29 19:13:53 2023
+@@ -806,6 +806,11 @@
+     exit(EXIT_SUCCESS);
+ }
+ 
++unsigned long strtoul(char * str, char **ptr, int base) {
++        return (unsigned long) strtol(str, ptr, base);
++}
++
++
+ static void
+ handle_attribute(char *val_ptr)
+ {
+diff -ur /nfs/stock/Eterm-0.9.6/src/options.h /u/root/src/Eterm-0.9.6/src/options.h
+--- /nfs/stock/Eterm-0.9.6/src/options.h	Tue Mar 15 21:16:59 2011
++++ /u/root/src/Eterm-0.9.6/src/options.h	Sun Jan 29 19:13:53 2023
+@@ -162,4 +162,6 @@
+ 
+ _XFUNCPROTOEND
+ 
++unsigned long strtoul(char * str, char **ptr, int base);
++
+ #endif	/* _OPTIONS_H_ */
+diff -ur /nfs/stock/Eterm-0.9.6/src/pixmap.c /u/root/src/Eterm-0.9.6/src/pixmap.c
+--- /nfs/stock/Eterm-0.9.6/src/pixmap.c	Tue Mar 15 22:09:23 2011
++++ /u/root/src/Eterm-0.9.6/src/pixmap.c	Sun Jan 29 19:13:53 2023
+@@ -76,11 +76,11 @@
+ 
+ Pixmap buffer_pixmap = None;
+ 
+-#ifdef PIXMAP_OFFSET
++/* #ifdef PIXMAP_OFFSET */
+ Pixmap desktop_pixmap = None, viewport_pixmap = None;
+ Window desktop_window = None;
+ unsigned char desktop_pixmap_is_mine = 0;
+-#endif
++/* #endif */
+ 
+ image_t images[image_max] = {
+     {None, 0, 0, NULL, NULL, NULL, NULL, NULL},
+@@ -1738,7 +1738,7 @@
+     }
+ }
+ 
+-#  ifdef PIXMAP_OFFSET
++/* #  ifdef PIXMAP_OFFSET */
+ void
+ colormod_trans(Pixmap p, imlib_t *iml, GC gc, unsigned short w, unsigned short h)
+ {
+@@ -2116,7 +2116,7 @@
+     desktop_pixmap = None;
+ }
+ 
+-# endif /* PIXMAP_OFFSET */
++/*# endif*/ /* PIXMAP_OFFSET */
+ 
+ void
+ shaped_window_apply_mask(Drawable d, Pixmap mask)
+diff -ur /nfs/stock/Eterm-0.9.6/src/screen.c /u/root/src/Eterm-0.9.6/src/screen.c
+--- /nfs/stock/Eterm-0.9.6/src/screen.c	Tue Mar 15 21:16:59 2011
++++ /u/root/src/Eterm-0.9.6/src/screen.c	Sun Jan 29 19:13:53 2023
+@@ -1553,7 +1553,7 @@
+ 
+     if (BITFIELD_IS_SET(vt_options, VT_OPTIONS_URG_ALERT)) {
+         wm_hints = XGetWMHints(Xdisplay, TermWin.parent);
+-        wm_hints->flags |= XUrgencyHint;
++/* wm_hints->flags |= XUrgencyHint; */
+         XSetWMHints(Xdisplay, TermWin.parent, wm_hints);
+         XFree(wm_hints);
+     }
+diff -ur /nfs/stock/Eterm-0.9.6/src/system.h /u/root/src/Eterm-0.9.6/src/system.h
+--- /nfs/stock/Eterm-0.9.6/src/system.h	Tue Jan  6 01:05:36 2009
++++ /u/root/src/Eterm-0.9.6/src/system.h	Sun Jan 29 19:13:53 2023
+@@ -26,10 +26,12 @@
+ 
+ #define ETERM_SYSTEM_WAIT
+ 
++#if 0
+ #ifdef ETERM_SYSTEM_WAIT
+ #  define system(c) system_wait((c))
+ #else
+ #  define system(c) system_no_wait((c))
++#endif
+ #endif
+ 
+ typedef RETSIGTYPE (*eterm_sighandler_t)(int);
+diff -ur /nfs/stock/Eterm-0.9.6/src/term.c /u/root/src/Eterm-0.9.6/src/term.c
+--- /nfs/stock/Eterm-0.9.6/src/term.c	Tue Mar 15 21:16:59 2011
++++ /u/root/src/Eterm-0.9.6/src/term.c	Sun Jan 29 19:13:53 2023
+@@ -723,7 +723,7 @@
+ 
+                         /* Tab key is normal unless it's shift-tab. */
+                     case XK_Tab:
+-                    case XK_ISO_Left_Tab:
++                   /* case XK_ISO_Left_Tab: */
+                         if (shft) {
+                             len = 3;
+                             strcpy(kbuf, "\033[Z");
+diff -ur /nfs/stock/Eterm-0.9.6/src/windows.c /u/root/src/Eterm-0.9.6/src/windows.c
+--- /nfs/stock/Eterm-0.9.6/src/windows.c	Tue Mar 15 21:16:59 2011
++++ /u/root/src/Eterm-0.9.6/src/windows.c	Sun Jan 29 19:13:53 2023
+@@ -363,6 +363,23 @@
+     XRecolorCursor(Xdisplay, TermWin_cursor, &fg, &bg);
+ }
+ 
++int unsetenv(const char * varname) {
++	char * buf;
++	int varnamelen = strlen(buf);
++	buf = malloc(varnamelen + 2);
++	if (buf == 0) {
++		errno = ENOMEM;
++		return -1;
++	}
++	bcopy(varname, buf, varnamelen);
++	buf[varnamelen] = '=';
++	buf[varnamelen+1] = '\0';
++
++        /* the alloced mem is abandoned as 
++        local man putenv suggests this is required */
++	return putenv(varname);
++}
++
+ /* Create_Windows() - Open and map the window */
+ void
+ Create_Windows(int argc, char *argv[])
+diff -ur /nfs/stock/Eterm-0.9.6/utils/Etbg_update_list /u/root/src/Eterm-0.9.6/utils/Etbg_update_list
+--- /nfs/stock/Eterm-0.9.6/utils/Etbg_update_list	Tue Jan  6 01:05:36 2009
++++ /u/root/src/Eterm-0.9.6/utils/Etbg_update_list	Sun Jan 29 19:13:53 2023
+@@ -34,7 +34,7 @@
+ cd $PIXDIR
+ 
+ # Make sure sed works; if not, use perl
+-SEDCMD="sed -e 's/[-_]/ /g' -e 's/^\(.\)/\u\1/' -e 's/ \(.\)/ \u\1/g' -e 's/\....$//'"
++SEDCMD="/bin/sed -e 's/[-_]/ /g' -e 's/^\(.\)/\u\1/' -e 's/ \(.\)/ \u\1/g' -e 's/\....$//'"
+ if [ "x`echo i | sed -e 's/^\(.\)/\u\1/'`" != "xI" ]; then
+     SEDCMD='perl -p -e "s/[-_]/ /g; s/^(.)/\u\1/; s/ (.)/ \u\1/g; s/\....$//;"'
+ fi
+@@ -47,21 +47,33 @@
+ begin menu
+   title Tiled
+ EOF
++
++
+ if [ -d tile ]; then
+     for i in `(cd tile && ls -1)` ; do 
++echo here1
+         echo '"tile/'$i'@0+0:tile"' >> $LISTFILE.new
++echo here2
+         echo "  begin menuitem" >&3
++echo here3
+         eval echo "\ \ \ \ text \\\"\`echo $i | $SEDCMD\`\\\"" >&3
++echo here4
+         echo "    action string \"\\e]20;tile/$i;0+0:tile\\a\"" >&3
++echo here5
+         echo "  end" >&3
+     done
+ fi
+ cat >&3 <<EOF
+ end
++
++
++
++
+ begin menu
+   title Scaled
+ EOF
+ 
++
+ if [ -d scale ]; then
+     for i in `(cd scale && ls -1)` ; do \
+         echo '"scale/'$i'@100"' >> $LISTFILE.new ; \
+@@ -98,6 +110,6 @@
+     if [ -f $i/theme.cfg -a ! -f $i/$LISTFILE ]; then
+         echo "Creating symlink to $LISTFILE for theme $i"
+         rm -f $i/$LISTFILE
+-        ln -f -s ../../pix/$LISTFILE $i/$LISTFILE
++        ln -s ../../pix/$LISTFILE $i/$LISTFILE
+     fi
+ done
+diff -ur /nfs/stock/Eterm-0.9.6/utils/Makefile.in /u/root/src/Eterm-0.9.6/utils/Makefile.in
+--- /nfs/stock/Eterm-0.9.6/utils/Makefile.in	Tue Mar 15 22:10:31 2011
++++ /u/root/src/Eterm-0.9.6/utils/Makefile.in	Sun Jan 29 19:33:15 2023
+@@ -135,7 +135,7 @@
+ LDFLAGS = @LDFLAGS@
+ LIBAST_CONFIG = @LIBAST_CONFIG@
+ LIBOBJS = @LIBOBJS@
+-LIBS = @LIBS@
++LIBS = @LIBS@ -lpng
+ LIBTOOL = @LIBTOOL@
+ LIBTOOLIZE = @LIBTOOLIZE@
+ LN_S = @LN_S@
