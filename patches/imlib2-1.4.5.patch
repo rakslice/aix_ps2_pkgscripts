@@ -1,6 +1,6 @@
 diff -ur /nfs/stock/imlib2-1.4.5/configure /u/root/src/imlib2-1.4.5/configure
 --- /nfs/stock/imlib2-1.4.5/configure	Mon Aug 15 11:31:20 2011
-+++ /u/root/src/imlib2-1.4.5/configure	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/configure	Mon Jan 30 06:47:20 2023
 @@ -12261,25 +12261,7 @@
  
  { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $CC accepts -std=gnu99" >&5
@@ -37,9 +37,18 @@ diff -ur /nfs/stock/imlib2-1.4.5/configure /u/root/src/imlib2-1.4.5/configure
  
  $as_echo "#define BUILD_X11 1" >>confdefs.h
  
+@@ -13958,7 +13940,7 @@
+   $as_echo_n "(cached) " >&6
+ else
+   ac_check_lib_save_LIBS=$LIBS
+-LIBS="-ltiff  $LIBS"
++LIBS="-ltiff -ljpeg -lm -lz $LIBS"
+ cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+ /* end confdefs.h.  */
+ 
 diff -ur /nfs/stock/imlib2-1.4.5/src/bin/imlib2_grab.c /u/root/src/imlib2-1.4.5/src/bin/imlib2_grab.c
 --- /nfs/stock/imlib2-1.4.5/src/bin/imlib2_grab.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/bin/imlib2_grab.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/bin/imlib2_grab.c	Mon Jan 30 06:46:18 2023
 @@ -14,6 +14,8 @@
  #include <errno.h>
  #include "Imlib2.h"
@@ -51,7 +60,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/bin/imlib2_grab.c /u/root/src/imlib2-1.4.5/
  Colormap            cm;
 diff -ur /nfs/stock/imlib2-1.4.5/src/bin/imlib2_view.c /u/root/src/imlib2-1.4.5/src/bin/imlib2_view.c
 --- /nfs/stock/imlib2-1.4.5/src/bin/imlib2_view.c	Fri Apr  8 23:18:19 2011
-+++ /u/root/src/imlib2-1.4.5/src/bin/imlib2_view.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/bin/imlib2_view.c	Mon Jan 30 06:46:18 2023
 @@ -5,6 +5,7 @@
  #include <X11/extensions/shape.h>
  #include <X11/Xatom.h>
@@ -62,7 +71,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/bin/imlib2_view.c /u/root/src/imlib2-1.4.5/
  #include <stdlib.h>
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/Makefile.in /u/root/src/imlib2-1.4.5/src/lib/Makefile.in
 --- /nfs/stock/imlib2-1.4.5/src/lib/Makefile.in	Mon Aug 15 11:31:19 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/Makefile.in	Sun Jan 29 21:34:00 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/Makefile.in	Mon Jan 30 06:46:18 2023
 @@ -148,7 +148,8 @@
  CCDEPMODE = @CCDEPMODE@
  CFLAGS = @CFLAGS@
@@ -88,7 +97,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/Makefile.in /u/root/src/imlib2-1.4.5/sr
  	-rm -f *.$(OBJEXT)
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/common.h /u/root/src/imlib2-1.4.5/src/lib/common.h
 --- /nfs/stock/imlib2-1.4.5/src/lib/common.h	Fri Apr 15 14:05:28 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/common.h	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/common.h	Mon Jan 30 06:46:18 2023
 @@ -16,6 +16,8 @@
  #include <sys/types.h>
  #endif
@@ -100,7 +109,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/common.h /u/root/src/imlib2-1.4.5/src/l
  #else
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/dynamic_filters.c /u/root/src/imlib2-1.4.5/src/lib/dynamic_filters.c
 --- /nfs/stock/imlib2-1.4.5/src/lib/dynamic_filters.c	Fri Apr  8 23:18:19 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/dynamic_filters.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/dynamic_filters.c	Mon Jan 30 06:46:18 2023
 @@ -35,7 +35,11 @@
     MALLOCSHOW;
     ptr = malloc(sizeof(ImlibExternalFilter));
@@ -115,7 +124,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/dynamic_filters.c /u/root/src/imlib2-1.
          FREESHOW;
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/font_load.c /u/root/src/imlib2-1.4.5/src/lib/font_load.c
 --- /nfs/stock/imlib2-1.4.5/src/lib/font_load.c	Fri Apr  8 23:18:19 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/font_load.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/font_load.c	Mon Jan 30 06:46:18 2023
 @@ -221,6 +221,7 @@
  int
  imlib_font_insert_into_fallback_chain_imp(ImlibFont * fn, ImlibFont * fallback)
@@ -135,7 +144,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/font_load.c /u/root/src/imlib2-1.4.5/sr
     fallback->fallback_prev = fn;
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.c /u/root/src/imlib2-1.4.5/src/lib/image.c
 --- /nfs/stock/imlib2-1.4.5/src/lib/image.c	Fri Apr 15 14:05:28 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/image.c	Sun Jan 29 21:33:02 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/image.c	Mon Jan 30 06:46:18 2023
 @@ -555,6 +555,35 @@
  }
  #endif
@@ -235,7 +244,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.c /u/root/src/imlib2-1.4.5/src/li
          int                 i;
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.h /u/root/src/imlib2-1.4.5/src/lib/image.h
 --- /nfs/stock/imlib2-1.4.5/src/lib/image.h	Fri Apr 15 14:05:28 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/image.h	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/image.h	Mon Jan 30 06:46:18 2023
 @@ -8,7 +8,9 @@
  #  define X_DISPLAY_MISSING
  # endif
@@ -248,7 +257,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/image.h /u/root/src/imlib2-1.4.5/src/li
  # ifndef RTLD_LOCAL
 diff -ur /nfs/stock/imlib2-1.4.5/src/lib/script.h /u/root/src/imlib2-1.4.5/src/lib/script.h
 --- /nfs/stock/imlib2-1.4.5/src/lib/script.h	Fri Apr 15 14:05:28 2011
-+++ /u/root/src/imlib2-1.4.5/src/lib/script.h	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/lib/script.h	Mon Jan 30 06:46:18 2023
 @@ -1,7 +1,9 @@
  #ifndef _DYN_FUNCTION_H_
  #define _DYN_FUNCTION_H_
@@ -261,7 +270,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/lib/script.h /u/root/src/imlib2-1.4.5/src/l
  # ifndef X_DISPLAY_MISSING
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_argb.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_argb.c
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_argb.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_argb.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_argb.c	Mon Jan 30 06:46:18 2023
 @@ -7,7 +7,8 @@
   (((x) & 0xff000000 ) >> 24))
  
@@ -297,7 +306,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_argb.c /u/root/src/i
  
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_bmp.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_bmp.c
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_bmp.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_bmp.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_bmp.c	Mon Jan 30 06:46:18 2023
 @@ -103,7 +103,8 @@
  }
  
@@ -333,7 +342,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_bmp.c /u/root/src/im
  
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_bz2.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_bz2.c
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_bz2.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_bz2.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_bz2.c	Mon Jan 30 06:46:18 2023
 @@ -9,7 +9,7 @@
  #define INBUF_SIZE 1024
  
@@ -377,7 +386,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_bz2.c /u/root/src/im
     char               *list_formats[] = { "bz2" };
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_common.h /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_common.h
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_common.h	Tue Jul 28 10:35:59 2009
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_common.h	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_common.h	Mon Jan 30 06:46:18 2023
 @@ -11,4 +11,21 @@
                           char progress_granularity);
  EAPI void           formats(ImlibLoader * l);
@@ -402,7 +411,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_common.h /u/root/src
  #endif /* __LOADER_COMMON_H */
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_jpeg.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_jpeg.c
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_jpeg.c	Fri Apr 15 14:05:28 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_jpeg.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_jpeg.c	Mon Jan 30 06:46:18 2023
 @@ -1,3 +1,5 @@
 +#define MODULE jpeg
 +
@@ -444,7 +453,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_jpeg.c /u/root/src/i
  
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_lbm.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_lbm.c
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_lbm.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_lbm.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_lbm.c	Mon Jan 30 06:46:18 2023
 @@ -449,7 +449,8 @@
   * Imlib2 doesn't support reading comment chunks like ANNO.
   *------------------------------------------------------------------------------*/
@@ -474,7 +483,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_lbm.c /u/root/src/im
     int                 i;
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_png.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_png.c
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_png.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_png.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_png.c	Mon Jan 30 06:46:18 2023
 @@ -13,7 +13,7 @@
  }
  
@@ -513,7 +522,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_png.c /u/root/src/im
     char               *list_formats[] = { "png" };
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_pnm.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_pnm.c
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_pnm.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_pnm.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_pnm.c	Mon Jan 30 06:46:18 2023
 @@ -27,7 +27,8 @@
  }
  
@@ -549,7 +558,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_pnm.c /u/root/src/im
  
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_tga.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_tga.c
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_tga.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_tga.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_tga.c	Mon Jan 30 06:46:18 2023
 @@ -11,7 +11,9 @@
   */
  #include "loader_common.h"
@@ -617,7 +626,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_tga.c /u/root/src/im
  
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_xpm.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_xpm.c
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_xpm.c	Fri Apr  8 23:18:33 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_xpm.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_xpm.c	Mon Jan 30 06:46:19 2023
 @@ -91,7 +91,8 @@
  }
  
@@ -649,7 +658,7 @@ diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_xpm.c /u/root/src/im
     char               *list_formats[] = { "xpm" };
 diff -ur /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_zlib.c /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_zlib.c
 --- /nfs/stock/imlib2-1.4.5/src/modules/loaders/loader_zlib.c	Sat Apr  9 00:48:51 2011
-+++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_zlib.c	Sun Jan 29 21:02:49 2023
++++ /u/root/src/imlib2-1.4.5/src/modules/loaders/loader_zlib.c	Mon Jan 30 06:46:19 2023
 @@ -8,7 +8,7 @@
  #define OUTBUF_SIZE 16484
  
