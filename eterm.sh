@@ -6,8 +6,7 @@ pkgname=Eterm-0.9.6
 make=/usr/local/bin/make
 
 . gcc-2.7.2.3.inc
-#. gcc-2.95.3.inc
-. binutils-2.9.1.inc
+. binutils-2.13.2.inc
 
 PATH=/usr/local/bin:$PATH
 export PATH
