@@ -8,6 +8,10 @@ pkgname="$1"
 
 shift
 
+if [ `ulimit` -lt 2000000 ]; then
+	ulimit 2000000
+fi
+
 [ -d /u/root/src/$pkgname ] || exit 1
 
 . incs

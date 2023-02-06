@@ -18,6 +18,11 @@ sh diffutils.sh
 
 sh gawk.sh
 
+# we really need to have the profile.sh setup done
+# already at this point because gdb will fail at the stack size
+# limit if not
+
+
 sh gdb.sh
 
 sh grep.sh
@@ -47,7 +52,6 @@ sh make-3.82.sh
 
 sh bash3.sh
 
-fi
 
 sh jpeg.sh
 sh libpng.sh
@@ -62,6 +66,14 @@ sh freetype.sh
 
 sh binutils-2.13.2.sh
 
+sh tiff3.sh
+
 sh imlib2-1.4.5.sh
 
+fi
+
+sh libast.sh
+
 sh eterm.sh
+
+sh wmaker.sh

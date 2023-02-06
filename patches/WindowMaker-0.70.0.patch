@@ -1,0 +1,2578 @@
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/Examples/connect.c /u/root/src/WindowMaker-0.70.0/WINGs/Examples/connect.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/Examples/connect.c	Thu Feb  8 15:42:48 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/Examples/connect.c	Mon Feb  6 02:38:27 2023
+@@ -13,6 +13,7 @@
+ #include <WINGs/WINGs.h>
+ 
+ 
++#include "../../aixdefs.h"
+ 
+ static int initialized = 0;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/Examples/puzzle.c /u/root/src/WindowMaker-0.70.0/WINGs/Examples/puzzle.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/Examples/puzzle.c	Thu Jan 18 09:24:41 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/Examples/puzzle.c	Mon Feb  6 02:38:27 2023
+@@ -42,7 +42,7 @@
+ 
+ Bool SlideButton(int button)
+ {
+-    int x, y, done = 0;
++    int x = 0, y = 0, done = 0;
+     
+     /* locate the button */
+     for (y = 0; y < Size; y++) {
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/Examples/server.c /u/root/src/WindowMaker-0.70.0/WINGs/Examples/server.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/Examples/server.c	Wed Oct  3 20:39:17 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/Examples/server.c	Mon Feb  6 02:38:27 2023
+@@ -12,6 +12,8 @@
+ 
+ #include <WINGs/WINGs.h>
+ 
++#include "../../aixdefs.h"
++
+ 
+ #define _(P)         P
+ #define MAXCMD_SIZE  512
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/Tests/wmfile.c /u/root/src/WindowMaker-0.70.0/WINGs/Tests/wmfile.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/Tests/wmfile.c	Fri Apr 20 16:10:22 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/Tests/wmfile.c	Mon Feb  6 02:38:27 2023
+@@ -20,7 +20,7 @@
+ 
+ #include "logo.xpm"
+ 
+-
++#include "../aixdefs.h"
+ 
+ 
+ void
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/Tests/wmquery.c /u/root/src/WindowMaker-0.70.0/WINGs/Tests/wmquery.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/Tests/wmquery.c	Thu Apr 19 17:04:38 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/Tests/wmquery.c	Mon Feb  6 02:38:27 2023
+@@ -11,7 +11,7 @@
+ 
+ #include "logo.xpm"
+ 
+-
++#include "../aixdefs.h"
+ 
+ 
+ void
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/WINGs/WINGs.h /u/root/src/WindowMaker-0.70.0/WINGs/WINGs/WINGs.h
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/WINGs/WINGs.h	Wed Apr 25 17:16:34 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/WINGs/WINGs.h	Mon Feb  6 02:38:27 2023
+@@ -567,8 +567,8 @@
+     unsigned (*draggingEntered)(WMView *self, WMDraggingInfo *info);
+     unsigned (*draggingUpdated)(WMView *self, WMDraggingInfo *info);
+     void (*draggingExited)(WMView *self, WMDraggingInfo *info);
+-    Bool (*prepareForDragOperation)(WMView *self, WMDraggingInfo *info);
+-    Bool (*performDragOperation)(WMView *self, WMDraggingInfo *info);
++    char * (*prepareForDragOperation)(WMView *self, WMDraggingInfo *info);
++    Bool (*performDragOperation)(WMView *self, WMDraggingInfo *info, WMData *data);
+     void (*concludeDragOperation)(WMView *self, WMDraggingInfo *info);
+ } WMDragDestinationProcs;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/array.c /u/root/src/WindowMaker-0.70.0/WINGs/array.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/array.c	Fri Apr 13 16:08:38 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/array.c	Mon Feb  6 02:38:27 2023
+@@ -8,6 +8,8 @@
+  * proper credit is always appreciated :)
+  */
+ 
++#include "../memmove.h"
++
+ 
+ #include <stdlib.h>
+ #include <string.h>
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/configuration.c /u/root/src/WindowMaker-0.70.0/WINGs/configuration.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/configuration.c	Wed Oct  3 20:39:17 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/configuration.c	Mon Feb  6 02:38:27 2023
+@@ -2,7 +2,9 @@
+ 
+ #include "WINGsP.h"
+ 
+-#include <X11/Xlocale.h>
++/*#include <X11/Xlocale.h>*/
++
++int strcasecmp(const char *s1, const char *s2);
+ 
+ 
+ _WINGsConfiguration WINGsConfiguration;
+@@ -70,7 +72,7 @@
+ 		
+ 		/* if it's a multibyte language (japanese, chinese or korean)
+ 		 * then set it to True */
+-		locale = setlocale(LC_CTYPE, NULL);
++		locale = NULL;
+ 		if (locale != NULL 
+ 		    && (strncmp(locale, "ja", 2) == 0
+ 			|| strncmp(locale, "zh", 2) == 0
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/connection.c /u/root/src/WindowMaker-0.70.0/WINGs/connection.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/connection.c	Tue Jul 24 02:51:02 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/connection.c	Mon Feb  6 02:38:27 2023
+@@ -49,6 +49,9 @@
+ 
+ #include "WINGs.h"
+ 
++#include "../aixdefs.h"
++#include "../aix_socket_defs.h"
++#include "strtoul.c"
+ 
+ /* Some older systems does not define this (linux libc5, maybe others too) */
+ #ifndef SHUT_RDWR
+@@ -304,7 +307,7 @@
+     if (!protocol || protocol[0]==0)
+         protocol = "tcp";
+ 
+-    memset(&socketaddr, 0, sizeof(struct sockaddr_in));
++    memset((char *)&socketaddr, 0, sizeof(struct sockaddr_in));
+     socketaddr.sin_family = AF_INET;
+ 
+     /*
+@@ -367,7 +370,7 @@
+ 
+     cPtr = wmalloc(sizeof(WMConnection));
+     wretain(cPtr);
+-    memset(cPtr, 0, sizeof(WMConnection));
++    memset((char *)cPtr, 0, sizeof(WMConnection));
+ 
+     fcntl(sock, F_SETFD, FD_CLOEXEC); /* by default close on exec */
+ 
+@@ -777,7 +780,7 @@
+         pos = cPtr->bufPos; /* where we're left last time */
+         while(pos < len) {
+         again:
+-            bytes = write(cPtr->sock, dataBytes+pos, len - pos);
++            bytes = write(cPtr->sock, (char *)(dataBytes+pos), len - pos);
+             if(bytes<0) {
+                 switch (errno) {
+                 case EINTR:
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/dragdestination.c /u/root/src/WindowMaker-0.70.0/WINGs/dragdestination.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/dragdestination.c	Wed Apr 18 14:56:01 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/dragdestination.c	Mon Feb  6 02:38:27 2023
+@@ -96,36 +96,37 @@
+ 
+ static unsigned defDraggingEntered(WMView *self, WMDraggingInfo *info)
+ {
+-    printf("%x drag entered\n", W_VIEW_DRAWABLE(self));
++    printf("%x drag entered\n", (int) W_VIEW_DRAWABLE(self));
+     return WDOperationNone;
+ }
+ 
+ static unsigned defDraggingUpdated(WMView *self, WMDraggingInfo *info)
+ {
+-    printf("%x drag updat\n", W_VIEW_DRAWABLE(self));    
++    printf("%x drag updat\n", (int) W_VIEW_DRAWABLE(self));    
+     return WDOperationNone;
+ }
+ 
+ static void defDraggingExited(WMView *self, WMDraggingInfo *info)
+ {
+-    printf("%x drag exit\n", W_VIEW_DRAWABLE(self));    
++    printf("%x drag exit\n", (int) W_VIEW_DRAWABLE(self));    
+ }
+ 
+-static Bool defPrepareForDragOperation(WMView *self, WMDraggingInfo *info)
++static char * defPrepareForDragOperation(WMView *self, WMDraggingInfo *info)
+ {
+-    printf("%x drag prep\n", W_VIEW_DRAWABLE(self));    
+-    return False;
++    printf("%x drag prep\n", (int) W_VIEW_DRAWABLE(self));    
++    /* return False; */
++    return NULL;
+ }
+ 
+-static Bool defPerformDragOperation(WMView *self, WMDraggingInfo *info)
++static Bool defPerformDragOperation(WMView *self, WMDraggingInfo *info, WMData *data)
+ {
+-    printf("%x drag perf\n", W_VIEW_DRAWABLE(self));    
++    printf("%x drag perf\n", (int) W_VIEW_DRAWABLE(self));    
+     return False;
+ }
+ 
+ static void defConcludeDragOperation(WMView *self, WMDraggingInfo *info)
+ {
+-    printf("%x drag concl\n", W_VIEW_DRAWABLE(self));    
++    printf("%x drag concl\n", (int) W_VIEW_DRAWABLE(self));    
+ }
+ 
+ 
+@@ -176,13 +177,14 @@
+ }
+ 
+ 
+-
++#if 0
+ static void
+ receivedData(WMView *view, Atom selection, Atom target, Time timestamp, 
+ 	     void *cdata, WMData *data)
+ {
+     
+ }
++#endif
+ 
+ 
+ 
+@@ -217,6 +219,7 @@
+ 			  0, 0, 0, 0);
+     }
+ #endif
++    return False;
+ }
+ 
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/dragsource.c /u/root/src/WindowMaker-0.70.0/WINGs/dragsource.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/dragsource.c	Tue Oct 31 18:47:24 2000
++++ /u/root/src/WindowMaker-0.70.0/WINGs/dragsource.c	Mon Feb  6 02:38:27 2023
+@@ -1046,7 +1046,7 @@
+     
+ 
+ 
+-
++#if 0
+ 
+ 
+ static Atom*
+@@ -1076,12 +1076,12 @@
+     return types;
+ }
+ 
+-
++#endif
+ 
+ #define DISPATCH(view, func, info) (view)->dragDestinationProcs->func(view, info)
++#define DISPATCH_WITH_DATA(view, func, info, data) (view)->dragDestinationProcs->func(view, info, data)
+ 
+-
+-
++#if 0
+ static void
+ receivedData(WMView *view, Atom selection, Atom target,
+ 	     Time timestamp, void *cdata, WMData *data)
+@@ -1104,7 +1104,7 @@
+ 
+     memset(&scr->dragInfo, 0, sizeof(WMDraggingInfo));
+ }
+-
++#endif
+ 
+ 
+ void
+@@ -1295,11 +1295,12 @@
+      case WDrop:
+ 	{
+ 	    Bool res;
++            char * dragType;
+ 	    
+-	    res = DISPATCH(oldView, prepareForDragOperation, &scr->dragInfo);
++	    dragType = DISPATCH(oldView, prepareForDragOperation, &scr->dragInfo);
+ 
+-	    if (res) {
+-		res = DISPATCH(oldView, performDragOperation, &scr->dragInfo);
++	    if (dragType) {
++		res = DISPATCH_WITH_DATA(oldView, performDragOperation, &scr->dragInfo, NULL);
+ 	    }
+ 	    
+ 	    if (res) {
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/error.c /u/root/src/WindowMaker-0.70.0/WINGs/error.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/error.c	Tue Sep 11 03:27:06 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/error.c	Mon Feb  6 02:38:27 2023
+@@ -34,6 +34,10 @@
+ 
+ #define MAXLINE	1024
+ 
++/* XXXX FIXME this should probably be worked around instead */
++char * strerror (int errnum);
++
++int vsnprintf (char *str, size_t count, const char *fmt, va_list args);
+ 
+ /*********************************************************************
+  * Returns the system error message associated with error code 'errnum'
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/findfile.c /u/root/src/WindowMaker-0.70.0/WINGs/findfile.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/findfile.c	Wed Oct  3 20:39:17 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/findfile.c	Mon Feb  6 02:38:27 2023
+@@ -35,6 +35,8 @@
+ #define PATH_MAX  1024
+ #endif
+ 
++#include "../aixdefs.h"
++#include "../aix_uio_defs.h"
+ 
+ char*
+ wgethomedir()
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/handlers.c /u/root/src/WindowMaker-0.70.0/WINGs/handlers.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/handlers.c	Wed Apr 18 14:57:03 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/handlers.c	Mon Feb  6 02:38:27 2023
+@@ -22,7 +22,8 @@
+ #define X_GETTIMEOFDAY(t) gettimeofday(t, (struct timezone*)0)
+ #endif
+ 
+-
++#include "../aixdefs.h"
++#include "../aix_time_defs.h"
+ 
+ 
+ typedef struct TimerHandler {
+@@ -141,7 +142,7 @@
+ {
+     TimerHandler *handler;
+ 
+-    handler = malloc(sizeof(TimerHandler));
++    handler = (TimerHandler *)malloc(sizeof(TimerHandler));
+     if (!handler)
+       return NULL;
+ 
+@@ -240,7 +241,7 @@
+ {
+     IdleHandler *handler;
+ 
+-    handler = malloc(sizeof(IdleHandler));
++    handler = (IdleHandler *)malloc(sizeof(IdleHandler));
+     if (!handler)
+         return NULL;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/host.c /u/root/src/WindowMaker-0.70.0/WINGs/host.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/host.c	Tue Jul 24 02:51:02 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/host.c	Mon Feb  6 02:38:27 2023
+@@ -32,6 +32,7 @@
+ 
+ #include "WUtil.h"
+ 
++#include "../aix_socket_defs.h"
+ 
+ /* For Solaris */
+ #ifndef INADDR_NONE
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/memory.c /u/root/src/WindowMaker-0.70.0/WINGs/memory.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/memory.c	Sun May 27 06:50:29 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/memory.c	Mon Feb  6 02:38:27 2023
+@@ -42,6 +42,7 @@
+ # define True 1
+ #endif
+ 
++#include "../aixdefs.h"
+ 
+ static void
+ defaultHandler(int bla)
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/proplist.c /u/root/src/WindowMaker-0.70.0/WINGs/proplist.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/proplist.c	Wed Oct  3 20:39:17 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/proplist.c	Mon Feb  6 02:38:27 2023
+@@ -12,7 +12,7 @@
+ #include "WUtil.h"
+ #include "wconfig.h"
+ 
+-
++#include "../aixdefs.h"
+ 
+ typedef enum {
+     WPLString     = 0x57504c01,
+@@ -115,6 +115,13 @@
+ 
+ #define MaxHashLength 64
+ 
++char tolower(char keytemp) {
++	if (isupper(keytemp)) {
++		keytemp = _tolower(keytemp);
++	}
++	return keytemp;
++}
++
+ static unsigned
+ hashPropList(WMPropList *plist)
+ {
+@@ -1502,7 +1509,7 @@
+     PLData *pldata;
+ 
+     pldata = (PLData*) wmalloc(sizeof(PLData));
+-    memset(pldata, 0, sizeof(PLData));
++    memset((char *)pldata, 0, sizeof(PLData));
+     pldata->ptr = desc;
+     pldata->lineNumber = 1;
+ 
+@@ -1557,7 +1564,7 @@
+     }
+ 
+     pldata = (PLData*) wmalloc(sizeof(PLData));
+-    memset(pldata, 0, sizeof(PLData));
++    memset((char *)pldata, 0, sizeof(PLData));
+     pldata->ptr = (char*) wmalloc(length+1);
+     pldata->filename = file;
+     pldata->lineNumber = 1;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/selection.c /u/root/src/WindowMaker-0.70.0/WINGs/selection.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/selection.c	Sat Apr 14 09:17:11 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/selection.c	Mon Feb  6 02:38:27 2023
+@@ -370,7 +370,7 @@
+     if (XGetSelectionOwner(dpy, selection) != W_VIEW_DRAWABLE(view))
+ 	return False;
+ 
+-    handler = malloc(sizeof(SelectionHandler));
++    handler = (SelectionHandler *)malloc(sizeof(SelectionHandler));
+     if (handler == NULL)
+ 	return False;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/userdefaults.c /u/root/src/WindowMaker-0.70.0/WINGs/userdefaults.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/userdefaults.c	Wed Oct  3 20:39:17 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/userdefaults.c	Mon Feb  6 02:38:27 2023
+@@ -13,6 +13,7 @@
+ 
+ #include "WINGs.h"
+ 
++#include "../aixdefs.h"
+ 
+ 
+ typedef struct W_UserDefaults {
+@@ -94,6 +95,8 @@
+ }
+ 
+ 
++#if 0
++
+ static void
+ #ifndef HAVE_ATEXIT
+ saveDefaultsChanges(int foo, void *bar)
+@@ -110,6 +113,8 @@
+     }
+ }
+ 
++#endif
++
+ 
+ /* set to save changes in defaults when program is exited */
+ static void
+@@ -118,11 +123,13 @@
+     static Bool registeredSaveOnExit = False;
+ 
+     if (!registeredSaveOnExit) {
++#if 0
+ #ifndef HAVE_ATEXIT
+         on_exit(saveDefaultsChanges, (void*)NULL);
+ #else
+         atexit(saveDefaultsChanges);
+ #endif
++#endif
+         registeredSaveOnExit = True;
+     }
+ }
+@@ -276,7 +283,7 @@
+ 
+     /* we didn't found the database we are looking for. Go read it. */
+     defaults = wmalloc(sizeof(WMUserDefaults));
+-    memset(defaults, 0, sizeof(WMUserDefaults));
++    memset((char *)defaults, 0, sizeof(WMUserDefaults));
+ 
+     defaults->defaults = WMCreatePLDictionary(NULL, NULL, NULL);
+ 
+@@ -372,7 +379,7 @@
+ 
+     /* we didn't found the database we are looking for. Go read it. */
+     defaults = wmalloc(sizeof(WMUserDefaults));
+-    memset(defaults, 0, sizeof(WMUserDefaults));
++    memset((char *)defaults, 0, sizeof(WMUserDefaults));
+ 
+     defaults->defaults = WMCreatePLDictionary(NULL, NULL, NULL);
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/usleep.c /u/root/src/WindowMaker-0.70.0/WINGs/usleep.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/usleep.c	Mon Mar 15 15:41:23 1999
++++ /u/root/src/WindowMaker-0.70.0/WINGs/usleep.c	Mon Feb  6 02:38:27 2023
+@@ -15,6 +15,9 @@
+ #include <unistd.h>
+ #include <string.h>
+ 
++#include "../aixdefs.h"
++#include "../aix_time_defs.h"
++
+ #if defined(HAVE_SELECT)
+ 
+ #ifdef HAVE_SYS_SELECT_H
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/wapplication.c /u/root/src/WindowMaker-0.70.0/WINGs/wapplication.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/wapplication.c	Tue Jul 24 02:51:02 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/wapplication.c	Mon Feb  6 02:38:27 2023
+@@ -6,7 +6,9 @@
+ 
+ #include "wconfig.h"
+ 
+-#include "X11/Xlocale.h"
++/*#include <X11/Xlocale.h>*/
++
++#include "../aixdefs.h"
+ 
+ 
+ extern void W_InitNotificationCenter(void);
+@@ -36,7 +38,7 @@
+     assert(applicationName!=NULL);
+    
+ 
+-    setlocale(LC_ALL, "");
++    /* setlocale(LC_ALL, ""); */ 
+     
+ #ifdef I18N
+     if (getenv("NLSPATH"))
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/wbox.c /u/root/src/WindowMaker-0.70.0/WINGs/wbox.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/wbox.c	Tue Apr 24 08:32:57 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/wbox.c	Mon Feb  6 02:38:27 2023
+@@ -2,6 +2,8 @@
+ 
+ #include "WINGsP.h"
+ 
++#include "../memmove.h"
++
+ 
+ typedef struct {
+     WMView *view;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/wcolorpanel.c /u/root/src/WindowMaker-0.70.0/WINGs/wcolorpanel.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/wcolorpanel.c	Tue Jul 24 02:51:02 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/wcolorpanel.c	Mon Feb  6 02:38:27 2023
+@@ -36,6 +36,8 @@
+ #include <dirent.h>
+ #include <errno.h>
+ 
++#include "../aixdefs.h"
++
+ /* BUG There's something fishy with shaped windows */
+ #if 1
+     #ifdef SHAPE
+@@ -397,7 +399,7 @@
+  
+     
+     panel = wmalloc(sizeof(WMColorPanel));
+-    memset(panel, 0, sizeof(WMColorPanel));
++    memset((char *)panel, 0, sizeof(WMColorPanel));
+  
+     panel->color.rgb.red = 0;
+     panel->color.rgb.green = 0;
+@@ -2004,7 +2006,7 @@
+     assert((width > 0) && (height > 0));
+     
+     matrix = wmalloc(sizeof(wheelMatrix));
+-    memset(matrix, 0, sizeof(wheelMatrix));
++    memset((char *)matrix, 0, sizeof(wheelMatrix));
+     matrix->width = width;
+     matrix->height = height;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/wfilepanel.c /u/root/src/WindowMaker-0.70.0/WINGs/wfilepanel.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/wfilepanel.c	Tue Jul 24 02:51:02 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/wfilepanel.c	Mon Feb  6 02:38:27 2023
+@@ -13,6 +13,9 @@
+ #define PATH_MAX 1024
+ #endif
+ 
++#include "../aixdefs.h"
++
++int snprintf(char *str,size_t count,const char *fmt,...);
+ 
+ typedef struct W_FilePanel {
+     WMWindow *win;
+@@ -183,7 +186,7 @@
+     WMPixmap *icon;
+ 
+     fPtr = wmalloc(sizeof(WMFilePanel));
+-    memset(fPtr, 0, sizeof(WMFilePanel));
++    memset((char *)fPtr, 0, sizeof(WMFilePanel));
+ 
+     fPtr->win = WMCreateWindowWithStyle(scrPtr, name, WMTitledWindowMask
+ 					|WMResizableWindowMask);
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/wfont.c /u/root/src/WindowMaker-0.70.0/WINGs/wfont.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/wfont.c	Tue Jul 24 02:51:02 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/wfont.c	Mon Feb  6 02:38:27 2023
+@@ -5,11 +5,13 @@
+ 
+ #include <wraster.h>
+ #include <assert.h>
+-#include <X11/Xlocale.h>
++/* #include <X11/Xlocale.h> */
+ 
+-static char *makeFontSetOfSize(char *fontset, int size);
++#include "../aixdefs.h"
+ 
++static char *makeFontSetOfSize(char *fontset, int size);
+ 
++int snprintf(char *str,size_t count,const char *fmt,...);
+ 
+ /* XLFD pattern matching */
+ static char*
+@@ -72,9 +74,9 @@
+        (this fontset is only for pattern analysis) */
+     if (fs == NULL) {
+ 	if (*nmissing != 0) XFreeStringList(*missing);
+-	setlocale(LC_CTYPE, "C");
++	/* setlocale(LC_CTYPE, "C"); */
+ 	fs = XCreateFontSet(dpy, xlfd, missing, nmissing, def_string);
+-	setlocale(LC_CTYPE, "");
++	/* setlocale(LC_CTYPE, ""); */
+     }
+ 
+     /* make XLFD font name for pattern analysis */
+@@ -112,10 +114,10 @@
+ 	return font;
+     }
+ 
+-    font = malloc(sizeof(WMFont));
++    font = (WMFont *)malloc(sizeof(WMFont));
+     if (!font)
+       return NULL;
+-    memset(font, 0, sizeof(WMFont));
++    memset((char *)font, 0, sizeof(WMFont));
+ 
+     font->notFontSet = 0;
+ 
+@@ -179,12 +181,12 @@
+ 	return font;
+     }
+ 
+-    font = malloc(sizeof(WMFont));
++    font = (WMFont *)malloc(sizeof(WMFont));
+     if (!font) {
+ 	wfree(fname);
+ 	return NULL;
+     }
+-    memset(font, 0, sizeof(WMFont));
++    memset((char *)font, 0, sizeof(WMFont));
+     
+     font->notFontSet = 1;
+     
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/wfontpanel.c /u/root/src/WindowMaker-0.70.0/WINGs/wfontpanel.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/wfontpanel.c	Wed Oct  3 20:39:17 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/wfontpanel.c	Mon Feb  6 02:38:27 2023
+@@ -9,6 +9,15 @@
+ #include <ctype.h>
+ #include <string.h>
+ 
++int snprintf(char *str,size_t count,const char *fmt,...);
++#include "../aixdefs.h"
++
++char toupper(char in) {
++	if (islower(in)) {
++		in = _toupper(in);
++	}
++	return in;
++}
+ 
+ typedef struct W_FontPanel {
+     WMWindow *win;
+@@ -163,7 +172,7 @@
+ 
+ 
+     panel = wmalloc(sizeof(FontPanel));
+-    memset(panel, 0, sizeof(FontPanel));
++    memset((char *)panel, 0, sizeof(FontPanel));
+     
+     panel->win = WMCreateWindow(scr, "fontPanel");
+ /*    WMSetWidgetBackgroundColor(panel->win, WMWhiteColor(scr));*/
+@@ -559,7 +568,7 @@
+     }
+ 
+     face = wmalloc(sizeof(Typeface));
+-    memset(face, 0, sizeof(Typeface));
++    memset((char *)face, 0, sizeof(Typeface));
+ 
+     face->weight = wstrdup(fontFields[WEIGHT]);
+     face->slant = wstrdup(fontFields[SLANT]);
+@@ -616,7 +625,7 @@
+ 		fam->showFoundry = 1;
+ 
+ 		fam = wmalloc(sizeof(Family));
+-		memset(fam, 0, sizeof(Family));
++		memset((char *)fam, 0, sizeof(Family));
+ 
+ 		fam->name = wstrdup(fontFields[FAMILY]);
+ 		fam->foundry = wstrdup(fontFields[FOUNDRY]);
+@@ -641,7 +650,7 @@
+ 		fam->showRegistry = 1;
+ 
+ 		fam = wmalloc(sizeof(Family));
+-		memset(fam, 0, sizeof(Family));
++		memset((char *)fam, 0, sizeof(Family));
+ 
+ 		fam->name = wstrdup(fontFields[FAMILY]);
+ 		fam->foundry = wstrdup(fontFields[FOUNDRY]);
+@@ -657,7 +666,7 @@
+ 	}
+ 	/* foundry and encoding do not match anything known */
+ 	fam = wmalloc(sizeof(Family));
+-	memset(fam, 0, sizeof(Family));
++	memset((char *)fam, 0, sizeof(Family));
+ 
+ 	fam->name = wstrdup(fontFields[FAMILY]);
+ 	fam->foundry = wstrdup(fontFields[FOUNDRY]);
+@@ -675,7 +684,7 @@
+     family = WMCreateArray(8);
+ 
+     fam = wmalloc(sizeof(Family));
+-    memset(fam, 0, sizeof(Family));
++    memset((char *)fam, 0, sizeof(Family));
+ 
+     fam->name = wstrdup(fontFields[FAMILY]);
+     fam->foundry = wstrdup(fontFields[FOUNDRY]);
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/wframe.c /u/root/src/WindowMaker-0.70.0/WINGs/wframe.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/wframe.c	Thu Jun  8 20:54:11 2000
++++ /u/root/src/WindowMaker-0.70.0/WINGs/wframe.c	Mon Feb  6 02:38:27 2023
+@@ -85,6 +85,9 @@
+     int tx, ty, tw, th;
+     int fy, fh;
+     Bool drawTitle;
++
++    tx = 0;
++    tw = 0;
+     
+     if (fPtr->caption!=NULL)
+ 	th = WMFontHeight(scrPtr->normalFont);
+@@ -154,6 +157,8 @@
+ 	Region region, tmp;
+ 	GC gc[4];
+ 	int i;
++
++	tmp = NULL;
+ 
+ 	region = XCreateRegion();
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/widgets.c /u/root/src/WindowMaker-0.70.0/WINGs/widgets.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/widgets.c	Sun Sep  2 14:19:16 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/widgets.c	Mon Feb  6 03:02:34 2023
+@@ -8,6 +8,8 @@
+ #include <X11/keysym.h>
+ #include <X11/cursorfont.h>
+ 
++Bool W_InitIMStuff(WMScreen *scr);
++
+ /********** data ************/
+ 
+ 
+@@ -596,7 +598,7 @@
+ 	assert(W_ApplicationInitialized());
+     }
+     
+-    scrPtr = malloc(sizeof(W_Screen));
++    scrPtr = (W_Screen *) malloc(sizeof(W_Screen));
+     if (!scrPtr)
+ 	return NULL;
+     memset(scrPtr, 0, sizeof(W_Screen));
+@@ -671,6 +673,9 @@
+ 		Mod2Mask, Mod3Mask, Mod4Mask, Mod5Mask
+ 	};
+ 	unsigned int numLockMask, scrollLockMask;
++
++	numLockMask = 0;
++	scrollLockMask = 0;
+ 	
+ 	nlock = XKeysymToKeycode(display, XK_Num_Lock);
+ 	slock = XKeysymToKeycode(display, XK_Scroll_Lock);
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/winputmethod.c /u/root/src/WindowMaker-0.70.0/WINGs/winputmethod.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/winputmethod.c	Thu Aug 23 15:40:46 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/winputmethod.c	Mon Feb  6 02:38:27 2023
+@@ -35,6 +35,7 @@
+     }
+     
+ //    XGetIMValues(scr->display,
++    return True;
+ }
+ 
+ 
+@@ -50,19 +51,19 @@
+ }
+ 
+ 
+-
++#if 0
+ WMICContext *W_CreateIC(WMView *view)
+ {
+     WMScreen *scr = W_VIEW_SCREEN(view);
+     WMICContext *ctx;
+-    
++
+     ctx->prev = NULL;
+     ctx->next = scr->imctx->icList;
+     if (scr->imctx->icList)
+ 	scr->imctx->icList->prev = ctx;
+     scr->imctx = ctx;
+ }
+-
++#endif
+ 
+ void W_DestroyIC(WMICContext *ctx)
+ {
+@@ -75,7 +76,7 @@
+ int W_LookupString(WMView *view, XKeyEvent *event,
+ 		   char buffer, int bufsize, KeySym ksym)
+ {
+-    
++	return 0;    
+ }
+ 
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/wruler.c /u/root/src/WindowMaker-0.70.0/WINGs/wruler.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/wruler.c	Tue Jul 24 02:51:02 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/wruler.c	Mon Feb  6 02:38:27 2023
+@@ -22,6 +22,8 @@
+ #include "WINGsP.h"
+ #include "wconfig.h"
+ 
++int snprintf(char *str,size_t count,const char *fmt,...);
++
+ #define MIN_DOC_WIDTH 10
+ 
+ typedef struct W_Ruler {
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/wscroller.c /u/root/src/WindowMaker-0.70.0/WINGs/wscroller.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/wscroller.c	Tue May  8 08:21:01 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/wscroller.c	Mon Feb  6 02:38:27 2023
+@@ -6,6 +6,10 @@
+ 
+ #include <math.h>
+ 
++int isnan(float f) {
++	return f != f;
++}
++
+ /* undefine will disable the autoadjusting of the knob dimple to be
+  * directly below the cursor 
+  * DOES NOT WORK */
+@@ -675,6 +679,8 @@
+ 
+      case WSKnobSlot:
+      case WSNoPart:
++     case WSDecrementWheel:
++     case WSIncrementWheel:
+ 	/* dummy */
+ 	break;
+     }
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/wtabview.c /u/root/src/WindowMaker-0.70.0/WINGs/wtabview.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/wtabview.c	Wed Oct  3 20:39:17 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/wtabview.c	Mon Feb  6 02:38:27 2023
+@@ -1,6 +1,8 @@
+ 
+ #include "WINGsP.h"
+ 
++#include "../memmove.h"
++
+ 
+ typedef struct W_TabView {
+     W_Class widgetClass;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WINGs/wtext.c /u/root/src/WindowMaker-0.70.0/WINGs/wtext.c
+--- /nfs/stock/WindowMaker-0.70.0/WINGs/wtext.c	Thu May 10 15:26:45 2001
++++ /u/root/src/WindowMaker-0.70.0/WINGs/wtext.c	Mon Feb  6 02:38:27 2023
+@@ -7,6 +7,11 @@
+ #include <X11/keysym.h>
+ #include <X11/Xatom.h>
+ 
++#include "../memmove.h"
++
++char tolower(char c);
++int strncasecmp(const char *s1, const char *s3, size_t n);
++
+ #define DO_BLINK 0
+ 
+ /* TODO: 
+@@ -656,6 +661,8 @@
+     Window win = tPtr->view->window;
+     WMColor *color;
+ 
++    greyGC = NULL;
++
+     if (!tPtr->view->flags.realized || !tPtr->db || tPtr->flags.frozen)
+         return;
+ 
+@@ -2032,7 +2039,7 @@
+         int s = tb->used - tPtr->tpos;
+ 
+         if (!tb->blank && nlen>0) {
+-            char *save;
++            char *save = NULL;
+ 
+             if (s > 0) {
+                 save = wmalloc(s);
+@@ -2891,11 +2898,11 @@
+ printf("draggingExited\n");
+ }
+ 
+-static Bool
++static char *
+ prepareForDragOperation(WMView *self, WMDraggingInfo *info)
+ {
+     printf("prepareForDragOperation\n");
+-    return True;
++    return "text/plain";
+ }   
+ 
+ 
+@@ -2944,7 +2951,7 @@
+ }
+ 
+ static Bool
+-performDragOperation(WMView *self, WMDraggingInfo *info)
++performDragOperation(WMView *self, WMDraggingInfo *info, WMData *data)
+ {
+     WMColor *color; 
+     WMText *tPtr = (WMText *)self->self;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Appearance.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/Appearance.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Appearance.c	Wed Oct  3 20:39:17 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/Appearance.c	Mon Feb  6 02:38:27 2023
+@@ -33,7 +33,9 @@
+ #include <unistd.h>
+ 
+ 
++#include "../aixdefs.h"
+ 
++char toupper(char ch);
+ 
+ #include "TexturePanel.h"
+ 
+@@ -734,6 +736,7 @@
+     Pixmap pix, tmp;
+     GC gc = XCreateGC(dpy, WMWidgetXID(panel->parent), 0, NULL);
+     int i;
++    pix = NULL;
+ 
+     switch (panel->menuStyle) {
+      case MSTYLE_NORMAL:
+@@ -954,7 +957,7 @@
+     WMScreen *scr = WMWidgetScreen(panel->parent);
+ 
+     titem = wmalloc(sizeof(TextureListItem));
+-    memset(titem, 0, sizeof(TextureListItem));
++    memset((char *)titem, 0, sizeof(TextureListItem));
+ 
+     HideTexturePanel(panel->texturePanel);
+ 
+@@ -1142,7 +1145,7 @@
+ changePage(WMWidget *w, void *data)
+ {
+     _Panel *panel = (_Panel*)data;
+-    int section;
++    int section = 0;
+     WMListItem *item;
+     TextureListItem *titem;
+     WMScreen *scr = WMWidgetScreen(panel->box);
+@@ -1390,7 +1393,7 @@
+ 	texture = WMGetFromPLArray(textureList, i);
+ 
+ 	titem = wmalloc(sizeof(TextureListItem));
+-	memset(titem, 0, sizeof(TextureListItem));
++	memset((char *)titem, 0, sizeof(TextureListItem));
+ 
+ 	titem->title = wstrdup(WMGetFromPLString(WMGetFromPLArray(texture, 0)));
+ 	titem->prop = WMRetainPropList(WMGetFromPLArray(texture, 1));
+@@ -1938,7 +1941,7 @@
+ 
+     for (i = 0; i < 3; i++) {
+ 	WMPixmap *icon;
+-	char *path;
++	char *path=NULL;
+ 
+ 	panel->mstyB[i] = WMCreateButton(panel->mstyF, WBTOnOff);
+ 	WMResizeWidget(panel->mstyB[i], 54, 54);
+@@ -2030,7 +2033,7 @@
+     TextureListItem *titem;
+ 
+     titem = wmalloc(sizeof(TextureListItem));
+-    memset(titem, 0, sizeof(TextureListItem));
++    memset((char *)titem, 0, sizeof(TextureListItem));
+ 
+     titem->title = wstrdup(title);
+     titem->prop = GetObjectForKey(key);
+@@ -2101,8 +2104,8 @@
+     }
+     updatePreviewBox(panel, EVERYTHING);
+ 
+-    WMSetButtonSelected(panel->mstyB[panel->menuStyle], True);
+-    WMSetButtonSelected(panel->taliB[panel->titleAlignment], True);
++    WMSetButtonSelected(panel->mstyB[(int)(panel->menuStyle)], True);
++    WMSetButtonSelected(panel->taliB[(int)(panel->titleAlignment)], True);
+ }
+ 
+ 
+@@ -2211,7 +2214,7 @@
+     _Panel *panel;
+ 
+     panel = wmalloc(sizeof(_Panel));
+-    memset(panel, 0, sizeof(_Panel));
++    memset((char *)panel, 0, sizeof(_Panel));
+     
+     panel->sectionName = _("Appearance Preferences");
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Focus.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/Focus.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Focus.c	Wed Oct  3 20:39:17 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/Focus.c	Mon Feb  6 02:38:27 2023
+@@ -23,6 +23,8 @@
+ 
+ #include "WPrefs.h"
+ 
++#include "../aixdefs.h"
++
+ typedef struct _Panel {
+     WMBox *box;
+ 
+@@ -358,7 +360,7 @@
+     _Panel *panel;
+ 
+     panel = wmalloc(sizeof(_Panel));
+-    memset(panel, 0, sizeof(_Panel));
++    memset((char *)panel, 0, sizeof(_Panel));
+ 
+     panel->sectionName = _("Window Focus Preferences");
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Font.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/Font.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Font.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/Font.c	Mon Feb  6 02:38:27 2023
+@@ -78,9 +78,11 @@
+ static WMPropList *DefaultWindowTitleFont = NULL;
+ static WMPropList *DefaultMenuTitleFont = NULL;
+ static WMPropList *DefaultMenuTextFont = NULL;
++#if 0
+ static WMPropList *DefaultIconTitleFont = NULL;
+ static WMPropList *DefaultClipTitleFont = NULL;
+ static WMPropList *DefaultDisplayFont = NULL;
++#endif
+ 
+ 
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Icons.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/Icons.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Icons.c	Tue Apr 24 08:40:37 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/Icons.c	Mon Feb  6 02:38:27 2023
+@@ -23,6 +23,8 @@
+ 
+ #include "WPrefs.h"
+ 
++#include "../aixdefs.h"
++
+ 
+ typedef struct _Panel {
+     WMBox *box;
+@@ -340,7 +342,7 @@
+     _Panel *panel;
+ 
+     panel = wmalloc(sizeof(_Panel));
+-    memset(panel, 0, sizeof(_Panel));
++    memset((char *)panel, 0, sizeof(_Panel));
+ 
+     panel->sectionName = _("Icon Preferences");
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/KeyboardShortcuts.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/KeyboardShortcuts.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/KeyboardShortcuts.c	Tue Jul 24 02:51:02 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/KeyboardShortcuts.c	Mon Feb  6 02:38:27 2023
+@@ -26,6 +26,7 @@
+ 
+ #include <X11/keysym.h>
+ 
++#include "../aixdefs.h"
+ 
+ typedef struct _Panel {
+     WMBox *box;
+@@ -123,17 +124,19 @@
+ captureShortcut(Display *dpy, _Panel *panel)
+ {
+     XEvent ev;
+-    KeySym ksym, lksym, uksym;
++    KeySym ksym, uksym;
+     char buffer[64];
+     char *key = NULL;
+ 
++    uksym = 0;
++
+     while (panel->capturing) {
+     	XAllowEvents(dpy, AsyncKeyboard, CurrentTime);
+ 	WMNextEvent(dpy, &ev);
+ 	if (ev.type==KeyPress && ev.xkey.keycode!=0) {
+ 	    ksym = XKeycodeToKeysym(dpy, ev.xkey.keycode, 0);
+             if (!IsModifierKey(ksym)) {
+-                XConvertCase(ksym, &lksym, &uksym);
++                /* XConvertCase(ksym, &lksym, &uksym); */
+                 key=XKeysymToString(uksym);
+                 panel->capturing = 0;
+ 		break;
+@@ -429,7 +432,7 @@
+ 
+     panel->actionCount = WMGetListNumberOfRows(panel->actLs);
+     panel->shortcuts = wmalloc(sizeof(char*)*panel->actionCount);
+-    memset(panel->shortcuts, 0, sizeof(char*)*panel->actionCount);
++    memset((char *)panel->shortcuts, 0, sizeof(char*)*panel->actionCount);
+ 
+     /***************** Shortcut ****************/
+ 
+@@ -507,7 +510,7 @@
+     _Panel *panel;
+ 
+     panel = wmalloc(sizeof(_Panel));
+-    memset(panel, 0, sizeof(_Panel));
++    memset((char *)panel, 0, sizeof(_Panel));
+ 
+     panel->sectionName = _("Keyboard Shortcut Preferences");
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Menu.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/Menu.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Menu.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/Menu.c	Mon Feb  6 02:38:27 2023
+@@ -162,7 +162,7 @@
+ 
+ 
+ 
+-#define NEW(type) memset(wmalloc(sizeof(type)), 0, sizeof(type))
++#define NEW(type) (type *)memset(wmalloc(sizeof(type)), 0, sizeof(type))
+ 
+ 
+ #define ICON_FILE	"menus"
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/MouseSettings.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/MouseSettings.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/MouseSettings.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/MouseSettings.c	Mon Feb  6 02:38:28 2023
+@@ -32,6 +32,7 @@
+ #include "double.h"
+ 
+ 
++#include "../aixdefs.h"
+ 
+ #define XSET	"xset"
+ 
+@@ -394,7 +395,7 @@
+ 	char *tmp;
+ 
+ 	a = 0;
+-	memset(array, 0, sizeof(char*)*8);
++	memset((char *)array, 0, sizeof(char*)*8);
+ 	for (i=0; i < mapping->max_keypermod; i++) {
+ 	    idx = i+j*mapping->max_keypermod;
+ 	    if (mapping->modifiermap[idx]!=0) {
+@@ -844,7 +845,7 @@
+     wheelActions[1] = wstrdup(_("Switch Workspaces"));
+ 
+     panel = wmalloc(sizeof(_Panel));
+-    memset(panel, 0, sizeof(_Panel));
++    memset((char *)panel, 0, sizeof(_Panel));
+ 
+     panel->sectionName = _("Mouse Preferences");
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Paths.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/Paths.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Paths.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/Paths.c	Mon Feb  6 02:38:28 2023
+@@ -24,6 +24,8 @@
+ #include "WPrefs.h"
+ #include <unistd.h>
+ 
++#include "../aixdefs.h"
++
+ typedef struct _Panel {
+     WMBox *box;
+     char *sectionName;
+@@ -158,7 +160,7 @@
+                 len--;
+             }
+             if (len > 0) {
+-                WMList *lPtr;
++                WMList *lPtr = NULL;
+                 int i;
+ 
+                 if (w == panel->icoaB)
+@@ -336,7 +338,7 @@
+     _Panel *panel;
+ 
+     panel = wmalloc(sizeof(_Panel));
+-    memset(panel, 0, sizeof(_Panel));
++    memset((char *)panel, 0, sizeof(_Panel));
+ 
+     panel->sectionName = _("Search Path Configuration");
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Preferences.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/Preferences.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Preferences.c	Thu Jun  7 02:22:05 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/Preferences.c	Mon Feb  6 02:38:28 2023
+@@ -23,6 +23,8 @@
+ 
+ #include "WPrefs.h"
+ 
++#include "../aixdefs.h"
++
+ typedef struct _Panel {
+     WMBox *box;
+ 
+@@ -344,7 +346,7 @@
+     _Panel *panel;
+ 
+     panel = wmalloc(sizeof(_Panel));
+-    memset(panel, 0, sizeof(_Panel));
++    memset((char *)panel, 0, sizeof(_Panel));
+ 
+     panel->sectionName = _("Miscellaneous Ergonomic Preferences");
+     panel->description = _("Various settings like balloon text, geometry\n"
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/TexturePanel.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/TexturePanel.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/TexturePanel.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/TexturePanel.c	Mon Feb  6 02:38:28 2023
+@@ -37,6 +37,10 @@
+ 
+ #include "TexturePanel.h"
+ 
++#include "../aixdefs.h"
++
++char toupper(char ch);
++
+ #define MAX_SECTION_PARTS 5
+ 
+ typedef struct _TexturePanel {
+@@ -509,7 +513,7 @@
+     row = WMGetListSelectedItemRow(panel->gcolL) + 1;
+     item = WMInsertListItem(panel->gcolL, row, "00,00,00");
+     rgb = wmalloc(sizeof(RColor));
+-    memset(rgb, 0, sizeof(RColor));
++    memset((char *)rgb, 0, sizeof(RColor));
+     item->clientData = rgb;
+ 
+     WMSelectListItem(panel->gcolL, row);
+@@ -1236,7 +1240,7 @@
+     WMScreen *scr = WMWidgetScreen(keyWindow);
+ 
+     panel = wmalloc(sizeof(TexturePanel));
+-    memset(panel, 0, sizeof(TexturePanel));
++    memset((char *)panel, 0, sizeof(TexturePanel));
+ 
+     panel->listFont = WMSystemFontOfSize(scr, 12);
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Themes.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/Themes.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Themes.c	Tue Apr 24 08:41:07 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/Themes.c	Mon Feb  6 02:38:28 2023
+@@ -25,6 +25,8 @@
+ 
+ #include <unistd.h>
+ 
++#include "../aixdefs.h"
++
+ typedef struct _Panel {
+     WMBox *box;
+ 
+@@ -145,7 +147,7 @@
+ }
+ 
+ 
+-
++#if 0
+ static void
+ updateThemeList(_Panel *panel)
+ {
+@@ -154,6 +156,7 @@
+     
+     
+ }
++#endif
+ 
+ 
+ 
+@@ -245,7 +248,7 @@
+     _Panel *panel;
+ 
+     panel = wmalloc(sizeof(_Panel));
+-    memset(panel, 0, sizeof(_Panel));
++    memset((char *)panel, 0, sizeof(_Panel));
+ 
+     panel->sectionName = _("Themes");
+     
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/WPrefs.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/WPrefs.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/WPrefs.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/WPrefs.c	Mon Feb  6 02:38:28 2023
+@@ -24,6 +24,8 @@
+ #include "WPrefs.h"
+ #include <assert.h>
+ 
++#include "../aixdefs.h"
++#include "../aix_file_defs.h"
+ 
+ extern Panel *InitWindowHandling(WMScreen *scr, WMWidget *parent);
+ 
+@@ -169,7 +171,7 @@
+     WMWritePropListToFile(WindowMakerDB, WindowMakerDBPath, True);
+ 
+ 
+-    memset(&ev, 0, sizeof(XEvent));
++    memset((char *)&ev, 0, sizeof(XEvent));
+ 	    
+     ev.xclient.type = ClientMessage;
+     ev.xclient.message_type = XInternAtom(WMScreenDisplay(WMWidgetScreen(w)),
+@@ -680,7 +682,7 @@
+ 	wfree(path);
+     }
+     
+-    memset(&WPrefs, 0, sizeof(_WPrefs));
++    memset((char *)&WPrefs, 0, sizeof(_WPrefs));
+     createMainWindow(scr);
+ 
+     WMRealizeWidget(WPrefs.win);
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/WindowHandling.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/WindowHandling.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/WindowHandling.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/WindowHandling.c	Mon Feb  6 02:38:28 2023
+@@ -23,6 +23,8 @@
+ 
+ #include "WPrefs.h"
+ 
++#include "../aixdefs.h"
++
+ typedef struct _Panel {
+     WMBox *box;
+ 
+@@ -445,7 +447,7 @@
+     _Panel *panel;
+ 
+     panel = wmalloc(sizeof(_Panel));
+-    memset(panel, 0, sizeof(_Panel));
++    memset((char *)panel, 0, sizeof(_Panel));
+ 
+     panel->sectionName = _("Window Handling Preferences");
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Workspace.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/Workspace.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/Workspace.c	Fri Apr 27 13:49:47 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/Workspace.c	Mon Feb  6 02:38:28 2023
+@@ -23,6 +23,8 @@
+ 
+ #include "WPrefs.h"
+ 
++#include "../aixdefs.h"
++
+ 
+ typedef struct _Panel {
+     WMBox *box;
+@@ -359,7 +361,7 @@
+     _Panel *panel;
+ 
+     panel = wmalloc(sizeof(_Panel));
+-    memset(panel, 0, sizeof(_Panel));
++    memset((char *)panel, 0, sizeof(_Panel));
+ 
+     panel->sectionName = _("Workspace Preferences");
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/main.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/main.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/main.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/main.c	Mon Feb  6 02:38:28 2023
+@@ -24,7 +24,7 @@
+ 
+ #include <assert.h>
+ 
+-#include <X11/Xlocale.h>
++/* #include <X11/Xlocale.h> */
+ 
+ #include <sys/wait.h>
+ #include <unistd.h>
+@@ -131,7 +131,7 @@
+     }
+ 
+     locale = getenv("LANG");
+-    setlocale(LC_ALL, "");
++    /* setlocale(LC_ALL, ""); */
+ 
+ #ifdef I18N
+     if (getenv("NLSPATH"))
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/WPrefs.app/xmodifier.c /u/root/src/WindowMaker-0.70.0/WPrefs.app/xmodifier.c
+--- /nfs/stock/WindowMaker-0.70.0/WPrefs.app/xmodifier.c	Thu Jan 18 09:29:11 2001
++++ /u/root/src/WindowMaker-0.70.0/WPrefs.app/xmodifier.c	Mon Feb  6 02:38:28 2023
+@@ -37,7 +37,7 @@
+ 
+ #include <WINGs/WUtil.h>
+ 
+-
++#include "../aixdefs.h"
+ 
+ /************************************************************************/
+ /*                            keymap handling                           */
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/configure /u/root/src/WindowMaker-0.70.0/configure
+--- /nfs/stock/WindowMaker-0.70.0/configure	Thu Oct  4 17:52:29 2001
++++ /u/root/src/WindowMaker-0.70.0/configure	Mon Feb  6 02:38:28 2023
+@@ -7214,7 +7214,7 @@
+ _ACEOF
+ if (eval "$ac_cpp conftest.$ac_ext") 2>&5 |
+   egrep "$ac_pattern" >/dev/null 2>&1; then
+-  ac_cv_prog_gcc_traditional=yes
++  ac_cv_prog_gcc_traditional=no
+ else
+   ac_cv_prog_gcc_traditional=no
+ fi
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/appicon.c /u/root/src/WindowMaker-0.70.0/src/appicon.c
+--- /nfs/stock/WindowMaker-0.70.0/src/appicon.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/appicon.c	Mon Feb  6 02:38:28 2023
+@@ -50,6 +50,7 @@
+ #include "wsound.h"
+ #include <WINGs/WINGsP.h>
+ 
++int snprintf(char *str,size_t count,const char *fmt,...);
+ 
+ /*
+  * icon_file for the dock is got from the preferences file by
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/application.c /u/root/src/WindowMaker-0.70.0/src/application.c
+--- /nfs/stock/WindowMaker-0.70.0/src/application.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/application.c	Mon Feb  6 02:38:28 2023
+@@ -50,6 +50,8 @@
+ #include "dock.h"
+ #include "wsound.h"
+ 
++#include "../aixdefs.h"
++
+ 
+ /******** Global variables ********/
+ 
+@@ -275,7 +277,7 @@
+     }
+     
+     wapp = wmalloc(sizeof(WApplication));
+-    memset(wapp, 0, sizeof(WApplication));
++    memset((char *)wapp, 0, sizeof(WApplication));
+ 
+     wapp->refcount = 1;
+     wapp->last_focused = NULL;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/appmenu.c /u/root/src/WindowMaker-0.70.0/src/appmenu.c
+--- /nfs/stock/WindowMaker-0.70.0/src/appmenu.c	Tue Oct 31 18:47:26 2000
++++ /u/root/src/WindowMaker-0.70.0/src/appmenu.c	Mon Feb  6 02:38:28 2023
+@@ -162,7 +162,7 @@
+ 		}
+ 		strcpy(title, &slist[*index][pos]);
+ 	    }
+-	    if (!(data = malloc(sizeof(WAppMenuData)))) {
++	    if (!(data = (WAppMenuData *)malloc(sizeof(WAppMenuData)))) {
+ 		wwarning("appmenu: out of memory making menu for window %x",
+ 			 win);
+ 		wMenuDestroy(menu, True);
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/balloon.c /u/root/src/WindowMaker-0.70.0/src/balloon.c
+--- /nfs/stock/WindowMaker-0.70.0/src/balloon.c	Tue Jul 24 02:51:05 2001
++++ /u/root/src/WindowMaker-0.70.0/src/balloon.c	Mon Feb  6 02:38:28 2023
+@@ -46,6 +46,7 @@
+ #include "balloon.h"
+ 
+ 
++int snprintf(char *str,size_t count,const char *fmt,...);
+ 
+ extern WPreferences wPreferences;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/defaults.c /u/root/src/WindowMaker-0.70.0/src/defaults.c
+--- /nfs/stock/WindowMaker-0.70.0/src/defaults.c	Thu Oct  4 05:07:27 2001
++++ /u/root/src/WindowMaker-0.70.0/src/defaults.c	Mon Feb  6 02:38:28 2023
+@@ -69,7 +69,8 @@
+ #include "workspace.h"
+ #include "properties.h"
+ 
+-
++int snprintf(char *str,size_t count,const char *fmt,...);
++#include "../aixdefs.h"
+ 
+ /***** Global *****/
+ 
+@@ -958,7 +959,7 @@
+     }
+ 
+     db = wmalloc(sizeof(WDDomain));
+-    memset(db, 0, sizeof(WDDomain));
++    memset((char *)db, 0, sizeof(WDDomain));
+     db->domain_name = domain;
+     db->path = wdefaultspathfordomain(domain);
+     the_path = db->path;
+@@ -2050,7 +2051,9 @@
+ #ifdef TEXTURE_PLUGIN
+     else if (strcasecmp(val, "function")==0) {
+ 	WTexFunction *function;
++#if 0
+ 	void (*initFunc) (Display *, Colormap);
++#endif
+ 	char *lib, *func, **argv;
+ 	int i, argc;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/dialog.c /u/root/src/WindowMaker-0.70.0/src/dialog.c
+--- /nfs/stock/WindowMaker-0.70.0/src/dialog.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/dialog.c	Mon Feb  6 02:38:28 2023
+@@ -61,6 +61,10 @@
+ #include "actions.h"
+ #include "defaults.h"
+ 
++#include "../aixdefs.h"
++int snprintf(char *str,size_t count,const char *fmt,...);
++
++
+ 
+ extern WPreferences wPreferences;
+ 
+@@ -508,7 +512,7 @@
+     KeySym ksym;
+     int iidx;
+     int didx;
+-    int item;
++    int item = 0;
+     WMList *list = NULL;
+     
+     if (event->type == KeyRelease)
+@@ -585,7 +589,7 @@
+     WMFont *boldFont;
+ 
+     panel = wmalloc(sizeof(IconPanel));
+-    memset(panel, 0, sizeof(IconPanel));
++    memset((char *)panel, 0, sizeof(IconPanel));
+ 
+     panel->scr = scr;
+ 
+@@ -1204,7 +1208,7 @@
+     }
+ 
+     panel = wmalloc(sizeof(InfoPanel));
+-    memset(panel, 0, sizeof(InfoPanel));
++    memset((char *)panel, 0, sizeof(InfoPanel));
+ 
+     panel->scr = scr;
+ 
+@@ -1645,7 +1649,7 @@
+     char buf[256];
+ 
+     panel = wmalloc(sizeof(CrashPanel));
+-    memset(panel, 0, sizeof(CrashPanel));
++    memset((char *)panel, 0, sizeof(CrashPanel));
+ 
+     screen_no = DefaultScreen(dpy);
+     scr_width = WidthOfScreen(ScreenOfDisplay(dpy, screen_no));
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/dock.c /u/root/src/WindowMaker-0.70.0/src/dock.c
+--- /nfs/stock/WindowMaker-0.70.0/src/dock.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/dock.c	Mon Feb  6 02:38:28 2023
+@@ -55,6 +55,10 @@
+ #include "superfluous.h"
+ #include "wsound.h"
+ 
++#include "../aixdefs.h"
++int snprintf(char *str,size_t count,const char *fmt,...);
++int strncasecmp(const char *s1, const char *s3, size_t n);
++
+ 
+ #include <WINGs/WUtil.h>
+ 
+@@ -903,7 +907,7 @@
+ 	}
+ 	if (btn->wm_instance || btn->wm_class) {
+ 	    WWindowAttributes attr;
+-	    memset(&attr, 0, sizeof(WWindowAttributes));
++	    memset((char *)&attr, 0, sizeof(WWindowAttributes));
+ 	    wDefaultFillAttributes(scr, btn->wm_instance, btn->wm_class,
+ 				   &attr, NULL, True);
+ 
+@@ -1168,7 +1172,7 @@
+     make_keys();
+ 
+     dock = wmalloc(sizeof(WDock));
+-    memset(dock, 0, sizeof(WDock));
++    memset((char *)dock, 0, sizeof(WDock));
+ 
+     if (type == WM_CLIP)
+         icon_count = CLIP_MAX_ICONS;
+@@ -1176,7 +1180,7 @@
+         icon_count = scr->scr_height/wPreferences.icon_size;
+ 
+     dock->icon_array = wmalloc(sizeof(WAppIcon*)*icon_count);
+-    memset(dock->icon_array, 0, sizeof(WAppIcon*)*icon_count);
++    memset((char *)dock->icon_array, 0, sizeof(WAppIcon*)*icon_count);
+ 
+     dock->max_icons = icon_count;
+ 
+@@ -1978,7 +1982,7 @@
+             continue;
+ 
+         state = wmalloc(sizeof(WSavedState));
+-        memset(state, 0, sizeof(WSavedState));
++        memset((char *)state, 0, sizeof(WSavedState));
+         state->workspace = workspace;
+ 	/* TODO: this is klugy and is very difficult to understand
+ 	 * what's going on. Try to clean up */
+@@ -2049,7 +2053,7 @@
+         }
+         if (btn->wm_instance || btn->wm_class) {
+             WWindowAttributes attr;
+-	    memset(&attr, 0, sizeof(WWindowAttributes));
++	    memset((char *)&attr, 0, sizeof(WWindowAttributes));
+             wDefaultFillAttributes(btn->icon->core->screen_ptr,
+                                    btn->wm_instance,
+                                    btn->wm_class, &attr, NULL, True);
+@@ -2666,9 +2670,9 @@
+ 	hcount = WMIN(dock->max_icons, scr->scr_width/ICON_SIZE);
+ 	vcount = WMIN(dock->max_icons, scr->scr_height/ICON_SIZE);
+ 	hmap = wmalloc(hcount+1);
+-	memset(hmap, 0, hcount+1);
++	memset((char *)hmap, 0, hcount+1);
+ 	vmap = wmalloc(vcount+1);
+-	memset(vmap, 0, vcount+1);
++	memset((char *)vmap, 0, vcount+1);
+ 
+ 	/* mark used positions */
+ 	switch (corner) {
+@@ -2799,7 +2803,7 @@
+     r = (mwidth-1)/2;
+ 
+     slot_map = wmalloc(mwidth*mwidth);
+-    memset(slot_map, 0, mwidth*mwidth);
++    memset((char *)slot_map, 0, mwidth*mwidth);
+ 
+ #define XY2OFS(x,y) (WMAX(abs(x),abs(y)) > r) ? 0 : (((y)+r)*(mwidth)+(x)+r)
+ 
+@@ -2957,7 +2961,7 @@
+         setpgid(0, 0);
+ #endif
+ 
+-	args = malloc(sizeof(char*)*(argc+1));
++	args = (char **)malloc(sizeof(char*)*(argc+1));
+ 	if (!args)
+ 	    exit(111);
+ 	for (i=0; i<argc; i++) {
+@@ -2972,7 +2976,7 @@
+     if (pid > 0) {
+         if (!state) {
+             state = wmalloc(sizeof(WSavedState));
+-            memset(state, 0, sizeof(WSavedState));
++            memset((char *)state, 0, sizeof(WSavedState));
+             state->hidden = -1;
+             state->miniaturized = -1;
+             state->shaded = -1;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/dockedapp.c /u/root/src/WindowMaker-0.70.0/src/dockedapp.c
+--- /nfs/stock/WindowMaker-0.70.0/src/dockedapp.c	Wed Sep  5 04:55:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/dockedapp.c	Mon Feb  6 02:38:28 2023
+@@ -40,6 +40,9 @@
+ #include "framewin.h"
+ 
+ 
++int snprintf(char *str,size_t count,const char *fmt,...);
++
++
+ /**** Global variables ****/
+ extern WPreferences wPreferences;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/event.c /u/root/src/WindowMaker-0.70.0/src/event.c
+--- /nfs/stock/WindowMaker-0.70.0/src/event.c	Tue Sep 11 03:27:08 2001
++++ /u/root/src/WindowMaker-0.70.0/src/event.c	Mon Feb  6 02:38:29 2023
+@@ -165,7 +165,7 @@
+ {
+     DeathHandler *handler;
+     
+-    handler = malloc(sizeof(DeathHandler));
++    handler = (DeathHandler *)malloc(sizeof(DeathHandler));
+     if (!handler)
+       return 0;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/geomview.c /u/root/src/WindowMaker-0.70.0/src/geomview.c
+--- /nfs/stock/WindowMaker-0.70.0/src/geomview.c	Tue Jul 24 02:51:05 2001
++++ /u/root/src/WindowMaker-0.70.0/src/geomview.c	Mon Feb  6 02:38:29 2023
+@@ -3,6 +3,7 @@
+ 
+ #include <WINGs/WINGsP.h>
+ 
++int snprintf(char *str,size_t count,const char *fmt,...);
+ 
+ 
+ typedef struct W_GeometryView {
+@@ -43,7 +44,7 @@
+ 	widgetClass = W_RegisterUserWidget();
+     }
+     
+-    gview = malloc(sizeof(WGeometryView));
++    gview = (WGeometryView *)malloc(sizeof(WGeometryView));
+     if (!gview) {
+ 	return NULL;
+     }
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/icon.c /u/root/src/WindowMaker-0.70.0/src/icon.c
+--- /nfs/stock/WindowMaker-0.70.0/src/icon.c	Tue Jul 24 02:51:05 2001
++++ /u/root/src/WindowMaker-0.70.0/src/icon.c	Mon Feb  6 02:38:29 2023
+@@ -44,6 +44,9 @@
+ #include "defaults.h"
+ #include "appicon.h"
+ 
++int snprintf(char *str,size_t count,const char *fmt,...);
++#include "../aixdefs.h"
++
+ /**** Global variables ****/
+ extern WPreferences wPreferences;
+ 
+@@ -121,7 +124,7 @@
+     XSetWindowAttributes attribs;
+     
+     icon = wmalloc(sizeof(WIcon));
+-    memset(icon, 0, sizeof(WIcon));
++    memset((char *)icon, 0, sizeof(WIcon));
+     icon->core = wCoreCreateTopLevel(scr, wwin->icon_x, wwin->icon_y,
+ 				     wPreferences.icon_size, 
+ 				     wPreferences.icon_size, 0);
+@@ -198,7 +201,7 @@
+     XSetWindowAttributes attribs;
+ 
+     icon = wmalloc(sizeof(WIcon));
+-    memset(icon, 0, sizeof(WIcon));
++    memset((char *)icon, 0, sizeof(WIcon));
+     icon->core = wCoreCreateTopLevel(scr, 0, 0, wPreferences.icon_size, 
+ 				     wPreferences.icon_size, 0);
+     if (wPreferences.use_saveunders) {
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/main.c /u/root/src/WindowMaker-0.70.0/src/main.c
+--- /nfs/stock/WindowMaker-0.70.0/src/main.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/main.c	Mon Feb  6 02:38:29 2023
+@@ -32,12 +32,14 @@
+ #include <X11/Xlib.h>
+ #include <X11/Xutil.h>
+ 
++#include "../aixdefs.h"
++int snprintf(char *str,size_t count,const char *fmt,...);
+ 
+ /* Xlocale.h and locale.h are the same if X_LOCALE is undefind in wconfig.h,
+  * and if X_LOCALE is defined, X's locale emulating functions will be used.
+  * See Xlocale.h for more information.
+  */
+-#include <X11/Xlocale.h>
++/* #include <X11/Xlocale.h> */
+ 
+ #define MAINFILE
+ 
+@@ -587,7 +589,7 @@
+ #ifdef DEBUG
+     Bool doSync = False;
+ #endif
+-    setlocale(LC_ALL, "");
++    /* setlocale(LC_ALL, ""); */
+ 
+     wsetabort(wAbort);
+ 
+@@ -611,7 +613,7 @@
+ 
+     restart = 0;
+     
+-    memset(&wPreferences, 0, sizeof(WPreferences));
++    memset((char *)&wPreferences, 0, sizeof(WPreferences));
+     
+     if (argc>1) {
+ 	for (i=1; i<argc; i++) {
+@@ -712,7 +714,7 @@
+     	Locale = getenv("LANG");
+     }
+ 
+-    setlocale(LC_ALL, "");
++    /* setlocale(LC_ALL, ""); */
+ 
+     if (!Locale || strcmp(Locale, "C")==0 || strcmp(Locale, "POSIX")==0) 
+       Locale = NULL;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/menu.c /u/root/src/WindowMaker-0.70.0/src/menu.c
+--- /nfs/stock/WindowMaker-0.70.0/src/menu.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/menu.c	Mon Feb  6 02:38:29 2023
+@@ -43,6 +43,9 @@
+ #include "stacking.h"
+ #include "text.h"
+ 
++int snprintf(char *str,size_t count,const char *fmt,...);
++char toupper(char ch);
++
+ 
+ /****** Global Variables ******/
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/misc.c /u/root/src/WindowMaker-0.70.0/src/misc.c
+--- /nfs/stock/WindowMaker-0.70.0/src/misc.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/misc.c	Mon Feb  6 02:38:29 2023
+@@ -50,6 +50,11 @@
+ #include "xmodifier.h"
+ 
+ 
++int snprintf(char *str,size_t count,const char *fmt,...);
++#include "../aixdefs.h"
++#include "../aix_uio_defs.h"
++
++
+ /**** global variables *****/
+ 
+ extern char *DisplayName;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/moveres.c /u/root/src/WindowMaker-0.70.0/src/moveres.c
+--- /nfs/stock/WindowMaker-0.70.0/src/moveres.c	Tue Jul 24 02:51:06 2001
++++ /u/root/src/WindowMaker-0.70.0/src/moveres.c	Mon Feb  6 02:38:29 2023
+@@ -42,6 +42,8 @@
+ 
+ #include "geomview.h"
+ 
++#include "../snprintf.h"
++
+ 
+ #ifdef KWM_HINTS
+ #include "kwm.h"
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/properties.c /u/root/src/WindowMaker-0.70.0/src/properties.c
+--- /nfs/stock/WindowMaker-0.70.0/src/properties.c	Tue Oct 31 18:47:27 2000
++++ /u/root/src/WindowMaker-0.70.0/src/properties.c	Mon Feb  6 02:38:29 2023
+@@ -165,7 +165,7 @@
+     if (!data)
+ 	return False;
+     
+-    *attr = malloc(sizeof(GNUstepWMAttributes));
++    *attr = (GNUstepWMAttributes *)malloc(sizeof(GNUstepWMAttributes));
+     if (!*attr) {
+ 	XFree(data);
+ 	return False;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/rootmenu.c /u/root/src/WindowMaker-0.70.0/src/rootmenu.c
+--- /nfs/stock/WindowMaker-0.70.0/src/rootmenu.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/rootmenu.c	Mon Feb  6 02:38:29 2023
+@@ -55,7 +55,9 @@
+ 
+ #include <WINGs/WUtil.h>
+ 
+-
++#include "../snprintf.h"
++#include "../aixdefs.h"
++#include "../aix_file_defs.h"
+ 
+ extern char *Locale;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/screen.c /u/root/src/WindowMaker-0.70.0/src/screen.c
+--- /nfs/stock/WindowMaker-0.70.0/src/screen.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/screen.c	Mon Feb  6 02:38:29 2023
+@@ -67,6 +67,7 @@
+ 
+ #include "defaults.h"
+ 
++#include "../snprintf.h"
+ 
+ #ifdef LITE
+ #define EVENT_MASK (LeaveWindowMask|EnterWindowMask|PropertyChangeMask\
+@@ -859,19 +860,20 @@
+ }
+ 
+ 
+-
++#if 0
+ static WArea subtractRectangle(WArea area, WArea rect)
+ {
+     WArea result = area;
+-    
+-    
++   
++ 
+ }
++#endif
+ 
+ 
+ void
+ wScreenUpdateUsableArea(WScreen *scr)
+ {
+-    WReservedArea *area;
++    /* WReservedArea *area; */
+ 
+     scr->totalUsableArea = scr->usableArea;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/session.c /u/root/src/WindowMaker-0.70.0/src/session.c
+--- /nfs/stock/WindowMaker-0.70.0/src/session.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/session.c	Mon Feb  6 02:38:29 2023
+@@ -91,6 +91,9 @@
+ 
+ #include "dock.h"
+ 
++#include "../snprintf.h"
++#include "../aixdefs.h"
++
+ 
+ #include <WINGs/WUtil.h>
+ 
+@@ -394,7 +397,7 @@
+ 
+ 	SetupEnvironment(scr);
+ 
+-        args = malloc(sizeof(char*)*(argc+1));
++        args = (char**)malloc(sizeof(char*)*(argc+1));
+         if (!args)
+             exit(111);
+         for (i=0; i<argc; i++) {
+@@ -420,7 +423,7 @@
+     unsigned mask;
+     int i;
+ 
+-    memset(state, 0, sizeof(WSavedState));
++    memset((char *)state, 0, sizeof(WSavedState));
+     state->workspace = -1;
+     value = WMGetFromPLDictionary(win_state, sWorkspace);
+     if (value && WMIsPLString(value)) {
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/startup.c /u/root/src/WindowMaker-0.70.0/src/startup.c
+--- /nfs/stock/WindowMaker-0.70.0/src/startup.c	Wed Sep  5 04:55:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/startup.c	Mon Feb  6 02:38:29 2023
+@@ -84,6 +84,8 @@
+ # define SA_NODEFER 0
+ #endif
+ 
++#include "../aixdefs.h"
++
+ /****** Global Variables ******/
+ 
+ extern WPreferences wPreferences;
+@@ -751,7 +753,7 @@
+     ValidModMask &= ~(_NumLockMask|_ScrollLockMask);
+ 
+ 
+-    memset(&wKeyBindings, 0, sizeof(wKeyBindings));
++    memset((char *)&wKeyBindings, 0, sizeof(wKeyBindings));
+ 
+     wWinContext = XUniqueContext();
+     wAppWinContext = XUniqueContext();
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/switchmenu.c /u/root/src/WindowMaker-0.70.0/src/switchmenu.c
+--- /nfs/stock/WindowMaker-0.70.0/src/switchmenu.c	Tue Sep 11 03:27:08 2001
++++ /u/root/src/WindowMaker-0.70.0/src/switchmenu.c	Mon Feb  6 02:38:29 2023
+@@ -41,6 +41,8 @@
+ #include "workspace.h"
+ #include "framewin.h"
+ 
++#include "../snprintf.h"
++
+ /********* Global Variables *******/
+ extern WPreferences wPreferences;
+ extern Time LastTimestamp;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/wdefaults.c /u/root/src/WindowMaker-0.70.0/src/wdefaults.c
+--- /nfs/stock/WindowMaker-0.70.0/src/wdefaults.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/wdefaults.c	Mon Feb  6 02:38:29 2023
+@@ -43,6 +43,8 @@
+ #include "defaults.h"
+ #include "icon.h"
+ 
++#include "../aixdefs.h"
++
+ 
+ /* Global stuff */
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/window.c /u/root/src/WindowMaker-0.70.0/src/window.c
+--- /nfs/stock/WindowMaker-0.70.0/src/window.c	Tue Sep 11 03:27:08 2001
++++ /u/root/src/WindowMaker-0.70.0/src/window.c	Mon Feb  6 02:38:29 2023
+@@ -66,6 +66,8 @@
+ # include "openlook.h"
+ #endif
+ 
++#include "../snprintf.h"
++
+ /****** Global Variables ******/
+ 
+ extern WShortKey wKeyBindings[WKBD_LAST];
+@@ -2616,7 +2618,7 @@
+ {
+     WWindowState *wstate;
+ 
+-    wstate = malloc(sizeof(WWindowState));
++    wstate = (WWindowState *)malloc(sizeof(WWindowState));
+     if (!wstate)
+         return 0;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/winmenu.c /u/root/src/WindowMaker-0.70.0/src/winmenu.c
+--- /nfs/stock/WindowMaker-0.70.0/src/winmenu.c	Tue Sep 11 03:27:08 2001
++++ /u/root/src/WindowMaker-0.70.0/src/winmenu.c	Mon Feb  6 02:38:29 2023
+@@ -45,6 +45,8 @@
+ #include "stacking.h"
+ #include "icon.h"
+ 
++#include "../snprintf.h"
++
+ 
+ #define MC_MAXIMIZE	0
+ #define MC_MINIATURIZE	1
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/winspector.c /u/root/src/WindowMaker-0.70.0/src/winspector.c
+--- /nfs/stock/WindowMaker-0.70.0/src/winspector.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/src/winspector.c	Mon Feb  6 02:38:29 2023
+@@ -51,7 +51,8 @@
+ #include <WINGs/WUtil.h>
+ 
+ 
+-
++#include "../snprintf.h"
++#include "../aixdefs.h"
+ 
+ 
+ 
+@@ -949,9 +950,9 @@
+         wm_instance = wwin->wm_instance;
+         wm_class = wwin->wm_class;
+     }
+-    memset(&wwin->defined_user_flags, 0, sizeof(WWindowAttributes));
+-    memset(&wwin->user_flags, 0, sizeof(WWindowAttributes));
+-    memset(&wwin->client_flags, 0, sizeof(WWindowAttributes));
++    memset((char *)&wwin->defined_user_flags, 0, sizeof(WWindowAttributes));
++    memset((char *)&wwin->user_flags, 0, sizeof(WWindowAttributes));
++    memset((char *)&wwin->client_flags, 0, sizeof(WWindowAttributes));
+ 
+     wWindowSetupInitialAttributes(wwin, &level, &workspace);
+ 
+@@ -1206,7 +1207,7 @@
+ 			"name, when saved.");
+ 
+     panel = wmalloc(sizeof(InspectorPanel));
+-    memset(panel, 0, sizeof(InspectorPanel));
++    memset((char *)panel, 0, sizeof(InspectorPanel));
+     
+     panel->destroyed = 0;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/src/xmodifier.c /u/root/src/WindowMaker-0.70.0/src/xmodifier.c
+--- /nfs/stock/WindowMaker-0.70.0/src/xmodifier.c	Thu Jan 18 09:29:33 2001
++++ /u/root/src/WindowMaker-0.70.0/src/xmodifier.c	Mon Feb  6 02:38:29 2023
+@@ -35,6 +35,7 @@
+ 
+ #include <WINGs/WUtil.h>
+ 
++#include "../aixdefs.h"
+ 
+ extern Display *dpy;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/util/getstyle.c /u/root/src/WindowMaker-0.70.0/util/getstyle.c
+--- /nfs/stock/WindowMaker-0.70.0/util/getstyle.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/util/getstyle.c	Mon Feb  6 02:38:29 2023
+@@ -41,6 +41,9 @@
+ 
+ #include "../src/wconfig.h"
+ 
++#include "../aixdefs.h"
++#include "../aix_uio_defs.h"
++
+ /* table of style related options */
+ static char *options[] = {
+     "TitleJustify",	
+@@ -198,7 +201,7 @@
+     if (!user) {
+ 	char buffer[80];
+ 	
+-	sprintf(buffer, "could not get password entry for UID %i", getuid()); 
++	sprintf(buffer, "could not get password entry for UID %li", getuid()); 
+ 	perror(buffer);
+ 	return "/";
+     }
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/util/setstyle.c /u/root/src/WindowMaker-0.70.0/util/setstyle.c
+--- /nfs/stock/WindowMaker-0.70.0/util/setstyle.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/util/setstyle.c	Mon Feb  6 02:38:29 2023
+@@ -31,7 +31,7 @@
+ #include <X11/Xlib.h>
+ #include <WINGs/WUtil.h>
+ 
+-
++#include "../aixdefs.h"
+ 
+ #include "../src/wconfig.h"
+ 
+@@ -563,7 +563,7 @@
+ 	    int i;
+ 	    char *msg = "Reconfigure";
+ 
+-	    memset(&ev, 0, sizeof(XEvent));
++	    memset((char *)&ev, 0, sizeof(XEvent));
+ 	    
+ 	    ev.xclient.type = ClientMessage;
+ 	    ev.xclient.message_type = XInternAtom(dpy, "_WINDOWMAKER_COMMAND",
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/util/wdread.c /u/root/src/WindowMaker-0.70.0/util/wdread.c
+--- /nfs/stock/WindowMaker-0.70.0/util/wdread.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/util/wdread.c	Mon Feb  6 02:38:29 2023
+@@ -40,6 +40,8 @@
+ 
+ #include <pwd.h>
+ 
++#include "../aix_uio_defs.h"
++
+ 
+ char *ProgName;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/util/wdwrite.c /u/root/src/WindowMaker-0.70.0/util/wdwrite.c
+--- /nfs/stock/WindowMaker-0.70.0/util/wdwrite.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/util/wdwrite.c	Mon Feb  6 02:38:29 2023
+@@ -39,6 +39,8 @@
+ 
+ #include <pwd.h>
+ 
++#include "../aix_uio_defs.h"
++
+ 
+ char *ProgName;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/util/wmagnify.c /u/root/src/WindowMaker-0.70.0/util/wmagnify.c
+--- /nfs/stock/WindowMaker-0.70.0/util/wmagnify.c	Tue Jul 24 02:51:06 2001
++++ /u/root/src/WindowMaker-0.70.0/util/wmagnify.c	Mon Feb  6 02:38:29 2023
+@@ -12,6 +12,8 @@
+ #include <stdlib.h>
+ #include <stdio.h>
+ 
++#include "../aixdefs.h"
++
+ /*
+  * TODO:
+  * - lens that shows where it's magnifying
+@@ -106,7 +108,7 @@
+     width /= magfactor;
+     height /= magfactor;
+     data->buffer = wmalloc(sizeof(unsigned long)*width*height);
+-    memset(data->buffer, 0, width*height*sizeof(unsigned long));
++    memset((char *)data->buffer, 0, width*height*sizeof(unsigned long));
+     data->width = width;
+     data->height = height;
+ 
+@@ -127,7 +129,7 @@
+     data->buffer = wrealloc(data->buffer, sizeof(unsigned long)*w*h);
+     data->width = w;
+     data->height = h;
+-    memset(data->buffer, 0, w*h*sizeof(unsigned long));
++    memset((char *)data->buffer, 0, w*h*sizeof(unsigned long));
+ 
+     WMResizeWidget(data->label, width, height);
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/util/wmsetbg.c /u/root/src/WindowMaker-0.70.0/util/wmsetbg.c
+--- /nfs/stock/WindowMaker-0.70.0/util/wmsetbg.c	Wed Oct  3 20:39:18 2001
++++ /u/root/src/WindowMaker-0.70.0/util/wmsetbg.c	Mon Feb  6 02:38:29 2023
+@@ -38,6 +38,10 @@
+ #include <sys/types.h>
+ #include <ctype.h>
+ 
++#include "../aixdefs.h"
++
++char toupper(char c);
++
+ #include "../src/config.h"
+ 
+ #ifdef HAVE_DLFCN_H
+@@ -145,7 +149,7 @@
+     }
+ 
+     texture = wmalloc(sizeof(BackgroundTexture));
+-    memset(texture, 0, sizeof(BackgroundTexture));
++    memset((char *)texture, 0, sizeof(BackgroundTexture));
+ 
+     GETSTRORGOTO(val, type, 0, error);
+ 
+@@ -254,12 +258,12 @@
+ 	int gtype;
+ 	int iwidth, iheight;
+ 
+-	colors = malloc(sizeof(RColor*)*(count-1));
++	colors = (RColor **)malloc(sizeof(RColor*)*(count-1));
+ 	if (!colors) {
+ 	    wwarning("out of memory while parsing texture");
+ 	    goto error;
+ 	}
+-	memset(colors, 0, sizeof(RColor*)*(count-1));
++	memset((char *)colors, 0, sizeof(RColor*)*(count-1));
+ 
+ 	for (i = 2; i < count; i++) {
+ 	    val = WMGetFromPLArray(texarray, i);
+@@ -282,7 +286,7 @@
+ 		wfree(colors);
+ 		goto error;
+ 	    }
+-	    if (!(colors[i-2] = malloc(sizeof(RColor)))) {
++	    if (!(colors[i-2] = (RColor *)malloc(sizeof(RColor)))) {
+ 		wwarning("out of memory while parsing texture");
+ 
+ 		for (j = 0; colors[j]!=NULL; j++)
+@@ -348,7 +352,7 @@
+ 	Pixmap pixmap = None;
+ 	RImage *image = NULL;
+ 	int w, h;
+-	int iwidth, iheight;
++	int iwidth=0, iheight=0;
+ 	RColor rcolor;
+ 
+ 
+@@ -911,11 +915,11 @@
+     int size;
+     int errcount = 4;
+ 
+-    memset(textures, 0, WORKSPACE_COUNT*sizeof(BackgroundTexture*));
++    memset((char *)textures, 0, WORKSPACE_COUNT*sizeof(BackgroundTexture*));
+ 
+ 
+     while (1) {
+-	int workspace;
++	int workspace=0;
+ 
+ 	/* get length of message */
+ 	if (readmsg(0, buffer, 4) < 0) {
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/util/wmsetup.c /u/root/src/WindowMaker-0.70.0/util/wmsetup.c
+--- /nfs/stock/WindowMaker-0.70.0/util/wmsetup.c	Thu Jan 18 09:28:04 2001
++++ /u/root/src/WindowMaker-0.70.0/util/wmsetup.c	Mon Feb  6 02:38:29 2023
+@@ -21,6 +21,7 @@
+ int
+ main()
+ {
++	return 0;
+ }
+ #else
+ #define PROG_VERSION "wmsetup 0.0 (Window Maker)"
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/util/wxpaste.c /u/root/src/WindowMaker-0.70.0/util/wxpaste.c
+--- /nfs/stock/WindowMaker-0.70.0/util/wxpaste.c	Fri Jan 29 00:11:20 1999
++++ /u/root/src/WindowMaker-0.70.0/util/wxpaste.c	Mon Feb  6 02:38:29 2023
+@@ -34,6 +34,8 @@
+ # include <sys/select.h>
+ #endif
+ 
++#include "../aixdefs.h"
++#include "../aix_time_defs.h"
+ 
+ #define MAXDATA		(4*1024*1024)
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wmlib/app.c /u/root/src/WindowMaker-0.70.0/wmlib/app.c
+--- /nfs/stock/WindowMaker-0.70.0/wmlib/app.c	Tue Mar  9 06:58:06 1999
++++ /u/root/src/WindowMaker-0.70.0/wmlib/app.c	Mon Feb  6 02:38:29 2023
+@@ -32,7 +32,7 @@
+ {
+     wmAppContext *ctx;
+     
+-    ctx = malloc(sizeof(wmAppContext));
++    ctx = (wmAppContext *)malloc(sizeof(wmAppContext));
+     if (!ctx)
+       return NULL;
+     
+@@ -40,7 +40,7 @@
+     ctx->screen_number = screen_number;
+     ctx->our_leader_hint = False;
+     ctx->main_window = main_window;
+-    ctx->windows = malloc(sizeof(Window));
++    ctx->windows = (Window *)malloc(sizeof(Window));
+     if (!ctx->windows) {
+ 	free(ctx);
+ 	return NULL;
+@@ -61,7 +61,7 @@
+ {
+     Window *win;
+     
+-    win = malloc(sizeof(Window)*(app->win_count+1));
++    win = (Window *)malloc(sizeof(Window)*(app->win_count+1));
+     if (!win)
+       return False;
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wmlib/menu.c /u/root/src/WindowMaker-0.70.0/wmlib/menu.c
+--- /nfs/stock/WindowMaker-0.70.0/wmlib/menu.c	Tue Sep 29 15:36:36 1998
++++ /u/root/src/WindowMaker-0.70.0/wmlib/menu.c	Mon Feb  6 02:38:29 2023
+@@ -38,7 +38,7 @@
+     if (strlen(title)>255)
+       return NULL;
+ 
+-    menu = malloc(sizeof(wmMenu));
++    menu = (wmMenu *)malloc(sizeof(wmMenu));
+     if (!menu)
+       return NULL;
+     
+@@ -51,7 +51,7 @@
+     menu->realized = False;
+     menu->code = app->last_menu_tag++;
+     
+-    menu->entryline = malloc(strlen(title)+32);
++    menu->entryline = (char *)malloc(strlen(title)+32);
+     menu->entryline2 = malloc(32);
+     if (!menu->entryline || !menu->entryline2) {
+ 	if (menu->entryline)
+@@ -79,7 +79,7 @@
+     if (strlen(text)>255)
+       return -1;
+     
+-    entry = malloc(sizeof(wmMenuEntry));
++    entry = (wmMenuEntry *)malloc(sizeof(wmMenuEntry));
+     if (!entry)
+       return -1;
+     
+@@ -132,7 +132,7 @@
+     if (strlen(text)>255)
+       return -1;
+     
+-    entry = malloc(sizeof(wmMenuEntry));
++    entry = (wmMenuEntry *)malloc(sizeof(wmMenuEntry));
+     if (!entry)
+       return -1;
+     
+@@ -231,7 +231,7 @@
+       return True;
+ 
+     count++;
+-    slist = malloc(count*sizeof(char*));
++    slist = (char **)malloc(count*sizeof(char*));
+     if (!slist) {
+ 	return False;
+     }
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wrlib/context.c /u/root/src/WindowMaker-0.70.0/wrlib/context.c
+--- /nfs/stock/WindowMaker-0.70.0/wrlib/context.c	Fri Apr 20 13:33:03 2001
++++ /u/root/src/WindowMaker-0.70.0/wrlib/context.c	Mon Feb  6 02:38:29 2023
+@@ -111,14 +111,14 @@
+ 	return False;
+     }
+     
+-    ctx->colors = malloc(sizeof(XColor)*ctx->ncolors);
++    ctx->colors = (XColor *)malloc(sizeof(XColor)*ctx->ncolors);
+     if (!ctx->colors) {
+ 	RErrorCode = RERR_NOMEMORY;
+ 
+ 	return False;
+     }
+     
+-    ctx->pixels = malloc(sizeof(unsigned long)*ctx->ncolors);
++    ctx->pixels = (unsigned long *)malloc(sizeof(unsigned long)*ctx->ncolors);
+     if (!ctx->pixels) {
+ 	
+ 	free(ctx->colors);
+@@ -190,13 +190,13 @@
+ 
+     assert(cpc >= 2 && ncolors <= (1<<ctx->depth));
+ 
+-    colors = malloc(sizeof(XColor)*ncolors);
++    colors = (XColor *)malloc(sizeof(XColor)*ncolors);
+     if (!colors) {
+ 	RErrorCode = RERR_NOMEMORY;
+ 	return False;
+     }
+ 
+-    ctx->pixels = malloc(sizeof(unsigned long)*ncolors);
++    ctx->pixels = (unsigned long *)malloc(sizeof(unsigned long)*ncolors);
+     if (!ctx->pixels) {
+ 	free(colors);
+ 	RErrorCode = RERR_NOMEMORY;
+@@ -341,7 +341,7 @@
+         ctx->attribs->render_mode = RBestMatchRendering;
+     }
+ 
+-    colors = malloc(sizeof(XColor)*ncolors);
++    colors = (XColor *)malloc(sizeof(XColor)*ncolors);
+     if (!colors) {
+ 	RErrorCode = RERR_NOMEMORY;
+ 	return False;
+@@ -613,7 +613,7 @@
+     XGCValues gcv;
+ 
+     
+-    context = malloc(sizeof(RContext));
++    context = (RContext *)malloc(sizeof(RContext));
+     if (!context) {
+ 	RErrorCode = RERR_NOMEMORY;
+ 	return NULL;
+@@ -624,7 +624,7 @@
+     
+     context->screen_number = screen_number;
+     
+-    context->attribs = malloc(sizeof(RContextAttributes));
++    context->attribs = (RContextAttributes *)malloc(sizeof(RContextAttributes));
+     if (!context->attribs) {
+ 	free(context);
+ 	RErrorCode = RERR_NOMEMORY;
+@@ -707,7 +707,7 @@
+ 				 |GCGraphicsExposures, &gcv);
+ 
+ #ifdef HAVE_HERMES
+-    context->hermes_data = malloc(sizeof(RHermesData));
++    context->hermes_data = (RHermesData *)malloc(sizeof(RHermesData));
+     if (!context->hermes_data) {
+ 	RErrorCode = RERR_NOMEMORY;
+ 	free(context);
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wrlib/draw.c /u/root/src/WindowMaker-0.70.0/wrlib/draw.c
+--- /nfs/stock/WindowMaker-0.70.0/wrlib/draw.c	Wed Apr 25 14:13:14 2001
++++ /u/root/src/WindowMaker-0.70.0/wrlib/draw.c	Mon Feb  6 02:38:29 2023
+@@ -254,6 +254,9 @@
+     int accept = 0;
+     int x, y;
+ 
++    x = 0;
++    y = 0;
++
+     ocode1 = CHECK_OUT(*x1, *y1);
+     ocode2 = CHECK_OUT(*x2, *y2);
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wrlib/load.c /u/root/src/WindowMaker-0.70.0/wrlib/load.c
+--- /nfs/stock/WindowMaker-0.70.0/wrlib/load.c	Fri Apr 20 09:35:38 2001
++++ /u/root/src/WindowMaker-0.70.0/wrlib/load.c	Mon Feb  6 02:38:29 2023
+@@ -146,7 +146,7 @@
+     }
+ 
+     if (RImageCacheSize>0) {
+-	RImageCache = malloc(sizeof(RCachedImage)*RImageCacheSize);
++	RImageCache = (RCachedImage *)malloc(sizeof(RCachedImage)*RImageCacheSize);
+ 	if (RImageCache==NULL) {
+ 	    printf("wrlib: out of memory for image cache\n");
+ 	    return;
+@@ -311,6 +311,9 @@
+ 	return NULL;
+     }
+ }
++
++int close(int fildes);
++int read(int d, char *buf, unsigned int nbyte);
+ 
+ 
+ static int
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wrlib/nxpm.c /u/root/src/WindowMaker-0.70.0/wrlib/nxpm.c
+--- /nfs/stock/WindowMaker-0.70.0/wrlib/nxpm.c	Fri Apr 20 09:36:00 2001
++++ /u/root/src/WindowMaker-0.70.0/wrlib/nxpm.c	Mon Feb  6 02:38:29 2023
+@@ -71,6 +71,17 @@
+ 
+ #ifndef USE_XPM
+ 
++const int OUR_BUF_LIMIT = 64;
++char our_buf[64];
++
++int our_buf_copy(const char * s) {
++  if (strlen(s) <= OUR_BUF_LIMIT) {
++	strcpy(our_buf, s);
++	return TRUE;
++  } else {
++	return FALSE;
++  }
++}
+ 
+ RImage*
+ RGetImageFromXPMData(RContext *context, char **data)
+@@ -85,7 +96,7 @@
+     int bsize;
+     int w, h, ccount, csize;
+ 
+-    if (sscanf(data[line++], "%i %i %i %i", &w, &h, &ccount, &csize)!=4
++    if (our_buf_copy(data[line++]) && sscanf(our_buf, "%i %i %i %i", &w, &h, &ccount, &csize) !=4 
+ 	|| w <= 0 || h <= 0 || ccount <= 0 || csize <= 0)
+ 	goto bad_format;
+     
+@@ -125,10 +136,10 @@
+ 	    j++;
+ 	    while (data[line][j+k]!=0) k++;
+ 	    if (k==6) {
+-		if (sscanf(&(data[line][j]), "%2x%2x%2x", &red, &green, &blue)!=3)
++		if (our_buf_copy(&(data[line][j])) && sscanf(our_buf, "%2x%2x%2x", &red, &green, &blue)!=3)
+ 		    goto bad_format;
+ 	    } else if (k==12) {		
+-		if (sscanf(&(data[line][j]), "%4x%4x%4x", &red, &green, &blue)!=3)
++		if (our_buf_copy( &(data[line][j]) ) && sscanf(our_buf , "%4x%4x%4x", &red, &green, &blue)!=3)
+ 		    goto bad_format;
+ 		red >>= 8;
+ 		green >>= 8;
+@@ -485,7 +496,7 @@
+     if (tmpc)
+ 	return True;
+ 
+-    newc = malloc(sizeof(XPMColor));
++    newc = (XPMColor *)malloc(sizeof(XPMColor));
+ 
+     if (!newc) {
+ 
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wrlib/png.c /u/root/src/WindowMaker-0.70.0/wrlib/png.c
+--- /nfs/stock/WindowMaker-0.70.0/wrlib/png.c	Fri Apr 20 09:36:13 2001
++++ /u/root/src/WindowMaker-0.70.0/wrlib/png.c	Mon Feb  6 02:38:29 2023
+@@ -49,12 +49,14 @@
+ 
+ #include "wraster.h"
+ 
++double atof (char *nptr);
++
+ 
+ RImage*
+ RLoadPNG(RContext *context, char *file, int index)
+ {
+     char *tmp;
+-    RImage *image=NULL;
++    RImage * volatile image;
+     FILE *f;
+     png_structp png;
+     png_infop pinfo, einfo;
+@@ -66,6 +68,8 @@
+     int depth, junk, color_type;
+     png_bytep *png_rows;
+     unsigned char *ptr;
++
++    image=NULL;
+     
+     f = fopen(file, "r");
+     if (!f) {
+@@ -97,7 +101,7 @@
+     }
+ 
+     RErrorCode = RERR_INTERNAL;
+-    if (setjmp(png->jmpbuf)) {
++    if (setjmp(png_jmpbuf(png))) {
+ 	fclose(f);
+ 	png_destroy_read_struct(&png, &pinfo, &einfo);
+ 	if (image)
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wrlib/raster.c /u/root/src/WindowMaker-0.70.0/wrlib/raster.c
+--- /nfs/stock/WindowMaker-0.70.0/wrlib/raster.c	Sun Sep  2 14:19:18 2001
++++ /u/root/src/WindowMaker-0.70.0/wrlib/raster.c	Mon Feb  6 02:38:30 2023
+@@ -45,7 +45,7 @@
+     
+     assert(width>0 && height>0);
+ 
+-    image = malloc(sizeof(RImage));
++    image = (RImage *)malloc(sizeof(RImage));
+     if (!image) {
+ 	RErrorCode = RERR_NOMEMORY;
+         return NULL;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wrlib/testdraw.c /u/root/src/WindowMaker-0.70.0/wrlib/testdraw.c
+--- /nfs/stock/WindowMaker-0.70.0/wrlib/testdraw.c	Fri Apr 20 09:36:57 2001
++++ /u/root/src/WindowMaker-0.70.0/wrlib/testdraw.c	Mon Feb  6 02:38:30 2023
+@@ -14,6 +14,11 @@
+ char *ProgName;
+ 
+ 
++int _filbuf(FILE *stream);
++
++int gettimeofday(struct timeval *tp, struct timezone *tzp);
++
++
+ void
+ testDraw()
+ {
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wrlib/testgrad.c /u/root/src/WindowMaker-0.70.0/wrlib/testgrad.c
+--- /nfs/stock/WindowMaker-0.70.0/wrlib/testgrad.c	Tue Mar 28 15:21:10 2000
++++ /u/root/src/WindowMaker-0.70.0/wrlib/testgrad.c	Mon Feb  6 02:38:30 2023
+@@ -18,6 +18,8 @@
+ Pixmap pix;
+ char *ProgName;
+ 
++int _filbuf(FILE *stream);
++
+ 
+ void
+ print_help()
+@@ -122,14 +124,14 @@
+ 	exit(1);
+     }
+ 
+-    colors = malloc(sizeof(RColor*)*(ncolors+1));
++    colors = (RColor **)malloc(sizeof(RColor*)*(ncolors+1));
+     for (i=0; i<ncolors; i++) {
+         if (!XParseColor(dpy, ctx->cmap, color_name[i], &color)) {
+             printf("could not parse color \"%s\"\n", color_name[i]);
+             exit(1);
+         }
+         else {
+-            colors[i] = malloc(sizeof(RColor));
++            colors[i] = (RColor *)malloc(sizeof(RColor));
+             colors[i]->red = color.red >> 8;
+             colors[i]->green = color.green >> 8;
+             colors[i]->blue = color.blue >> 8;
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wrlib/testrot.c /u/root/src/WindowMaker-0.70.0/wrlib/testrot.c
+--- /nfs/stock/WindowMaker-0.70.0/wrlib/testrot.c	Fri Apr 20 09:37:46 2001
++++ /u/root/src/WindowMaker-0.70.0/wrlib/testrot.c	Mon Feb  6 02:38:30 2023
+@@ -15,6 +15,10 @@
+ 
+ #define MAX(a,b) (a)>(b) ? (a) : (b)
+ 
++#include "../aixdefs.h"
++#include "../aix_time_defs.h"
++#include "../WINGs/usleep.c"
++
+ int main(int argc, char **argv)
+ {
+     RContextAttributes attr;
+@@ -63,7 +67,7 @@
+ 	XFreePixmap(dpy, pix);
+ 	XClearWindow(dpy, win);
+ 	XSync(dpy, 0);
+-	usleep(50000);
++	wusleep(50000);
+     }
+     exit(0);
+ }
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wrlib/view.c /u/root/src/WindowMaker-0.70.0/wrlib/view.c
+--- /nfs/stock/WindowMaker-0.70.0/wrlib/view.c	Tue May  8 16:58:10 2001
++++ /u/root/src/WindowMaker-0.70.0/wrlib/view.c	Mon Feb  6 02:38:30 2023
+@@ -9,7 +9,7 @@
+ RImage *img;
+ Pixmap pix;
+ 
+-
++int _filbuf(FILE *stream);
+ 
+ int
+ main(int argc, char **argv)
+diff -ur --exclude wconfig.h /nfs/stock/WindowMaker-0.70.0/wrlib/xutil.c /u/root/src/WindowMaker-0.70.0/wrlib/xutil.c
+--- /nfs/stock/WindowMaker-0.70.0/wrlib/xutil.c	Sun Feb 25 13:05:40 2001
++++ /u/root/src/WindowMaker-0.70.0/wrlib/xutil.c	Mon Feb  6 02:38:30 2023
+@@ -38,6 +38,12 @@
+ #include "wraster.h"
+ 
+ 
++int shmget (key_t key, int size, int shmflg);
++char *shmat (int shmid, char *shmaddr, int shmflg);
++int shmctl (int shmid, int cmd, struct shmid_ds *buf);
++int shmdt (char *shmaddr);
++
++
+ #ifdef XSHM
+ 
+ static int shmError;
+@@ -64,7 +70,7 @@
+     RXImage *rximg;
+     Visual *visual = context->visual;
+     
+-    rximg = malloc(sizeof(RXImage));
++    rximg = (RXImage *)malloc(sizeof(RXImage));
+     if (!rximg) {
+ 	RErrorCode = RERR_NOMEMORY;
+ 	return NULL;
+@@ -220,7 +226,7 @@
+ 	}
+     }
+     if (!ximg) {
+-	ximg = malloc(sizeof(RXImage));
++	ximg = (RXImage *)malloc(sizeof(RXImage));
+ 	if (!ximg) {
+ 	    RErrorCode = RERR_NOMEMORY;
+ 	    return NULL;
