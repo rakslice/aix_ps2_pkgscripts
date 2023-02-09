@@ -23,6 +23,6 @@ cp $pkgscripts/codefragments/strtoul.c .
 
 $make
 
-prefixvar=exec_prefix
+prefixvar=DESTDIR
 
 . $pkgscripts/common-end.inc
