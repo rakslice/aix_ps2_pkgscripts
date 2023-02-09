@@ -1,0 +1,12 @@
+diff -ur ./clients/xdm/sessreg.c /usr/lpp/X11/samples/clients/xdm/sessreg.c
+--- ./clients/xdm/sessreg.c	Thu Feb  9 01:59:12 2023
++++ /usr/lpp/X11/samples/clients/xdm/sessreg.c	Thu Feb  9 02:11:15 2023
+@@ -72,6 +72,8 @@
+ #ifdef X_NOT_POSIX
+ extern long	lseek ();
+ extern char	*ttyname ();
++#else
++extern char * ttyname (int);
+ #endif
+ 
+ int	wflag, uflag, lflag;
