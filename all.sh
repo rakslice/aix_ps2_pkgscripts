@@ -25,6 +25,8 @@ sh gawk.sh
 
 sh gdb.sh
 
+fi
+
 sh grep.sh
 
 
@@ -70,10 +72,11 @@ sh tiff3.sh
 
 sh imlib2-1.4.5.sh
 
-fi
 
 sh libast.sh
 
 sh eterm.sh
 
 sh wmaker.sh
+
+sh vim.sh
