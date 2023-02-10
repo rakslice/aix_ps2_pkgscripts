@@ -2,7 +2,7 @@
 set -e
 set -x
 
-# this is a script o build the existing samples on the system
+# this is a script to build the existing samples on the system
 
 # 1. build imake
 cd /usr/lpp/X11/samples/config
@@ -26,12 +26,13 @@ make
 cd /usr/lpp/X11/samples/clients
 for client in *
 do
+
+# other files in the dir that aren't buildables
 if [ "$client" = "Imakefile" ]; then continue; fi
 if [ "$client" = "Makefile" ]; then continue; fi
-if [ "$client" = "showrgb" ]; then continue; fi
 
-# there's an error int char * conversion problem
-if [ "$client" = "xdmshell" ]; then continue; fi
+# things we don't want to build
+if [ "$client" = "showrgb" ]; then continue; fi
 
 cd /usr/lpp/X11/samples/clients/$client
 make
