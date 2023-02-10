@@ -21,13 +21,18 @@ if [ -z "$pkgprefix" ]; then
 fi
 if [ ! -d $pkgprefix ]; then mkdir $pkgprefix; fi
 
+
 # check whether we have DESTDIR style and do something appropriate
 [ "`echo "$pkgprefix" | cut -c1`" = "/" ] || exit 1
 pkgprefixrel="`echo "$pkgprefix" | cut -c2-`"
-if [ -d $pkgprefixrel ]; then
-  cp -r $pkgprefixrel/* $pkgprefix
-else
-  cp -r * $pkgprefix
+
+# don't try to install if the dest isn't writable, we still have the package file
+if touch $pkgprefix/.writable; then
+  if [ -d $pkgprefixrel ]; then
+    cp -r $pkgprefixrel/* $pkgprefix
+  else
+    cp -r * $pkgprefix
+  fi
 fi
 cd ..
 
