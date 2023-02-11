@@ -82,3 +82,5 @@ sh wmaker.sh
 sh vim.sh
 
 sh wget-1.11.sh
+
+sh expat.sh

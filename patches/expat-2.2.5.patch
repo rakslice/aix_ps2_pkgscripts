@@ -1,0 +1,70 @@
+diff -ur --exclude=expat_config.h /nfs/stock/expat-2.2.5/configure /u/root/src/expat-2.2.5/configure
+--- /nfs/stock/expat-2.2.5/configure	Tue Oct 31 06:58:33 2017
++++ /u/root/src/expat-2.2.5/configure	Fri Feb 10 20:13:43 2023
+@@ -16408,9 +16408,9 @@
+     CXXFLAGS=`echo "$CFLAGS" | sed 's/ -Wmissing-prototypes -Wstrict-prototypes//'`
+     fi
+ 
+-    CFLAGS="${CFLAGS} -fno-strict-aliasing"
+-    CXXFLAGS="${CXXFLAGS} -fno-strict-aliasing"
+-    LDFLAGS="${LDFLAGS} -fno-strict-aliasing"
++#    CFLAGS="${CFLAGS} -fno-strict-aliasing"
++#    CXXFLAGS="${CXXFLAGS} -fno-strict-aliasing"
++#    LDFLAGS="${LDFLAGS} -fno-strict-aliasing"
+ fi
+ 
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking for ANSI C header files" >&5
+diff -ur --exclude=expat_config.h /nfs/stock/expat-2.2.5/lib/xmlparse.c /u/root/src/expat-2.2.5/lib/xmlparse.c
+--- /nfs/stock/expat-2.2.5/lib/xmlparse.c	Tue Oct 31 08:20:31 2017
++++ /u/root/src/expat-2.2.5/lib/xmlparse.c	Fri Feb 10 20:16:12 2023
+@@ -110,6 +110,10 @@
+     to the build system, please open a bug.  Thank you!
+ #endif
+ 
++#if defined(_AIX) && defined(__i386__)
++typedef long int ssize_t;
++#endif
++
+ 
+ #ifdef XML_UNICODE
+ #define XML_ENCODE_MAX XML_UTF16_ENCODE_MAX
+diff -ur --exclude=expat_config.h /nfs/stock/expat-2.2.5/lib/xmltok.c /u/root/src/expat-2.2.5/lib/xmltok.c
+--- /nfs/stock/expat-2.2.5/lib/xmltok.c	Mon Sep 11 10:31:49 2017
++++ /u/root/src/expat-2.2.5/lib/xmltok.c	Fri Feb 10 20:22:14 2023
+@@ -38,6 +38,10 @@
+ # define bool   int
+ # define false  0
+ # define true   1
++#elif defined(_AIX) && defined(__i386__)
++#define bool int
++#define true 1
++#define false 0
+ #else
+ # include <stdbool.h>
+ #endif
+diff -ur --exclude=expat_config.h /nfs/stock/expat-2.2.5/tests/benchmark/benchmark.c /u/root/src/expat-2.2.5/tests/benchmark/benchmark.c
+--- /nfs/stock/expat-2.2.5/tests/benchmark/benchmark.c	Mon Sep 11 06:10:12 2017
++++ /u/root/src/expat-2.2.5/tests/benchmark/benchmark.c	Fri Feb 10 20:13:43 2023
+@@ -30,6 +30,8 @@
+    USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+ 
++#define CLOCKS_PER_SEC 1000000
++
+ #include <sys/stat.h>
+ #include <stdlib.h>
+ #include <stdio.h>
+diff -ur --exclude=expat_config.h /nfs/stock/expat-2.2.5/xmlwf/readfilemap.c /u/root/src/expat-2.2.5/xmlwf/readfilemap.c
+--- /nfs/stock/expat-2.2.5/xmlwf/readfilemap.c	Mon Sep 11 06:28:11 2017
++++ /u/root/src/expat-2.2.5/xmlwf/readfilemap.c	Fri Feb 10 20:23:52 2023
+@@ -70,6 +70,10 @@
+ # endif
+ #endif
+ 
++#if defined(_AIX) && defined(__i386__)
++typedef long int ssize_t;
++#endif
++
+ #include "xmltchar.h"
+ #include "filemap.h"
+ 
