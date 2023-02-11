@@ -1,0 +1,25 @@
+diff -ur /nfs/stock/wget-1.11/src/host.c /u/root/src/wget-1.11/src/host.c
+--- /nfs/stock/wget-1.11/src/host.c	Sat Jan 26 01:26:57 2008
++++ /u/root/src/wget-1.11/src/host.c	Fri Feb 10 19:43:47 2023
+@@ -36,6 +36,7 @@
+ #include <assert.h>
+ 
+ #ifndef WINDOWS
++# include <sys/types.h>
+ # include <sys/socket.h>
+ # include <netinet/in.h>
+ # ifndef __BEOS__
+diff -ur /nfs/stock/wget-1.11/src/http.c /u/root/src/wget-1.11/src/http.c
+--- /nfs/stock/wget-1.11/src/http.c	Sat Jan 26 01:26:57 2008
++++ /u/root/src/wget-1.11/src/http.c	Fri Feb 10 19:45:02 2023
+@@ -41,6 +41,10 @@
+ #include <time.h>
+ #include <locale.h>
+ 
++#if defined(_AIX) && defined(__i386__)
++# include "memmove.h"
++#endif
++
+ #include "wget.h"
+ #include "hash.h"
+ #include "http.h"

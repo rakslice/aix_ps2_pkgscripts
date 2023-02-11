@@ -5,6 +5,8 @@ set -x
 pkgname=wget-1.11
 tarball=$pkgname.tar.bz2
 
+make=/usr/local/bin/make
+
 . gcc-2.7.2.3.inc
 #. gcc-2.95.3.inc
 . binutils-2.9.1.inc
@@ -13,9 +15,12 @@ export PATH
 
 . common-start.inc
 
-./configure
-#/u/root/bin/superconf
-#make CFLAGS=
-make
+/usr/local/bin/patch -p4 -i $patches/$pkgname.patch
+
+cp $pkgscripts/codefragments/memmove.h src/
+
+ENV= CONFIG_SHELL=/archive/bash2 SHELL=/archive/bash2 /archive/bash2 ./configure --disable-nls
+
+$make
 
 . $pkgscripts/common-end.inc
