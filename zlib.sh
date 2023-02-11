@@ -19,6 +19,26 @@ $pkgscripts/superconf
 
 $make
 
-prefixvar=exec_prefix
+prefixvar=DESTDIR
+
+createdirs () {
+	cur=$1
+	dirs=
+	while [ $cur != / ]; do
+		if [ -d $cur ]; then
+			break
+		fi
+		dirs="$cur $dirs"
+		cur=`dirname $cur`
+	done
+
+	for dir in $dirs; do
+		mkdir $dir
+	done
+}
+
+for d in $pkgdir/usr/local/share/man/man3 ; do
+	createdirs $d
+done
 
 . $pkgscripts/common-end.inc
