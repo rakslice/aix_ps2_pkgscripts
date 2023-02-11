@@ -1,0 +1,21 @@
+#!/bin/sh
+set -e
+set -x
+
+[ $# -ge 1 ] || exit 1
+
+pkgname="$1"
+
+shift
+
+if [ `ulimit` -lt 2000000 ]; then
+	ulimit 2000000
+fi
+
+[ -d /u/root/src/$pkgname ] || exit 1
+
+. incs-new
+
+cd /u/root/src/$pkgname
+
+/usr/local/bin/make "$@"
