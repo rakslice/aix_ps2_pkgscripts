@@ -44,6 +44,8 @@ cd "$basedir" || exit 1
 
 if echo "$tarballfull" | fgrep '.tar.gz' > /dev/null; then
 	$gunzip -c "$tarballfull" | tar xf -
+elif echo "$tarballfull" | fgrep '.tgz' > /dev/null; then
+	$gunzip -c "$tarballfull" | tar xf -
 elif echo "$tarballfull" | fgrep '.tar.bz2' > /dev/null; then
 	$bunzip2 -c "$tarballfull" | tar xf -
 else
