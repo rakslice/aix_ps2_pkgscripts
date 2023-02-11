@@ -1,0 +1,1759 @@
+diff -ur /nfs/stock/Python-2.7.15/Include/Python.h /u/root/src/Python-2.7.15/Include/Python.h
+--- /nfs/stock/Python-2.7.15/Include/Python.h	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Include/Python.h	Sat Feb 11 00:11:15 2023
+@@ -8,6 +8,8 @@
+ #include "pyconfig.h"
+ #include "pymacconfig.h"
+ 
++#include "memmove.h"
++
+ /* Cyclic gc is always enabled, starting with release 2.3a1.  Supply the
+  * old symbol for the benefit of extension modules written before then
+  * that may be conditionalizing on it.  The core doesn't use it anymore.
+@@ -57,6 +59,8 @@
+  * assert() calls won't be removed.
+  */
+ #include <assert.h>
++#undef assert
++#define assert(EX) 0
+ 
+ #include "pyport.h"
+ 
+diff -ur /nfs/stock/Python-2.7.15/Include/pymem.h /u/root/src/Python-2.7.15/Include/pymem.h
+--- /nfs/stock/Python-2.7.15/Include/pymem.h	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Include/pymem.h	Sat Feb 11 00:11:15 2023
+@@ -71,8 +71,13 @@
+    pymalloc. To solve these problems, allocate an extra byte. */
+ /* Returns NULL to indicate error if a negative size or size larger than
+    Py_ssize_t can represent is supplied.  Helps prevents security holes. */
+-#define PyMem_MALLOC(n)		((size_t)(n) > (size_t)PY_SSIZE_T_MAX ? NULL \
+-				: malloc(((n) != 0) ? (n) : 1))
++
++char * funtime_pymem_malloc(size_t n); 
++/* I put the impl of this in Objects/object.c */
++
++#define PyMem_MALLOC(n)	(funtime_pymem_malloc(n))	
++/*((size_t)(n) > (size_t)PY_SSIZE_T_MAX ? NULL \
++				: malloc(((n) != 0) ? (n) : 1))*/
+ #define PyMem_REALLOC(p, n)	((size_t)(n) > (size_t)PY_SSIZE_T_MAX  ? NULL \
+ 				: realloc((p), ((n) != 0) ? (n) : 1))
+ #define PyMem_FREE		free
+diff -ur /nfs/stock/Python-2.7.15/Include/pyport.h /u/root/src/Python-2.7.15/Include/pyport.h
+--- /nfs/stock/Python-2.7.15/Include/pyport.h	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Include/pyport.h	Sat Feb 11 00:11:15 2023
+@@ -187,6 +187,12 @@
+ #   error "Python needs a typedef for Py_ssize_t in pyport.h."
+ #endif
+ 
++#ifndef HAVE_SSIZE_T
++#if defined(_AIX) && defined(__i386__)
++typedef long int ssize_t;
++#endif
++#endif
++
+ /* Largest possible value of size_t.
+    SIZE_MAX is part of C99, so it might be defined on some
+    platforms. If it is not defined, (size_t)-1 is a portable
+@@ -195,11 +201,14 @@
+ #ifdef SIZE_MAX
+ #define PY_SIZE_MAX SIZE_MAX
+ #else
+-#define PY_SIZE_MAX ((size_t)-1)
++/* #define PY_SIZE_MAX ((size_t)-1)  */
++/* #define PY_SIZE_MAX ((size_t)(MAXLONG-1)) */
++#define PY_SIZE_MAX (MAXLONG)
+ #endif
+ 
+ /* Largest positive value of type Py_ssize_t. */
+-#define PY_SSIZE_T_MAX ((Py_ssize_t)(((size_t)-1)>>1))
++/* #define PY_SSIZE_T_MAX ((Py_ssize_t)(((size_t)-1)>>1)) */
++#define PY_SSIZE_T_MAX MAXLONG
+ /* Smallest negative value of type Py_ssize_t. */
+ #define PY_SSIZE_T_MIN (-PY_SSIZE_T_MAX-1)
+ 
+@@ -660,7 +669,7 @@
+    if TCGETA, TCSETA, TCSETAW, or TCSETAF are used.  sys/termio.h must
+    be included before termios.h or it will generate an error. */
+ #if defined(HAVE_SYS_TERMIO_H) && !defined(__hpux)
+-#include <sys/termio.h>
++/* #include <sys/termio.h> */
+ #endif
+ 
+ #if defined(HAVE_OPENPTY) || defined(HAVE_FORKPTY)
+diff -ur /nfs/stock/Python-2.7.15/Include/unicodeobject.h /u/root/src/Python-2.7.15/Include/unicodeobject.h
+--- /nfs/stock/Python-2.7.15/Include/unicodeobject.h	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Include/unicodeobject.h	Sat Feb 11 00:11:15 2023
+@@ -117,8 +117,11 @@
+ # ifdef _HAVE_BSDI
+ #  include <time.h>
+ # endif
++#warning workaround for wchar_t without wchar.h
++#if 0
+ #  include <wchar.h>
+ #endif
++#endif
+ 
+ /*
+  * Use this typedef when you need to represent a UTF-16 surrogate pair
+@@ -231,6 +234,8 @@
+ # define _PyUnicode_ToUppercase _PyUnicodeUCS2_ToUppercase
+ 
+ #else
++
++#error we are ucs4
+ 
+ # define PyUnicode_AsASCIIString PyUnicodeUCS4_AsASCIIString
+ # define PyUnicode_AsCharmapString PyUnicodeUCS4_AsCharmapString
+diff -ur /nfs/stock/Python-2.7.15/Lib/idlelib/EditorWindow.py /u/root/src/Python-2.7.15/Lib/idlelib/EditorWindow.py
+--- /nfs/stock/Python-2.7.15/Lib/idlelib/EditorWindow.py	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Lib/idlelib/EditorWindow.py	Sat Feb 11 00:11:15 2023
+@@ -1539,14 +1539,14 @@
+             text.insert("insert", self._make_blanks(column))
+         text.undo_block_stop()
+ 
+-    def _asktabwidth(self):
+-        return self.askinteger(
+-            "Tab width",
+-            "Columns per tab? (2-16)",
+-            parent=self.text,
+-            initialvalue=self.indentwidth,
+-            minvalue=2,
+-            maxvalue=16)
++#    def _asktabwidth(self):
++#        return self.askinteger(
++#            "Tab width",
++#            "Columns per tab? (2-16)",
++#            parent=self.text,
++#            initialvalue=self.indentwidth,
++#            minvalue=2,
++#            maxvalue=16)
+ 
+     # Guess indentwidth from text content.
+     # Return guessed indentwidth.  This should not be believed unless
+diff -ur /nfs/stock/Python-2.7.15/Makefile.pre.in /u/root/src/Python-2.7.15/Makefile.pre.in
+--- /nfs/stock/Python-2.7.15/Makefile.pre.in	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Makefile.pre.in	Sat Feb 11 00:30:48 2023
+@@ -21,7 +21,49 @@
+ # === Variables set by makesetup ===
+ 
+ MODOBJS=        _MODOBJS_
+-MODLIBS=        _MODLIBS_
++
++# XXX Add modules to build statically
++
++IOMODNAMES=bufferedio bytesio fileio iobase _iomodule stringio textio
++
++MOREMODNAMES=parsermodule cStringIO cPickle _ssl cryptmodule termios resource _hashopenssl dbmmodule zlibmodule
++#_cursesmodule
++
++MORE_PYTHON_LDFLAGS=
++
++# for ssl and crypt
++
++SSL=/usr/local/ssl
++Modules/_ssl.o: CFLAGS+=-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl
++MORE_PYTHON_LDFLAGS+=-L$(SSL)/lib -lssl -lcrypto
++
++
++# for hashlib
++
++Modules/_hashopenssl.o: CFLAGS+=-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl
++
++
++# for zlib
++
++Modules/zlibmodule.o: CFLAGS+=-I$(prefix)/include
++MORE_PYTHON_LDFLAGS+=-L$(exec_prefix)/lib -lz
++
++# for curses module
++
++MORE_PYTHON_LDFLAGS+=-lcurses
++
++
++ADDMODLIBS=
++ADDMODLIBS= Modules/itertoolsmodule.o Modules/arraymodule.o Modules/cmathmodule.o Modules/mathmodule.o \
++	Modules/_math.o Modules/_struct.o Modules/timemodule.o Modules/operator.o Modules/unicodedata.o \
++	Modules/_collectionsmodule.o Modules/_testcapimodule.o Modules/_randommodule.o Modules/_heapqmodule.o \
++	Modules/stropmodule.o Modules/_functoolsmodule.o Modules/datetimemodule.o \
++	Modules/_bisectmodule.o Modules/_localemodule.o Modules/fcntlmodule.o Modules/grpmodule.o \
++	Modules/selectmodule.o Modules/_csv.o Modules/socketmodule.o Modules/binascii.o \
++	$(foreach mod,$(IOMODNAMES),Modules/_io/$(mod).o) \
++	$(foreach mod,$(MOREMODNAMES),Modules/$(mod).o)                                                                  
++
++MODLIBS=        _MODLIBS_ $(ADDMODLIBS)
+ 
+ # === Variables set by configure
+ VERSION=	@VERSION@
+@@ -199,7 +241,7 @@
+ PYTHON=		python$(EXE)
+ BUILDPYTHON=	python$(BUILDEXE)
+ 
+-PYTHON_FOR_REGEN=@PYTHON_FOR_REGEN@
++PYTHON_FOR_REGEN=python
+ PYTHON_FOR_BUILD=@PYTHON_FOR_BUILD@
+ _PYTHON_HOST_PLATFORM=@_PYTHON_HOST_PLATFORM@
+ HOST_GNU_TYPE=  @host@
+@@ -401,7 +443,7 @@
+ 
+ # Default target
+ all:		@DEF_MAKE_ALL_RULE@
+-build_all:	check-clean-src $(BUILDPYTHON) oldsharedmods sharedmods gdbhooks
++build_all:	check-clean-src $(ADDMODLIBS) $(BUILDPYTHON) oldsharedmods sharedmods gdbhooks
+ 
+ # Check that the source is clean when building out of source.
+ check-clean-src:
+@@ -489,7 +531,7 @@
+ $(BUILDPYTHON):	Modules/python.o $(LIBRARY) $(LDLIBRARY)
+ 		$(LINKCC) $(LDFLAGS) $(LINKFORSHARED) -o $@ \
+ 			Modules/python.o \
+-			$(BLDLIBRARY) $(LIBS) $(MODLIBS) $(SYSLIBS) $(LDLAST)
++			$(BLDLIBRARY) $(LIBS) $(SYSLIBS) $(LDLAST) $(MORE_PYTHON_LDFLAGS)
+ 
+ platform: $(BUILDPYTHON) pybuilddir.txt
+ 	$(RUNSHARED) $(PYTHON_FOR_BUILD) -c 'import sys ; from sysconfig import get_platform ; print get_platform()+"-"+sys.version[0:3]' >platform
+diff -ur /nfs/stock/Python-2.7.15/Modules/Setup.dist /u/root/src/Python-2.7.15/Modules/Setup.dist
+--- /nfs/stock/Python-2.7.15/Modules/Setup.dist	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/Setup.dist	Sat Feb 11 00:11:15 2023
+@@ -6,6 +6,9 @@
+ # Setup to your heart's content.  Note that Makefile.pre is created
+ # from Makefile.pre.in by the toplevel configure script.
+ 
++#_curses _cursesmodule.c
++#_curses_panel _curses_panel.c
++
+ # (VPATH notes: Setup and Makefile.pre are in the build directory, as
+ # are Makefile and config.c; the *.in and *.dist files are in the source
+ # directory.)
+@@ -155,6 +158,8 @@
+ 
+ #*shared*
+ 
++*static*
++
+ # GNU readline.  Unlike previous Python incarnations, GNU readline is
+ # now incorporated in an optional module, configured in the Setup file
+ # instead of by a configure script switch.  You may have to insert a
+@@ -168,72 +173,72 @@
+ 
+ # Modules that should always be present (non UNIX dependent):
+ 
+-#array arraymodule.c	# array objects
+-#cmath cmathmodule.c _math.c # -lm # complex math library functions
+-#math mathmodule.c _math.c # -lm # math library functions, e.g. sin()
+-#_struct _struct.c	# binary structure packing/unpacking
+-#time timemodule.c # -lm # time operations and variables
+-#operator operator.c	# operator.add() and similar goodies
+-#_testcapi _testcapimodule.c    # Python C API test module
+-#_random _randommodule.c	# Random number generator
+-#_collections _collectionsmodule.c # Container types
+-#_heapq _heapqmodule.c		# Heapq type
+-#itertools itertoolsmodule.c	# Functions creating iterators for efficient looping 
+-#strop stropmodule.c		# String manipulations
+-#_functools _functoolsmodule.c	# Tools for working with functions and callable objects
++array arraymodule.c	# array objects
++cmath cmathmodule.c _math.c # -lm # complex math library functions
++math mathmodule.c _math.c # -lm # math library functions, e.g. sin()
++_struct _struct.c	# binary structure packing/unpacking
++time timemodule.c # -lm # time operations and variables
++operator operator.c	# operator.add() and similar goodies
++_testcapi _testcapimodule.c    # Python C API test module
++_random _randommodule.c	# Random number generator
++_collections _collectionsmodule.c # Container types
++_heapq _heapqmodule.c		# Heapq type
++itertools itertoolsmodule.c	# Functions creating iterators for efficient looping 
++strop stropmodule.c		# String manipulations
++_functools _functoolsmodule.c	# Tools for working with functions and callable objects
+ #_elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DUSE_PYEXPAT_CAPI _elementtree.c	# elementtree accelerator
+ #_pickle _pickle.c	# pickle accelerator
+-#datetime datetimemodule.c	# date/time type
+-#_bisect _bisectmodule.c	# Bisection algorithms
++datetime datetimemodule.c	# date/time type
++_bisect _bisectmodule.c	# Bisection algorithms
+ 
+-#unicodedata unicodedata.c    # static Unicode character database
++unicodedata unicodedata.c    # static Unicode character database
+ 
+ # access to ISO C locale support
+-#_locale _localemodule.c  # -lintl
++_locale _localemodule.c  # -lintl
+ 
+ # Standard I/O baseline
+-#_io -I$(srcdir)/Modules/_io _io/bufferedio.c _io/bytesio.c _io/fileio.c _io/iobase.c _io/_iomodule.c _io/stringio.c _io/textio.c
++_io -I$(srcdir)/Modules/_io _io/bufferedio.c _io/bytesio.c _io/fileio.c _io/iobase.c _io/_iomodule.c _io/stringio.c _io/textio.c
+ 
+ 
+ # Modules with some UNIX dependencies -- on by default:
+ # (If you have a really backward UNIX, select and socket may not be
+ # supported...)
+ 
+-#fcntl fcntlmodule.c	# fcntl(2) and ioctl(2)
++fcntl fcntlmodule.c	# fcntl(2) and ioctl(2)
+ #spwd spwdmodule.c		# spwd(3) 
+-#grp grpmodule.c		# grp(3)
+-#select selectmodule.c	# select(2); not on ancient System V
++grp grpmodule.c		# grp(3)
++select selectmodule.c	# select(2); not on ancient System V
+ 
+ # Memory-mapped files (also works on Win32).
+ #mmap mmapmodule.c
+ 
+ # CSV file helper
+-#_csv _csv.c
++_csv _csv.c
+ 
+ # Socket module helper for socket(2)
+-#_socket socketmodule.c timemodule.c
++_socket socketmodule.c timemodule.c
+ 
+ # Socket module helper for SSL support; you must comment out the other
+ # socket line above, and possibly edit the SSL variable:
+-#SSL=/usr/local/ssl
+-#_ssl _ssl.c \
+-#	-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
+-#	-L$(SSL)/lib -lssl -lcrypto
++SSL=/usr/local/ssl
++_ssl _ssl.c \
++	-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
++	-L$(SSL)/lib -lssl -lcrypto
+ 
+ # The crypt module is now disabled by default because it breaks builds
+ # on many systems (where -lcrypt is needed), e.g. Linux (I believe).
+ #
+ # First, look at Setup.config; configure may have set this for you.
+ 
+-#crypt cryptmodule.c # -lcrypt	# crypt(3); needs -lcrypt on some systems
++crypt cryptmodule.c # -lcrypt	# crypt(3); needs -lcrypt on some systems
+ 
+ 
+ # Some more UNIX dependent modules -- off by default, since these
+ # are not supported by all UNIX systems:
+ 
+ #nis nismodule.c -lnsl	# Sun yellow pages -- not everywhere
+-#termios termios.c	# Steen Lumholt's termios module
+-#resource resource.c	# Jeremy Hylton's rlimit interface
++termios termios.c	# Steen Lumholt's termios module
++resource resource.c	# Jeremy Hylton's rlimit interface
+ 
+ 
+ # Multimedia modules -- off by default.
+@@ -261,6 +266,8 @@
+ #_sha256 sha256module.c
+ #_sha512 sha512module.c
+ 
++# XXX added
++_hashlib _hashopenssl.c
+ 
+ # SGI IRIX specific modules -- off by default.
+ 
+@@ -394,7 +401,7 @@
+ #
+ # First, look at Setup.config; configure may have set this for you.
+ 
+-#dbm dbmmodule.c 	# dbm(3) may require -lndbm or similar
++dbm dbmmodule.c 	# dbm(3) may require -lndbm or similar
+ 
+ # Anthony Baxter's gdbm module.  GNU dbm(3) will require -lgdbm:
+ #
+@@ -434,14 +441,14 @@
+ 
+ 
+ # Helper module for various ascii-encoders
+-#binascii binascii.c
++binascii binascii.c
+ 
+ # Fred Drake's interface to the Python parser
+-#parser parsermodule.c
++parser parsermodule.c
+ 
+ # cStringIO and cPickle
+-#cStringIO cStringIO.c
+-#cPickle cPickle.c
++cStringIO cStringIO.c
++cPickle cPickle.c
+ 
+ 
+ # Lee Busby's SIGFPE modules.
+@@ -464,7 +471,7 @@
+ # Andrew Kuchling's zlib module.
+ # This require zlib 1.1.3 (or later).
+ # See http://www.gzip.org/zlib/
+-#zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
++zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
+ 
+ # Interface to the Expat XML parser
+ #
+diff -ur /nfs/stock/Python-2.7.15/Modules/_cursesmodule.c /u/root/src/Python-2.7.15/Modules/_cursesmodule.c
+--- /nfs/stock/Python-2.7.15/Modules/_cursesmodule.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/_cursesmodule.c	Sat Feb 11 00:11:15 2023
+@@ -31,6 +31,8 @@
+  *   PERFORMANCE OF THIS SOFTWARE.
+  */
+ 
++typedef int attr_t;
++
+ /*
+ 
+   A number of SysV or ncurses functions don't have wrappers yet; if you
+@@ -1983,6 +1985,7 @@
+         }                                                               \
+     } while (0)
+ 
++#if ACS_LTEE
+     /* Here are some graphic symbols you can use */
+     SetDictInt("ACS_ULCORNER",      (ACS_ULCORNER));
+     SetDictInt("ACS_LLCORNER",      (ACS_LLCORNER));
+@@ -2050,6 +2053,8 @@
+     SetDictInt("ACS_STERLING",      (ACS_STERLING));
+ #endif
+ 
++#endif
++
+     SetDictInt("LINES", LINES);
+     SetDictInt("COLS", COLS);
+ 
+@@ -2315,6 +2320,8 @@
+     return Py_BuildValue("(ii)", f, b);
+ }
+ 
++#ifdef A_COLOR
++
+ static PyObject *
+ PyCurses_pair_number(PyObject *self, PyObject *args)
+ {
+@@ -2335,6 +2342,7 @@
+ 
+     return PyInt_FromLong((long) ((n & A_COLOR) >> 8));
+ }
++#endif
+ 
+ static PyObject *
+ PyCurses_Putp(PyObject *self, PyObject *args)
+@@ -2486,6 +2494,8 @@
+ }
+ #endif
+ 
++#ifdef A_COLOR
++
+ static PyObject *
+ PyCurses_Start_Color(PyObject *self)
+ {
+@@ -2510,6 +2520,7 @@
+         return NULL;
+     }
+ }
++#endif
+ 
+ static PyObject *
+ PyCurses_tigetflag(PyObject *self, PyObject *args)
+@@ -2747,7 +2758,9 @@
+     {"noqiflush",           (PyCFunction)PyCurses_noqiflush, METH_NOARGS},
+     {"noraw",               (PyCFunction)PyCurses_noraw, METH_NOARGS},
+     {"pair_content",        (PyCFunction)PyCurses_Pair_Content, METH_VARARGS},
++#ifdef A_COLOR
+     {"pair_number",         (PyCFunction)PyCurses_pair_number, METH_VARARGS},
++#endif
+     {"putp",                (PyCFunction)PyCurses_Putp, METH_VARARGS},
+     {"qiflush",             (PyCFunction)PyCurses_QiFlush, METH_VARARGS},
+     {"raw",                 (PyCFunction)PyCurses_raw, METH_VARARGS},
+@@ -2766,7 +2779,9 @@
+ #endif
+     {"setupterm",           (PyCFunction)PyCurses_setupterm,
+      METH_VARARGS|METH_KEYWORDS},
++#ifdef A_COLOR
+     {"start_color",         (PyCFunction)PyCurses_Start_Color, METH_NOARGS},
++#endif
+     {"termattrs",           (PyCFunction)PyCurses_termattrs, METH_NOARGS},
+     {"termname",            (PyCFunction)PyCurses_termname, METH_NOARGS},
+     {"tigetflag",           (PyCFunction)PyCurses_tigetflag, METH_VARARGS},
+@@ -2847,7 +2862,9 @@
+     SetDictInt("A_INVIS",           A_INVIS);
+     SetDictInt("A_PROTECT",         A_PROTECT);
+     SetDictInt("A_CHARTEXT",        A_CHARTEXT);
++#ifdef A_COLOR
+     SetDictInt("A_COLOR",           A_COLOR);
++#endif
+ 
+     /* The following are never available with strict SYSV curses */
+ #ifdef A_HORIZONTAL
+@@ -2869,6 +2886,7 @@
+     SetDictInt("A_VERTICAL",        A_VERTICAL);
+ #endif
+ 
++#ifdef COLOR_BLACK
+     SetDictInt("COLOR_BLACK",       COLOR_BLACK);
+     SetDictInt("COLOR_RED",         COLOR_RED);
+     SetDictInt("COLOR_GREEN",       COLOR_GREEN);
+@@ -2877,6 +2895,7 @@
+     SetDictInt("COLOR_MAGENTA",     COLOR_MAGENTA);
+     SetDictInt("COLOR_CYAN",        COLOR_CYAN);
+     SetDictInt("COLOR_WHITE",       COLOR_WHITE);
++#endif
+ 
+ #ifdef NCURSES_MOUSE_VERSION
+     /* Mouse-related constants */
+@@ -2911,6 +2930,7 @@
+     SetDictInt("ALL_MOUSE_EVENTS",         ALL_MOUSE_EVENTS);
+     SetDictInt("REPORT_MOUSE_POSITION",    REPORT_MOUSE_POSITION);
+ #endif
++#if defined(keyname) && defined(KEY_MIN) && defined(KEY_MAX)
+     /* Now set everything up for KEY_ variables */
+     {
+         int key;
+@@ -2946,4 +2966,5 @@
+         SetDictInt("KEY_MIN", KEY_MIN);
+         SetDictInt("KEY_MAX", KEY_MAX);
+     }
++#endif
+ }
+diff -ur /nfs/stock/Python-2.7.15/Modules/_localemodule.c /u/root/src/Python-2.7.15/Modules/_localemodule.c
+--- /nfs/stock/Python-2.7.15/Modules/_localemodule.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/_localemodule.c	Sat Feb 11 00:11:15 2023
+@@ -29,7 +29,10 @@
+ #endif
+ 
+ #ifdef HAVE_WCHAR_H
++#warning workaround for wchar_t without wchar.h
++#if 0
+ #include <wchar.h>
++#endif
+ #endif
+ 
+ #if defined(MS_WINDOWS)
+diff -ur /nfs/stock/Python-2.7.15/Modules/_math.c /u/root/src/Python-2.7.15/Modules/_math.c
+--- /nfs/stock/Python-2.7.15/Modules/_math.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/_math.c	Sat Feb 11 00:11:15 2023
+@@ -209,6 +209,8 @@
+ 
+ #else
+ 
++#error this other one
++
+ double
+ _Py_log1p(double x)
+ {
+diff -ur /nfs/stock/Python-2.7.15/Modules/_math.h /u/root/src/Python-2.7.15/Modules/_math.h
+--- /nfs/stock/Python-2.7.15/Modules/_math.h	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/_math.h	Sat Feb 11 00:11:15 2023
+@@ -2,7 +2,6 @@
+ double _Py_asinh(double x);
+ double _Py_atanh(double x);
+ double _Py_expm1(double x);
+-double _Py_log1p(double x);
+ 
+ #ifdef HAVE_ACOSH
+ #define m_acosh acosh
+@@ -39,3 +38,5 @@
+ /* Use the substitute from _math.c on all platforms:
+    it includes workarounds for buggy handling of zeros. */
+ #define m_log1p _Py_log1p
++
++double _Py_log1p(double x);
+diff -ur /nfs/stock/Python-2.7.15/Modules/gcmodule.c /u/root/src/Python-2.7.15/Modules/gcmodule.c
+--- /nfs/stock/Python-2.7.15/Modules/gcmodule.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/gcmodule.c	Sat Feb 11 00:11:15 2023
+@@ -106,7 +106,7 @@
+    thusly: "each full garbage collection is more and more costly as the
+    number of objects grows, but we do fewer and fewer of them").
+ 
+-   This heuristic was suggested by Martin von Löwis on python-dev in
++   This heuristic was suggested by Martin von LC6wis on python-dev in
+    June 2008. His original analysis and proposal can be found at:
+     http://mail.python.org/pipermail/python-dev/2008-June/080579.html
+ */
+@@ -1494,10 +1494,12 @@
+ {
+     PyObject *op;
+     PyGC_Head *g;
++    /* printf("XXX PyObject_GC_Malloc %ld\n", basicsize); */
+     if (basicsize > PY_SSIZE_T_MAX - sizeof(PyGC_Head))
+         return PyErr_NoMemory();
+     g = (PyGC_Head *)PyObject_MALLOC(
+         sizeof(PyGC_Head) + basicsize);
++    /* printf("PyObject_MALLOC return ptr 0x%08x\n", g); */
+     if (g == NULL)
+         return PyErr_NoMemory();
+     g->gc.gc_refs = GC_UNTRACKED;
+@@ -1512,6 +1514,7 @@
+         collecting = 0;
+     }
+     op = FROM_GC(g);
++    /* printf("XXX done GC_Malloc\n"); */
+     return op;
+ }
+ 
+@@ -1528,7 +1531,9 @@
+ _PyObject_GC_NewVar(PyTypeObject *tp, Py_ssize_t nitems)
+ {
+     const size_t size = _PyObject_VAR_SIZE(tp, nitems);
+-    PyVarObject *op = (PyVarObject *) _PyObject_GC_Malloc(size);
++    PyVarObject *op;
++    /* printf("GC_NewVar malloc %ld\n", size); */
++    op = (PyVarObject *) _PyObject_GC_Malloc(size);
+     if (op != NULL)
+         op = PyObject_INIT_VAR(op, tp, nitems);
+     return op;
+diff -ur /nfs/stock/Python-2.7.15/Modules/posixmodule.c /u/root/src/Python-2.7.15/Modules/posixmodule.c
+--- /nfs/stock/Python-2.7.15/Modules/posixmodule.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/posixmodule.c	Sat Feb 11 00:11:16 2023
+@@ -11,6 +11,115 @@
+    compiler is assumed to be IBM's VisualAge C++ (VACPP).  PYCC_GCC is used
+    as the compiler specific macro for the EMX port of gcc to OS/2. */
+ 
++/*** rak: XXX FIXME posix defs */
++#include <sys/types.h>
++int rmdir (char *path);
++int chdir(char *path);
++int access(char *path, int amode);
++char *ttyname(int fildes);
++int chmod(char *path, int mode);
++int fchmod(int fd, int mode);
++int chown (char *path, uid_t owner, gid_t group);
++int fchown(int fd, uid_t owner, gid_t group);
++char *getcwd (char *buf, int size);
++int nice(int incr);
++int unlink(char *path);
++#include <sys/time.h>
++int utimes(char *file, struct timeval tvp[2]);
++int execv( char *path, char *argv[]);
++int execve( char *path, char *argvp[], char *envp[]);
++pid_t fork(void);
++
++uid_t getuid(void);
++uid_t geteuid(void);
++gid_t getgid(void);
++gid_t getegid(void);
++
++pid_t getpid(void);
++pid_t getpgrp(void);
++pid_t getppid(void);
++
++#include <grp.h>
++int getgroups(int ngroups, int *gidset);
++
++int initgroups(char *user, int basegid);
++
++int setpgid(pid_t pid, pid_t pgid);
++pid_t setpgrp(void);
++
++char * getlogin(void);
++
++#include <errno.h>
++
++int kill (pid_t pid, int sig);
++
++int killpg(int pgrp, int sig) {
++	if (pgrp < 0) {
++		errno = ESRCH;
++		return -1;
++	}
++	return kill(-pgrp, sig);
++}
++
++#include <sys/lock.h>
++int plock(int op);
++
++#include <stdio.h>
++int pclose(FILE *stream);
++
++int setuid (uid_t uid);
++int setgid (gid_t gid);
++
++int setreuid (int ruid, int euid);
++int setregid (int rgid, int egid);
++
++#include <sys/param.h>
++#include <sys/resource.h>
++#include <sys/wait.h>
++pid_t wait3(union wait *status, int options, struct rusage *rusage);
++
++int lstat(char *path, struct stat *stbuf);
++
++#if 0
++int lstat(char *path, struct stat *stbuf) {
++	return statx(path, stbuf, STATSIZE, STX_LINK);
++}
++#endif
++
++int readlink(char *path, char *buf, int bufsiz);
++
++int setsid(void);
++
++#include <termios.h>
++pid_t tcgetpgrp(int fildes);
++int tcsetpgrp(int fildes, pid_t pgrp_id);
++
++int close (int fildes);
++int dup (int fildes);
++int dup2 (int oldfd, int newfd);
++
++off_t lseek (int fildes, off_t offset, int whence);
++
++int read (int d, char *buf, unsigned int nbyte);
++int write (int d, char *buf, unsigned int nbytes);
++
++int isatty(int fildes);
++
++int pipe (int fildes[2]);
++
++int mknod (char *path, int mode, dev_t dev);
++
++int ftruncate (int fildes, off_t length);
++
++int putenv (char *str);
++
++long pathconf(char *path, int name);
++long fpathconf (int fildes, int name);
++
++long sysconf(int name);
++
++/*** rak: XXX FIXME end posix defs */
++
+ #ifdef __APPLE__
+    /*
+     * Step 1 of support for weak-linking a number of symbols existing on
+@@ -4257,11 +4366,15 @@
+ static PyObject *
+ posix_getpgrp(PyObject *self, PyObject *noargs)
+ {
++#if 0
+ #ifdef GETPGRP_HAVE_ARG
+     return PyLong_FromPid(getpgrp(0));
+ #else /* GETPGRP_HAVE_ARG */
+     return PyLong_FromPid(getpgrp());
+ #endif /* GETPGRP_HAVE_ARG */
++#endif
++
++    return PyLong_FromPid(getpgrp());
+ }
+ #endif /* HAVE_GETPGRP */
+ 
+@@ -4274,11 +4387,14 @@
+ static PyObject *
+ posix_setpgrp(PyObject *self, PyObject *noargs)
+ {
++#if 0
+ #ifdef SETPGRP_HAVE_ARG
+     if (setpgrp(0, 0) < 0)
+ #else /* SETPGRP_HAVE_ARG */
+     if (setpgrp() < 0)
+ #endif /* SETPGRP_HAVE_ARG */
++#endif
++    if (setpgrp() < 0)
+         return posix_error();
+     Py_INCREF(Py_None);
+     return Py_None;
+@@ -5991,7 +6107,8 @@
+ #endif /* HAVE_SETUID */
+ 
+ 
+-#ifdef HAVE_SETEUID
++/*#ifdef HAVE_SETEUID*/
++#if 0
+ PyDoc_STRVAR(posix_seteuid__doc__,
+ "seteuid(uid)\n\n\
+ Set the current process's effective user id.");
+@@ -6011,7 +6128,8 @@
+ }
+ #endif /* HAVE_SETEUID */
+ 
+-#ifdef HAVE_SETEGID
++/*#ifdef HAVE_SETEGID */
++#if 0
+ PyDoc_STRVAR(posix_setegid__doc__,
+ "setegid(gid)\n\n\
+ Set the current process's effective group id.");
+@@ -6888,6 +7006,15 @@
+ "fdopen(fd [, mode='r' [, bufsize]]) -> file_object\n\n\
+ Return an open file object connected to a file descriptor.");
+ 
++char * strerror(int errnoval) {
++	switch (errnoval) {
++	case EISDIR:
++		return "EISDIR";
++	default:
++		return "Unknown error";
++	}
++}
++
+ static PyObject *
+ posix_fdopen(PyObject *self, PyObject *args)
+ {
+@@ -9007,12 +9134,14 @@
+ #ifdef HAVE_SETUID
+     {"setuid",          posix_setuid, METH_VARARGS, posix_setuid__doc__},
+ #endif /* HAVE_SETUID */
++#if 0
+ #ifdef HAVE_SETEUID
+     {"seteuid",         posix_seteuid, METH_VARARGS, posix_seteuid__doc__},
+ #endif /* HAVE_SETEUID */
+ #ifdef HAVE_SETEGID
+     {"setegid",         posix_setegid, METH_VARARGS, posix_setegid__doc__},
+ #endif /* HAVE_SETEGID */
++#endif
+ #ifdef HAVE_SETREUID
+     {"setreuid",        posix_setreuid, METH_VARARGS, posix_setreuid__doc__},
+ #endif /* HAVE_SETREUID */
+diff -ur /nfs/stock/Python-2.7.15/Modules/resource.c /u/root/src/Python-2.7.15/Modules/resource.c
+--- /nfs/stock/Python-2.7.15/Modules/resource.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/resource.c	Sat Feb 11 00:11:16 2023
+@@ -10,6 +10,8 @@
+ #include <unistd.h>
+ #endif
+ 
++typedef long rlim_t;
++
+ /* On some systems, these aren't in any header file.
+    On others they are, with inconsistent prototypes.
+    We declare the (default) return type, to shut up gcc -Wall;
+diff -ur /nfs/stock/Python-2.7.15/Modules/signalmodule.c /u/root/src/Python-2.7.15/Modules/signalmodule.c
+--- /nfs/stock/Python-2.7.15/Modules/signalmodule.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/signalmodule.c	Sat Feb 11 00:11:16 2023
+@@ -81,6 +81,8 @@
+ static pid_t main_pid;
+ #endif
+ 
++typedef int sig_atomic_t;
++
+ static struct {
+     int tripped;
+     PyObject *func;
+diff -ur /nfs/stock/Python-2.7.15/Modules/socketmodule.c /u/root/src/Python-2.7.15/Modules/socketmodule.c
+--- /nfs/stock/Python-2.7.15/Modules/socketmodule.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/socketmodule.c	Sat Feb 11 00:11:16 2023
+@@ -99,6 +99,10 @@
+ #include "structmember.h"
+ #include "timefuncs.h"
+ 
++#if defined(_AIX) && defined(__i386__)
++#include "memmove.h"
++#endif
++
+ #ifndef INVALID_SOCKET /* MS defines this */
+ #define INVALID_SOCKET (-1)
+ #endif
+diff -ur /nfs/stock/Python-2.7.15/Modules/termios.c /u/root/src/Python-2.7.15/Modules/termios.c
+--- /nfs/stock/Python-2.7.15/Modules/termios.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/termios.c	Sat Feb 11 00:11:16 2023
+@@ -2,6 +2,9 @@
+ 
+ #include "Python.h"
+ 
++#define   IXANY   0004000
++
++
+ #define PyInit_termios inittermios
+ 
+ /* Apparently, on SGI, termios.h won't define CTRL if _XOPEN_SOURCE
+diff -ur /nfs/stock/Python-2.7.15/Modules/xxsubtype.c /u/root/src/Python-2.7.15/Modules/xxsubtype.c
+--- /nfs/stock/Python-2.7.15/Modules/xxsubtype.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Modules/xxsubtype.c	Sat Feb 11 00:11:16 2023
+@@ -232,6 +232,9 @@
+     0,                                          /* tp_new */
+ };
+ 
++long clock(void);
++#define CLOCKS_PER_SEC 1000000
++
+ static PyObject *
+ spam_bench(PyObject *self, PyObject *args)
+ {
+diff -ur /nfs/stock/Python-2.7.15/Objects/abstract.c /u/root/src/Python-2.7.15/Objects/abstract.c
+--- /nfs/stock/Python-2.7.15/Objects/abstract.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Objects/abstract.c	Sat Feb 11 00:11:16 2023
+@@ -2259,11 +2259,14 @@
+         return null_error();
+ 
+     result = PyList_New(0);
+-    if (result == NULL)
++    if (result == NULL) {
++	printf("XXX PySequence_List PyList_New returned NULL\n");
+         return NULL;
++    }
+ 
+     rv = _PyList_Extend((PyListObject *)result, v);
+     if (rv == NULL) {
++	printf("XXX _PyList_Extend failed\n");
+         Py_DECREF(result);
+         return NULL;
+     }
+diff -ur /nfs/stock/Python-2.7.15/Objects/dictobject.c /u/root/src/Python-2.7.15/Objects/dictobject.c
+--- /nfs/stock/Python-2.7.15/Objects/dictobject.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Objects/dictobject.c	Sat Feb 11 00:11:16 2023
+@@ -319,10 +319,10 @@
+ static PyDictEntry *
+ lookdict(PyDictObject *mp, PyObject *key, register long hash)
+ {
+-    register size_t i;
+-    register size_t perturb;
++    register /* size_t */ unsigned int i;
++    register /* size_t */ unsigned int perturb;
+     register PyDictEntry *freeslot;
+-    register size_t mask = (size_t)mp->ma_mask;
++    register /* size_t */ mask = (/* size_t */ unsigned int)mp->ma_mask;
+     PyDictEntry *ep0 = mp->ma_table;
+     register PyDictEntry *ep;
+     register int cmp;
+@@ -407,12 +407,14 @@
+ static PyDictEntry *
+ lookdict_string(PyDictObject *mp, PyObject *key, register long hash)
+ {
+-    register size_t i;
+-    register size_t perturb;
++    register /* size_t */ unsigned int i;
++    register /* size_t */ unsigned int perturb;
+     register PyDictEntry *freeslot;
+-    register size_t mask = (size_t)mp->ma_mask;
++    register /* size_t */ unsigned int mask = /*(size_t)*/ (unsigned int)mp->ma_mask;
+     PyDictEntry *ep0 = mp->ma_table;
+     register PyDictEntry *ep;
++  
++    /* printf("it's lookdict_string\n"); */
+ 
+     /* Make sure this function doesn't have to handle non-string keys,
+        including subclasses of str; e.g., one reason to subclass
+@@ -423,6 +425,7 @@
+         ++converted;
+ #endif
+         mp->ma_lookup = lookdict;
++        /* printf("lookdict\n"); */
+         return lookdict(mp, key, hash);
+     }
+     i = hash & mask;
+@@ -441,6 +444,7 @@
+        least likely outcome, so test for that last. */
+     for (perturb = hash; ; perturb >>= PERTURB_SHIFT) {
+         i = (i << 2) + i + perturb + 1;
++        /* printf("i=%ld\n", i); */
+         ep = &ep0[i & mask];
+         if (ep->me_key == NULL)
+             return freeslot == NULL ? ep : freeslot;
+@@ -723,6 +727,8 @@
+         }
+     }
+ 
++    /* printf("XXX PyDict_GetItem looking up hash=%ld\n", hash); */
++
+     /* We can arrive here with a NULL tstate during initialization: try
+        running "python -Wi" for an example related to string interning.
+        Let's just hope that no exception occurs then...  This must be
+@@ -732,6 +738,7 @@
+     if (tstate != NULL && tstate->curexc_type != NULL) {
+         /* preserve the existing exception */
+         PyObject *err_type, *err_value, *err_tb;
++        /* printf("in the tstate failure case\n"); */
+         PyErr_Fetch(&err_type, &err_value, &err_tb);
+         ep = (mp->ma_lookup)(mp, key, hash);
+         /* ignore errors */
+@@ -740,7 +747,9 @@
+             return NULL;
+     }
+     else {
++        /* printf("ma_lookup 0x%08x\n", mp->ma_lookup); */
+         ep = (mp->ma_lookup)(mp, key, hash);
++        /* printf("ma_lookup done\n"); */
+         if (ep == NULL) {
+             PyErr_Clear();
+             return NULL;
+diff -ur /nfs/stock/Python-2.7.15/Objects/listobject.c /u/root/src/Python-2.7.15/Objects/listobject.c
+--- /nfs/stock/Python-2.7.15/Objects/listobject.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Objects/listobject.c	Sat Feb 11 00:11:16 2023
+@@ -48,7 +48,11 @@
+     new_allocated = (newsize >> 3) + (newsize < 9 ? 3 : 6);
+ 
+     /* check for integer overflow */
++    /* printf("XXX list_resize overflow check\n"); */
++    /* printf("XXX new_allocated %d > PY_SIZE_MAX %d - newsize %d\n", 
++		new_allocated, PY_SIZE_MAX, newsize); */
+     if (new_allocated > PY_SIZE_MAX - newsize) {
++        /* printf("XXX nope\n"); */
+         PyErr_NoMemory();
+         return -1;
+     } else {
+@@ -58,10 +62,13 @@
+     if (newsize == 0)
+         new_allocated = 0;
+     items = self->ob_item;
+-    if (new_allocated <= (PY_SIZE_MAX / sizeof(PyObject *)))
++    if (new_allocated <= (PY_SIZE_MAX / sizeof(PyObject *))) {
++        /* printf("XXX doing PyMem_RESIZE\n"); */
+         PyMem_RESIZE(items, PyObject *, new_allocated);
+-    else
++    } else {
++        /* printf("XXX new_allocated case?\n"); */
+         items = NULL;
++    }
+     if (items == NULL) {
+         PyErr_NoMemory();
+         return -1;
+@@ -811,10 +818,13 @@
+     */
+     if (PyList_CheckExact(b) || PyTuple_CheckExact(b) || (PyObject *)self == b) {
+         PyObject **src, **dest;
++        /* printf("XXX listextend first case\n"); */
+         b = PySequence_Fast(b, "argument must be iterable");
+-        if (!b)
++        if (!b) {
+             return NULL;
++        }
+         n = PySequence_Fast_GET_SIZE(b);
++        /* printf("XXX listextend - cur size is %d\n", n); */
+         if (n == 0) {
+             /* short circuit when b is empty */
+             Py_DECREF(b);
+@@ -822,6 +832,7 @@
+         }
+         m = Py_SIZE(self);
+         if (list_resize(self, m + n) == -1) {
++            /* printf("XXX list_resize failed\n"); */
+             Py_DECREF(b);
+             return NULL;
+         }
+diff -ur /nfs/stock/Python-2.7.15/Objects/object.c /u/root/src/Python-2.7.15/Objects/object.c
+--- /nfs/stock/Python-2.7.15/Objects/object.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Objects/object.c	Sat Feb 11 00:11:16 2023
+@@ -8,6 +8,23 @@
+ extern "C" {
+ #endif
+ 
++char * funtime_pymem_malloc(size_t n) {
++      char * out;
++      if(n > (size_t)PY_SSIZE_T_MAX) {
++	printf("funtime malloc is skipping because the size is too big"
++		" (%ld vs %ld)\n", n, PY_SSIZE_T_MAX);
++        return NULL;
++      } else {
++        if (n == 0) {
++                n = 1;
++        }
++        printf("funtime malloc is allocating %ld bytes\n", n);
++	out = malloc(n);
++	printf("funtime malloc got 0x%08x\n", out);
++        return out;
++      }
++}
++
+ #ifdef Py_REF_DEBUG
+ Py_ssize_t _Py_RefTotal;
+ 
+@@ -2085,11 +2102,17 @@
+     if (PyType_Ready(&_PyWeakref_ProxyType) < 0)
+         Py_FatalError("Can't initialize weakref proxy type");
+ 
++    /* printf("XXX _PyReadyTypes done with weakref\n");*/
++
+     if (PyType_Ready(&PyBool_Type) < 0)
+         Py_FatalError("Can't initialize bool type");
+ 
++    /* printf("XXX _PyReadyTypes done with bool\n"); */
++
+     if (PyType_Ready(&PyString_Type) < 0)
+         Py_FatalError("Can't initialize str type");
++
++    /* printf("XXX _PyReadyTypes done with str\n"); */
+ 
+     if (PyType_Ready(&PyByteArray_Type) < 0)
+         Py_FatalError("Can't initialize bytearray type");
+diff -ur /nfs/stock/Python-2.7.15/Objects/obmalloc.c /u/root/src/Python-2.7.15/Objects/obmalloc.c
+--- /nfs/stock/Python-2.7.15/Objects/obmalloc.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Objects/obmalloc.c	Sat Feb 11 00:11:16 2023
+@@ -801,14 +801,22 @@
+         goto redirect;
+ #endif
+ 
++    /* printf("XXX PyObject_Malloc called with (%ld)\n", nbytes); */
+     /*
+      * Limit ourselves to PY_SSIZE_T_MAX bytes to prevent security holes.
+      * Most python internals blindly use a signed Py_ssize_t to track
+      * things without checking for overflows or negatives.
+      * As size_t is unsigned, checking for nbytes < 0 is not required.
+      */
+-    if (nbytes > PY_SSIZE_T_MAX)
++    /*
++    printf("XXX PY_SSIZE_T_MAX is %ld\n", PY_SSIZE_T_MAX); 
++    printf("XXX PY_SSIZE_T_MIN is %ld\n", PY_SSIZE_T_MIN); 
++    */
++    if (nbytes > PY_SSIZE_T_MAX) {
++/*	printf("XXX too big early exit\n"); */
+         return NULL;
++    }
++/*	printf("XXX something\n"); */
+ 
+     /*
+      * This implicitly redirects malloc(0).
+@@ -819,6 +827,7 @@
+          * Most frequent paths first
+          */
+         size = (uint)(nbytes - 1) >> ALIGNMENT_SHIFT;
++/*	printf("XXX pool %d\n", size + size); */
+         pool = usedpools[size + size];
+         if (pool != pool->nextpool) {
+             /*
+@@ -983,6 +992,7 @@
+      */
+     if (nbytes == 0)
+         nbytes = 1;
++/*    printf("underlying malloc %ld\n", nbytes); */
+     return (void *)malloc(nbytes);
+ }
+ 
+@@ -1614,7 +1624,7 @@
+     id = (char)q[-SST];
+     if (id != api) {
+         msg = msgbuf;
+-        snprintf(msg, sizeof(msgbuf), "bad ID: Allocated using API '%c', verified using API '%c'", id, api);
++        PyOS_snprintf(msg, sizeof(msgbuf), "bad ID: Allocated using API '%c', verified using API '%c'", id, api);
+         msgbuf[sizeof(msgbuf)-1] = 0;
+         goto error;
+     }
+diff -ur /nfs/stock/Python-2.7.15/Objects/tupleobject.c /u/root/src/Python-2.7.15/Objects/tupleobject.c
+--- /nfs/stock/Python-2.7.15/Objects/tupleobject.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Objects/tupleobject.c	Sat Feb 11 00:11:16 2023
+@@ -50,6 +50,7 @@
+ {
+     register PyTupleObject *op;
+     Py_ssize_t i;
++    /* printf("new tuple size %d\n", size); */
+     if (size < 0) {
+         PyErr_BadInternalCall();
+         return NULL;
+@@ -61,6 +62,7 @@
+ #ifdef COUNT_ALLOCS
+         tuple_zero_allocs++;
+ #endif
++        /* printf("returning free list 0 ptr 0x%08x\n", op); */
+         return (PyObject *) op;
+     }
+     if (size < PyTuple_MAXSAVESIZE && (op = free_list[size]) != NULL) {
+@@ -88,8 +90,10 @@
+         }
+ 
+         op = PyObject_GC_NewVar(PyTupleObject, &PyTuple_Type, size);
+-        if (op == NULL)
++        if (op == NULL) {
++	    /* printf("PyObject_GC_NewVar returned NULL\n"); */
+             return NULL;
++	}
+     }
+     for (i=0; i < size; i++)
+         op->ob_item[i] = NULL;
+diff -ur /nfs/stock/Python-2.7.15/Objects/typeobject.c /u/root/src/Python-2.7.15/Objects/typeobject.c
+--- /nfs/stock/Python-2.7.15/Objects/typeobject.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Objects/typeobject.c	Sat Feb 11 00:11:16 2023
+@@ -1577,8 +1577,10 @@
+     PyObject *to_merge, *bases_aslist;
+ 
+     if (type->tp_dict == NULL) {
+-        if (PyType_Ready(type) < 0)
++        if (PyType_Ready(type) < 0) {
++	    /* printf("XXX mro_impl: type '%s' is not ready\n", type->tp_name); */
+             return NULL;
++	}
+     }
+ 
+     /* Find a superclass linearization that honors the constraints
+@@ -1594,18 +1596,24 @@
+     n = PyTuple_GET_SIZE(bases);
+ 
+     to_merge = PyList_New(n+1);
+-    if (to_merge == NULL)
++    if (to_merge == NULL) {
++	/* printf("XXX mro_impl: results of PyList_New to_merge was NULL\n"); */
+         return NULL;
++    }
+ 
+     for (i = 0; i < n; i++) {
+         PyObject *base = PyTuple_GET_ITEM(bases, i);
+         PyObject *parentMRO;
+-        if (PyType_Check(base))
++        if (PyType_Check(base)) {
++	    /* printf("XXX mro_impl: new style mro\n"); */
+             parentMRO = PySequence_List(
+                 ((PyTypeObject*)base)->tp_mro);
+-        else
++        } else {
++            /* printf("XXX mro_impl: old style mro\n"); */
+             parentMRO = classic_mro(base);
++	}
+         if (parentMRO == NULL) {
++            /* printf("XXX parentMRO NULL\n"); */
+             Py_DECREF(to_merge);
+             return NULL;
+         }
+@@ -1615,19 +1623,23 @@
+ 
+     bases_aslist = PySequence_List(bases);
+     if (bases_aslist == NULL) {
++        /* printf("XXX bases_aslist was NULL\n"); */
+         Py_DECREF(to_merge);
+         return NULL;
+     }
+     /* This is just a basic sanity check. */
+     if (check_duplicates(bases_aslist) < 0) {
++        /* printf("XXX check duplicates NULL\n"); */
+         Py_DECREF(to_merge);
+         Py_DECREF(bases_aslist);
+         return NULL;
+     }
+     PyList_SET_ITEM(to_merge, n, bases_aslist);
++    /* printf("XXX after SET_ITEM\n"); */
+ 
+     result = Py_BuildValue("[O]", (PyObject *)type);
+     if (result == NULL) {
++        /* printf("XXX Py_BuildValue result NULL\n"); */
+         Py_DECREF(to_merge);
+         return NULL;
+     }
+@@ -1657,19 +1669,26 @@
+     int checkit = 0;
+ 
+     if (Py_TYPE(type) == &PyType_Type) {
++        /* printf("XXX mro_internal: calling mro_implementation\n");
++           printf("XXX mro_internal: type name is '%s'\n", type->tp_name); */
+         result = mro_implementation(type);
+     }
+     else {
+         static PyObject *mro_str;
++        /* printf("XXX mro_internal: calling lookup_method\n"); */
+         checkit = 1;
+         mro = lookup_method((PyObject *)type, "mro", &mro_str);
+-        if (mro == NULL)
++        if (mro == NULL) {
++	    /* printf("got no method, returning -1\n"); */
+             return -1;
++	}
+         result = PyObject_CallObject(mro, NULL);
+         Py_DECREF(mro);
+     }
+-    if (result == NULL)
++    if (result == NULL) {
++	/* printf("XXX mro_internal: result of the call was NULL; returning -1\n"); */
+         return -1;
++    }
+     tuple = PySequence_Tuple(result);
+     Py_DECREF(result);
+     if (tuple == NULL)
+@@ -4117,8 +4136,12 @@
+     PyTypeObject *base;
+     Py_ssize_t i, n;
+ 
++    /* printf("Checking PyType_Ready for type '%s'\n", type->tp_name); */
++    fflush(stdout);
++
+     if (type->tp_flags & Py_TPFLAGS_READY) {
+         assert(type->tp_dict != NULL);
++	/* printf("not ready\n"); */
+         return 0;
+     }
+     assert((type->tp_flags & Py_TPFLAGS_READYING) == 0);
+@@ -4140,6 +4163,8 @@
+         goto error;
+     }
+ 
++    /* printf("xxx pytype ready type='%s' internal 1\n", type->tp_name); */
++
+     /* Initialize tp_base (defaults to BaseObject unless that's us) */
+     base = type->tp_base;
+     if (base == NULL && type != &PyBaseObject_Type) {
+@@ -4153,10 +4178,16 @@
+ 
+     /* Initialize the base class */
+     if (base && base->tp_dict == NULL) {
+-        if (PyType_Ready(base) < 0)
++        if (PyType_Ready(base) < 0) {
++            char * basename = NULL;
++            if (base != NULL) basename = base->tp_name;
++	    /* printf("init base class %s goto error\n", basename); */
+             goto error;
++	}
+     }
+ 
++    /* printf("xxx pytype ready type='%s' internal 2\n", type->tp_name); */
++
+     /* Initialize ob_type if NULL.      This means extensions that want to be
+        compilable separately on Windows can call PyType_Ready() instead of
+        initializing the ob_type field of their type objects. */
+@@ -4170,49 +4201,77 @@
+     /* Initialize tp_bases */
+     bases = type->tp_bases;
+     if (bases == NULL) {
+-        if (base == NULL)
++        if (base == NULL) { 
++	    /* printf("base was null; creating new tuple\n"); */
+             bases = PyTuple_New(0);
+-        else
++	}
++        else {
++	    /* printf("packing base\n"); */
+             bases = PyTuple_Pack(1, base);
+-        if (bases == NULL)
++	}
++        if (bases == NULL) {
++            /* printf("init tp_bases goto error\n"); */
+             goto error;
++	}
+         type->tp_bases = bases;
+     }
+ 
++    /* printf("xxx pytype ready type='%s' internal 3\n", type->tp_name); */
++
+     /* Initialize tp_dict */
++    /* printf("initialize type dict\n"); */
+     dict = type->tp_dict;
+     if (dict == NULL) {
+         dict = PyDict_New();
+-        if (dict == NULL)
++        if (dict == NULL) {
++		/* printf("dict is null goto error\n"); */
+             goto error;
++	}
+         type->tp_dict = dict;
+     }
++    /* printf("xxx pytype ready type='%s' internal 4\n", type->tp_name); */
+ 
+     /* Add type-specific descriptors to tp_dict */
+-    if (add_operators(type) < 0)
++    if (add_operators(type) < 0) {
++		/* printf("add operators goto error\n"); */
+         goto error;
++    }
++    /* printf("xxx pytype ready type='%s' internal 5\n", type->tp_name); */
+     if (type->tp_methods != NULL) {
+-        if (add_methods(type, type->tp_methods) < 0)
++        if (add_methods(type, type->tp_methods) < 0) {
++		/* printf("add methods goto error\n"); */
+             goto error;
++	}
+     }
++    /* printf("xxx pytype ready type='%s' internal 6\n", type->tp_name); */
+     if (type->tp_members != NULL) {
+-        if (add_members(type, type->tp_members) < 0)
++        if (add_members(type, type->tp_members) < 0) {
++		/* printf("add members goto error\n"); */
+             goto error;
++	}
+     }
++    /* printf("xxx pytype ready type='%s' internal 7\n", type->tp_name); */
+     if (type->tp_getset != NULL) {
+-        if (add_getset(type, type->tp_getset) < 0)
++        if (add_getset(type, type->tp_getset) < 0) {
++		/* printf("add getset goto error\n"); */
+             goto error;
++	}
+     }
+ 
++    /* printf("xxx pytype ready type='%s' internal 8\n", type->tp_name); */
+     /* Calculate method resolution order */
+     if (mro_internal(type) < 0) {
++	/*printf("mro internal goto error\n"); */
+         goto error;
+     }
++    /* printf("xxx pytype ready type='%s' internal 9\n", type->tp_name); */
+ 
+     /* Inherit special flags from dominant base */
+     if (type->tp_base != NULL)
+         inherit_special(type, type->tp_base);
+ 
++    /* printf("xxx pytype ready type='%s' internal 10\n", type->tp_name); */
++
+     /* Initialize tp_dict properly */
+     bases = type->tp_mro;
+     assert(bases != NULL);
+@@ -4224,6 +4283,8 @@
+             inherit_slots(type, (PyTypeObject *)b);
+     }
+ 
++    /* printf("xxx pytype ready type='%s' internal 11\n", type->tp_name); */
++
+     /* All bases of statically allocated type should be statically allocated */
+     if (Py_Py3kWarningFlag && !(type->tp_flags & Py_TPFLAGS_HEAPTYPE))
+         for (i = 0; i < n; i++) {
+@@ -4236,11 +4297,14 @@
+                               "its base type '%.100s' is dynamically allocated",
+                               type->tp_name, ((PyTypeObject *)b)->tp_name);
+                 if (PyErr_WarnPy3k(buf, 1) < 0)
++	    printf("warn py3k goto error\n");
+                     goto error;
+                 break;
+             }
+         }
+ 
++    /* printf("xxx pytype ready type='%s' internal 12\n", type->tp_name); */
++
+     /* Sanity check for tp_free. */
+     if (PyType_IS_GC(type) && (type->tp_flags & Py_TPFLAGS_BASETYPE) &&
+         (type->tp_free == NULL || type->tp_free == PyObject_Del)) {
+@@ -4251,17 +4315,22 @@
+                      "gc and is a base type but has inappropriate "
+                      "tp_free slot",
+                      type->tp_name);
++	/* printf("tp free sanity check goto error\n"); */
+         goto error;
+     }
+ 
++    /* printf("xxx pytype ready type='%s' internal 13\n", type->tp_name); */
++
+     /* if the type dictionary doesn't contain a __doc__, set it from
+        the tp_doc slot.
+      */
+     if (PyDict_GetItemString(type->tp_dict, "__doc__") == NULL) {
+         if (type->tp_doc != NULL) {
+             PyObject *doc = PyString_FromString(type->tp_doc);
+-            if (doc == NULL)
++            if (doc == NULL) {
++	    /* printf("doc slot goto error\n"); */
+                 goto error;
++	    }
+             PyDict_SetItemString(type->tp_dict, "__doc__", doc);
+             Py_DECREF(doc);
+         } else {
+@@ -4270,6 +4339,8 @@
+         }
+     }
+ 
++    /* printf("xxx pytype ready type='%s' internal 14\n", type->tp_name); */
++
+     /* Some more special stuff */
+     base = type->tp_base;
+     if (base != NULL) {
+@@ -4283,23 +4354,32 @@
+             type->tp_as_buffer = base->tp_as_buffer;
+     }
+ 
++    /* printf("xxx pytype ready type='%s' internal 15\n", type->tp_name); */
++
+     /* Link into each base class's list of subclasses */
+     bases = type->tp_bases;
+     n = PyTuple_GET_SIZE(bases);
+     for (i = 0; i < n; i++) {
+         PyObject *b = PyTuple_GET_ITEM(bases, i);
+         if (PyType_Check(b) &&
+-            add_subclass((PyTypeObject *)b, type) < 0)
++            add_subclass((PyTypeObject *)b, type) < 0) {
++	    /* printf("add subclass goto error\n"); */
+             goto error;
++	}
+     }
+ 
++    /* printf("xxx pytype ready type='%s' internal 16\n", type->tp_name); */
++
+     /* All done -- set the ready flag */
+     assert(type->tp_dict != NULL);
+     type->tp_flags =
+         (type->tp_flags & ~Py_TPFLAGS_READYING) | Py_TPFLAGS_READY;
++
++    /* printf("XXX done pytype ready for type '%s'\n", type->tp_name); */
+     return 0;
+ 
+   error:
++    /*printf("there was an error\n"); */
+     type->tp_flags &= ~Py_TPFLAGS_READYING;
+     return -1;
+ }
+@@ -6561,16 +6641,30 @@
+     slotdef *p;
+     PyObject *descr;
+     void **ptr;
++    /* printf("XXX add_operators(type='%s')\n", type->tp_name); */
+ 
+     init_slotdefs();
+     for (p = slotdefs; p->name; p++) {
+-        if (p->wrapper == NULL)
++        /* printf("name='%s'\n", p->name); */
++        if (p->wrapper == NULL) {
++	    /* printf("wrapper null skip\n"); */
+             continue;
++	}
++	/* printf("xxx add_operators internal 1\n"); */
+         ptr = slotptr(type, p->offset);
+-        if (!ptr || !*ptr)
++        if (!ptr || !*ptr) {
++	    /* printf("no ptr skip\n"); */
+             continue;
+-        if (PyDict_GetItem(dict, p->name_strobj))
++	}
++	/* printf("xxx add_operators internal 2\n"); */
++        ptr = slotptr(type, p->offset);
++	/* printf("xxx add_operators calling PyDict_GetItem(type, '%s')\n",
++		p->name_strobj); */
++        if (PyDict_GetItem(dict, p->name_strobj)) {
++	    /* printf("got dict item skip\n"); */
+             continue;
++	}
++        /* printf("past the first three addoperation skips\n"); */
+         if (*ptr == PyObject_HashNotImplemented) {
+             /* Classes may prevent the inheritance of the tp_hash
+                slot by storing PyObject_HashNotImplemented in it. Make it
+@@ -6588,6 +6682,7 @@
+             }
+             Py_DECREF(descr);
+         }
++        /* printf("XXX '%s' added\n", p->name); */
+     }
+     if (type->tp_new != NULL) {
+         if (add_tp_new_wrapper(type) < 0)
+diff -ur /nfs/stock/Python-2.7.15/Objects/unicodeobject.c /u/root/src/Python-2.7.15/Objects/unicodeobject.c
+--- /nfs/stock/Python-2.7.15/Objects/unicodeobject.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Objects/unicodeobject.c	Sat Feb 11 00:11:16 2023
+@@ -577,7 +577,7 @@
+        (Py_UCS4)*(ptr)++)
+ #endif
+ 
+-#ifdef HAVE_WCHAR_H
++#ifdef HAVE_WCHAR_H 
+ 
+ #if (Py_UNICODE_SIZE == 2) && defined(SIZEOF_WCHAR_T) && (SIZEOF_WCHAR_T == 4)
+ # define CONVERT_WCHAR_TO_SURROGATES
+diff -ur /nfs/stock/Python-2.7.15/Parser/parsetok.c /u/root/src/Python-2.7.15/Parser/parsetok.c
+--- /nfs/stock/Python-2.7.15/Parser/parsetok.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Parser/parsetok.c	Sat Feb 11 00:11:16 2023
+@@ -70,29 +70,29 @@
+ 
+ node *
+ PyParser_ParseFile(FILE *fp, const char *filename, grammar *g, int start,
+-                   char *ps1, char *ps2, perrdetail *err_ret)
++                   char *psone, char *pstwo, perrdetail *err_ret)
+ {
+-    return PyParser_ParseFileFlags(fp, filename, g, start, ps1, ps2,
++    return PyParser_ParseFileFlags(fp, filename, g, start, psone, pstwo,
+                                    err_ret, 0);
+ }
+ 
+ node *
+ PyParser_ParseFileFlags(FILE *fp, const char *filename, grammar *g, int start,
+-                        char *ps1, char *ps2, perrdetail *err_ret, int flags)
++                        char *psone, char *pstwo, perrdetail *err_ret, int flags)
+ {
+     int iflags = flags;
+-    return PyParser_ParseFileFlagsEx(fp, filename, g, start, ps1, ps2, err_ret, &iflags);
++    return PyParser_ParseFileFlagsEx(fp, filename, g, start, psone, pstwo, err_ret, &iflags);
+ }
+ 
+ node *
+ PyParser_ParseFileFlagsEx(FILE *fp, const char *filename, grammar *g, int start,
+-                          char *ps1, char *ps2, perrdetail *err_ret, int *flags)
++                          char *psone, char *pstwo, perrdetail *err_ret, int *flags)
+ {
+     struct tok_state *tok;
+ 
+     initerr(err_ret, filename);
+ 
+-    if ((tok = PyTokenizer_FromFile(fp, ps1, ps2)) == NULL) {
++    if ((tok = PyTokenizer_FromFile(fp, psone, pstwo)) == NULL) {
+         err_ret->error = E_NOMEM;
+         return NULL;
+     }
+diff -ur /nfs/stock/Python-2.7.15/Parser/tokenizer.c /u/root/src/Python-2.7.15/Parser/tokenizer.c
+--- /nfs/stock/Python-2.7.15/Parser/tokenizer.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Parser/tokenizer.c	Sat Feb 11 00:11:16 2023
+@@ -174,6 +174,7 @@
+     return NULL;                /* as if it were EOF */
+ }
+ 
++#include <ctype.h>
+ 
+ static char *
+ get_normal_name(char *s)        /* for utf-8 and latin-1 */
+@@ -751,7 +752,7 @@
+ /* Set up tokenizer for file */
+ 
+ struct tok_state *
+-PyTokenizer_FromFile(FILE *fp, char *ps1, char *ps2)
++PyTokenizer_FromFile(FILE *fp, char *psone, char *pstwo)
+ {
+     struct tok_state *tok = tok_new();
+     if (tok == NULL)
+@@ -763,8 +764,8 @@
+     tok->cur = tok->inp = tok->buf;
+     tok->end = tok->buf + BUFSIZ;
+     tok->fp = fp;
+-    tok->prompt = ps1;
+-    tok->nextprompt = ps2;
++    tok->prompt = psone;
++    tok->nextprompt = pstwo;
+     return tok;
+ }
+ 
+diff -ur /nfs/stock/Python-2.7.15/Python/dynload_aix.c /u/root/src/Python-2.7.15/Python/dynload_aix.c
+--- /nfs/stock/Python-2.7.15/Python/dynload_aix.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Python/dynload_aix.c	Sat Feb 11 00:11:16 2023
+@@ -8,7 +8,7 @@
+ #include <errno.h>      /*  for global errno      */
+ #include <string.h>     /*  for strerror()        */
+ #include <stdlib.h>     /*  for malloc(), free()  */
+-#include <sys/ldr.h>
++/* #include <sys/ldr.h> */
+ 
+ 
+ #ifdef AIX_GENUINE_CPLUSPLUS
+diff -ur /nfs/stock/Python-2.7.15/Python/mysnprintf.c /u/root/src/Python-2.7.15/Python/mysnprintf.c
+--- /nfs/stock/Python-2.7.15/Python/mysnprintf.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Python/mysnprintf.c	Sat Feb 11 00:11:16 2023
+@@ -56,8 +56,9 @@
+     int len;  /* # bytes written, excluding \0 */
+ #ifdef HAVE_SNPRINTF
+ #define _PyOS_vsnprintf_EXTRA_SPACE 1
++#error this one
+ #else
+-#define _PyOS_vsnprintf_EXTRA_SPACE 512
++#define _PyOS_vsnprintf_EXTRA_SPACE 16384
+     char *buffer;
+ #endif
+     assert(str != NULL);
+diff -ur /nfs/stock/Python-2.7.15/Python/pythonrun.c /u/root/src/Python-2.7.15/Python/pythonrun.c
+--- /nfs/stock/Python-2.7.15/Python/pythonrun.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Python/pythonrun.c	Sat Feb 11 00:11:16 2023
+@@ -772,14 +772,14 @@
+         flags = &local_flags;
+         local_flags.cf_flags = 0;
+     }
+-    v = PySys_GetObject("ps1");
++    v = PySys_GetObject("psone");
+     if (v == NULL) {
+-        PySys_SetObject("ps1", v = PyString_FromString(">>> "));
++        PySys_SetObject("psone", v = PyString_FromString(">>> "));
+         Py_XDECREF(v);
+     }
+-    v = PySys_GetObject("ps2");
++    v = PySys_GetObject("pstwo");
+     if (v == NULL) {
+-        PySys_SetObject("ps2", v = PyString_FromString("... "));
++        PySys_SetObject("pstwo", v = PyString_FromString("... "));
+         Py_XDECREF(v);
+     }
+     for (;;) {
+@@ -818,24 +818,24 @@
+     PyObject *m, *d, *v, *w;
+     mod_ty mod;
+     PyArena *arena;
+-    char *ps1 = "", *ps2 = "";
++    char *psone = "", *pstwo = "";
+     int errcode = 0;
+ 
+-    v = PySys_GetObject("ps1");
++    v = PySys_GetObject("psone");
+     if (v != NULL) {
+         v = PyObject_Str(v);
+         if (v == NULL)
+             PyErr_Clear();
+         else if (PyString_Check(v))
+-            ps1 = PyString_AsString(v);
++            psone = PyString_AsString(v);
+     }
+-    w = PySys_GetObject("ps2");
++    w = PySys_GetObject("pstwo");
+     if (w != NULL) {
+         w = PyObject_Str(w);
+         if (w == NULL)
+             PyErr_Clear();
+         else if (PyString_Check(w))
+-            ps2 = PyString_AsString(w);
++            pstwo = PyString_AsString(w);
+     }
+     arena = PyArena_New();
+     if (arena == NULL) {
+@@ -844,7 +844,7 @@
+         return -1;
+     }
+     mod = PyParser_ASTFromFile(fp, filename,
+-                               Py_single_input, ps1, ps2,
++                               Py_single_input, psone, pstwo,
+                                flags, &errcode, arena);
+     Py_XDECREF(v);
+     Py_XDECREF(w);
+@@ -1496,8 +1496,8 @@
+ }
+ 
+ mod_ty
+-PyParser_ASTFromFile(FILE *fp, const char *filename, int start, char *ps1,
+-                     char *ps2, PyCompilerFlags *flags, int *errcode,
++PyParser_ASTFromFile(FILE *fp, const char *filename, int start, char *psone,
++                     char *pstwo, PyCompilerFlags *flags, int *errcode,
+                      PyArena *arena)
+ {
+     mod_ty mod;
+@@ -1506,7 +1506,7 @@
+     int iflags = PARSER_FLAGS(flags);
+ 
+     node *n = PyParser_ParseFileFlagsEx(fp, filename, &_PyParser_Grammar,
+-                            start, ps1, ps2, &err, &iflags);
++                            start, psone, pstwo, &err, &iflags);
+     if (flags == NULL) {
+         localflags.cf_flags = 0;
+         flags = &localflags;
+diff -ur /nfs/stock/Python-2.7.15/Python/random.c /u/root/src/Python-2.7.15/Python/random.c
+--- /nfs/stock/Python-2.7.15/Python/random.c	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/Python/random.c	Sat Feb 11 00:11:16 2023
+@@ -358,6 +358,8 @@
+ #endif
+ }
+ 
++#include "strtoul.c"
++
+ void
+ _PyRandom_Init(void)
+ {
+diff -ur /nfs/stock/Python-2.7.15/configure /u/root/src/Python-2.7.15/configure
+--- /nfs/stock/Python-2.7.15/configure	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/configure	Sat Feb 11 00:11:16 2023
+@@ -5360,7 +5360,10 @@
+ 		   $ac_sys_release -eq 4 -a `uname -r` -ge 2 ; then
+ 	       exp_extra="."
+ 	   fi
+-	   LINKCC="\$(srcdir)/Modules/makexp_aix Modules/python.exp $exp_extra \$(LIBRARY); $LINKCC";;
++	   if test $ac_sys_release -ge 4 ; then
++	       LINKCC="\$(srcdir)/Modules/makexp_aix Modules/python.exp $exp_extra \$(LIBRARY); $LINKCC"
++	   fi
++	   ;;
+ 	QNX*)
+ 	   # qcc must be used because the other compilers do not
+ 	   # support -N.
+@@ -10540,6 +10543,7 @@
+ 	if test "$ac_cv_func_dlopen" = yes
+ 	then DYNLOADFILE="dynload_shlib.o"
+ 	else DYNLOADFILE="dynload_aix.o"
++        DYNLOADFILE="dynload_stub.o"
+ 	fi
+ 	;;
+ 	BeOS*) DYNLOADFILE="dynload_beos.o";;
+diff -ur /nfs/stock/Python-2.7.15/pyconfig.h.in /u/root/src/Python-2.7.15/pyconfig.h.in
+--- /nfs/stock/Python-2.7.15/pyconfig.h.in	Sun Apr 29 15:47:33 2018
++++ /u/root/src/Python-2.7.15/pyconfig.h.in	Sat Feb 11 00:11:16 2023
+@@ -4,6 +4,8 @@
+ #ifndef Py_PYCONFIG_H
+ #define Py_PYCONFIG_H
+ 
++#define HAVE_NDBM_H 1
++
+ 
+ /* Define if building universal (internal helper macro) */
+ #undef AC_APPLE_UNIVERSAL_BUILD
+@@ -344,7 +346,8 @@
+ #undef HAVE_GETNAMEINFO
+ 
+ /* Define if you have the 'getpagesize' function. */
+-#undef HAVE_GETPAGESIZE
++/* #undef HAVE_GETPAGESIZE */
++#define HAVE_GETPAGESIZE 1
+ 
+ /* Define to 1 if you have the `getpeername' function. */
+ #undef HAVE_GETPEERNAME
+@@ -942,7 +945,8 @@
+ #undef HAVE_WAITPID
+ 
+ /* Define if the compiler provides a wchar.h header file. */
+-#undef HAVE_WCHAR_H
++/* #undef HAVE_WCHAR_H */
++#define HAVE_WCHAR_H 1
+ 
+ /* Define to 1 if you have the `wcscoll' function. */
+ #undef HAVE_WCSCOLL
+@@ -1002,7 +1006,8 @@
+ #undef PYLONG_BITS_IN_DIGIT
+ 
+ /* Define to printf format modifier for long long type */
+-#undef PY_FORMAT_LONG_LONG
++/* #undef PY_FORMAT_LONG_LONG */
++#define PY_FORMAT_LONG_LONG "ld"
+ 
+ /* Define to printf format modifier for Py_ssize_t */
+ #undef PY_FORMAT_SIZE_T

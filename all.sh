@@ -84,3 +84,7 @@ sh vim.sh
 sh wget-1.11.sh
 
 sh expat.sh
+
+# really big. might require alternate filesystem arrangements than the default
+# (i.e. don't build, install to a destdir, and tar up the destdir all on the same mountpoint)
+#sh python.sh
