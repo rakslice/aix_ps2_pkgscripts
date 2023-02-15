@@ -89,6 +89,8 @@ sh expat.sh
 # (i.e. don't build, install to a destdir, and tar up the destdir all on the same mountpoint)
 #sh python.sh
 
+sh poll.sh
+
 sh tcl.sh
 
 # much of this has bugs we haven't sorted out yet, e.g. df du chmod
