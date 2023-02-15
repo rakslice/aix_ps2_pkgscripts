@@ -14,8 +14,15 @@ fi
 
 [ -d /u/root/src/$pkgname ] || exit 1
 
-. incs
+ls -l incs
+pwd
+cat incs
+. ./incs
 
 cd /u/root/src/$pkgname
+
+if [ ! -z "$MAKE_SUBDIR" ]; then
+	cd $MAKE_SUBDIR
+fi
 
 /usr/local/bin/make "$@"

@@ -1,0 +1,47 @@
+diff -ur /nfs/stock/poll-release-1.5.1/Makefile /u/root/src/poll-release-1.5.1/Makefile
+--- /nfs/stock/poll-release-1.5.1/Makefile	Mon Aug 29 14:28:10 2011
++++ /u/root/src/poll-release-1.5.1/Makefile	Sat Feb 11 04:07:10 2023
+@@ -53,10 +53,10 @@
+ # ---------------------------------------------------------------------------
+ 
+ # If you have a BSD-compatible install(1), use:
+-INSTALL		= install -c
++#INSTALL		= install -c
+ 
+ # If you do not have a BSD-compatible install(1), use:
+-#INSTALL	= ./install.sh -c
++INSTALL	= ./install.sh -c
+ 
+ # ---------------------------------------------------------------------------
+ # Compilation and Linkage
+@@ -85,7 +85,7 @@
+ 	$(COMPILE_STATIC) $(CPPFLAGS) $<
+ 
+ all:		libs
+-libs:		$(SHLIB) $(LIB)
++libs:		$(LIB)
+ test:		polltest
+ 
+ dirs:
+@@ -93,10 +93,8 @@
+ 		$(INSTALL) -m 755 -d $(LIBDIR)
+ 		$(INSTALL) -m 755 -d $(INCDIR)
+ 
+-install:	all dirs
+-		$(INSTALL) -m 755 $(SHLIB) $(LIB) $(LIBDIR)
+-		ln -sf $(SHLIB) $(SHLIB_INSTALLED)
+-		ln -sf $(SHLIB) $(LIBDIR)/$(SHLIB_NOVER)
++install:	all 
++		$(INSTALL) -m 755 $(LIB) $(LIBDIR)
+ 		$(INSTALL) -m 644 poll.h $(INCDIR)
+ 
+ clean:
+diff -ur /nfs/stock/poll-release-1.5.1/install.sh /u/root/src/poll-release-1.5.1/install.sh
+--- /nfs/stock/poll-release-1.5.1/install.sh	Mon Aug 29 14:28:10 2011
++++ /u/root/src/poll-release-1.5.1/install.sh	Sat Feb 11 04:04:09 2023
+@@ -1,5 +1,4 @@
+ #!/bin/sh
+-
+ #
+ # install - install a program, script, or datafile
+ # This comes from X11R5; it is not part of GNU.

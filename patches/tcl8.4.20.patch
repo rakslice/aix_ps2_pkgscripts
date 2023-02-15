@@ -1,0 +1,156 @@
+diff -ur /nfs/stock/tcl8.4.20/compat/stdlib.h /u/root/src/tcl8.4.20/compat/stdlib.h
+--- /nfs/stock/tcl8.4.20/compat/stdlib.h	Wed Apr  4 06:50:52 2012
++++ /u/root/src/tcl8.4.20/compat/stdlib.h	Sat Feb 11 19:26:18 2023
+@@ -27,7 +27,7 @@
+ extern char *		calloc _ANSI_ARGS_((unsigned int numElements,
+ 			    unsigned int size));
+ extern void		exit _ANSI_ARGS_((int status));
+-extern int		free _ANSI_ARGS_((char *blockPtr));
++extern void		free _ANSI_ARGS_((char *blockPtr));
+ extern char *		getenv _ANSI_ARGS_((CONST char *name));
+ extern char *		malloc _ANSI_ARGS_((unsigned int numBytes));
+ extern void		qsort _ANSI_ARGS_((VOID *base, int n, int size,
+diff -ur /nfs/stock/tcl8.4.20/compat/string.h /u/root/src/tcl8.4.20/compat/string.h
+--- /nfs/stock/tcl8.4.20/compat/string.h	Mon Nov 19 08:27:15 2012
++++ /u/root/src/tcl8.4.20/compat/string.h	Sat Feb 11 19:26:18 2023
+@@ -46,7 +46,7 @@
+ extern char *		strchr _ANSI_ARGS_((CONST char *string, int c));
+ extern int		strcmp _ANSI_ARGS_((CONST char *s1, CONST char *s2));
+ extern char *		strcpy _ANSI_ARGS_((char *dst, CONST char *src));
+-extern size_t		strcspn _ANSI_ARGS_((CONST char *string,
++extern int		strcspn _ANSI_ARGS_((CONST char *string,
+ 			    CONST char *chars));
+ extern char *		strdup _ANSI_ARGS_((CONST char *string));
+ extern char *		strerror _ANSI_ARGS_((int error));
+@@ -62,7 +62,7 @@
+ extern char *		strpbrk _ANSI_ARGS_((CONST char *string,
+ 			    CONST char *chars));
+ extern char *		strrchr _ANSI_ARGS_((CONST char *string, int c));
+-extern size_t		strspn _ANSI_ARGS_((CONST char *string,
++extern int		strspn _ANSI_ARGS_((CONST char *string,
+ 			    CONST char *chars));
+ extern char *		strstr _ANSI_ARGS_((CONST char *string,
+ 			    CONST char *substring));
+diff -ur /nfs/stock/tcl8.4.20/generic/tclIOUtil.c /u/root/src/tcl8.4.20/generic/tclIOUtil.c
+--- /nfs/stock/tcl8.4.20/generic/tclIOUtil.c	Mon Nov 19 08:27:16 2012
++++ /u/root/src/tcl8.4.20/generic/tclIOUtil.c	Sat Feb 11 19:26:18 2023
+@@ -447,7 +447,7 @@
+     &TclpObjRenameFile,
+     &TclpObjCopyDirectory, 
+     &TclpObjLstat,
+-    &TclpDlopen,
++    NULL,
+     &TclpObjGetCwd,
+     &TclpObjChdir
+ };
+@@ -2805,12 +2805,14 @@
+ 	    if (*handlePtr == NULL) {
+ 		return TCL_ERROR;
+ 	    }
++/*
+ 	    if (sym1 != NULL) {
+ 	        *proc1Ptr = TclpFindSymbol(interp, *handlePtr, sym1);
+ 	    }
+ 	    if (sym2 != NULL) {
+ 	        *proc2Ptr = TclpFindSymbol(interp, *handlePtr, sym2);
+ 	    }
++*/
+ 	    return retVal;
+ 	} else {
+ 	    Tcl_Filesystem *copyFsPtr;
+@@ -3013,6 +3015,9 @@
+     Tcl_SetErrno(ENOENT);
+     return -1;
+ }
++
++#if 0
++
+ /* 
+  * This function used to be in the platform specific directories, but it
+  * has now been made to work cross-platform
+@@ -3055,6 +3060,9 @@
+     *proc2Ptr = TclpFindSymbol(interp, handle, sym2);
+     return TCL_OK;
+ }
++
++#endif
++
+ 
+ /*
+  *---------------------------------------------------------------------------
+diff -ur /nfs/stock/tcl8.4.20/unix/Makefile.in /u/root/src/tcl8.4.20/unix/Makefile.in
+--- /nfs/stock/tcl8.4.20/unix/Makefile.in	Mon Jun  3 10:29:06 2013
++++ /u/root/src/tcl8.4.20/unix/Makefile.in	Sat Feb 11 19:29:11 2023
+@@ -442,7 +442,6 @@
+ 	$(UNIX_DIR)/tclUnixNotfy.c
+ 
+ DL_SRCS = \
+-	$(UNIX_DIR)/tclLoadAix.c \
+ 	$(UNIX_DIR)/tclLoadAout.c \
+ 	$(UNIX_DIR)/tclLoadDl.c \
+ 	$(UNIX_DIR)/tclLoadDl2.c \
+@@ -964,9 +963,6 @@
+ 
+ tclLoad.o: $(GENERIC_DIR)/tclLoad.c
+ 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tclLoad.c
+-
+-tclLoadAix.o: $(UNIX_DIR)/tclLoadAix.c
+-	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tclLoadAix.c
+ 
+ tclLoadAout.o: $(UNIX_DIR)/tclLoadAout.c
+ 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tclLoadAout.c
+diff -ur /nfs/stock/tcl8.4.20/unix/configure /u/root/src/tcl8.4.20/unix/configure
+--- /nfs/stock/tcl8.4.20/unix/configure	Mon Jun  3 10:29:06 2013
++++ /u/root/src/tcl8.4.20/unix/configure	Sat Feb 11 19:26:18 2023
+@@ -2542,7 +2542,7 @@
+   echo $ac_n "(cached) $ac_c" 1>&6
+ else
+   ac_save_LIBS="$LIBS"
+-LIBS="-ldl  $LIBS"
++LIBS="$LIBS"
+ cat > conftest.$ac_ext <<EOF
+ #line 2548 "configure"
+ #include "confdefs.h"
+@@ -2595,7 +2595,7 @@
+     CFLAGS_DEBUG=-g
+     CFLAGS_OPTIMIZE=-O
+     if test "$GCC" = "yes" ; then
+-	CFLAGS_WARNING="-Wall -fno-strict-aliasing"
++	CFLAGS_WARNING="-Wall"
+     else
+ 	CFLAGS_WARNING=""
+     fi
+@@ -2657,7 +2657,7 @@
+ 	    SHLIB_CFLAGS=""
+ 	    SHLIB_SUFFIX=".so"
+ 
+-	    DL_OBJS="tclLoadDl.o"
++	    DL_OBJS=""
+ 	    LD_LIBRARY_PATH_VAR="LIBPATH"
+ 
+ 	    # Check to enable 64-bit flags for compiler/linker on AIX 4+
+@@ -2697,12 +2697,6 @@
+ 		LD_SEARCH_FLAGS=${CC_SEARCH_FLAGS}
+ 		TCL_NEEDS_EXP_FILE=1
+ 		TCL_EXPORT_FILE_SUFFIX='${VERSION}\$\{DBGX\}.exp'
+-	    fi
+-
+-	    # AIX v<=4.1 has some different flags than 4.2+
+-	    if test "$system" = "AIX-4.1" -o "`uname -v`" -lt "4" ; then
+-		LIBOBJS="$LIBOBJS tclLoadAix.o"
+-		DL_LIBS="-lld"
+ 	    fi
+ 
+ 	    # On AIX <=v4 systems, libbsd.a has to be linked in to support
+diff -ur /nfs/stock/tcl8.4.20/unix/tclUnixChan.c /u/root/src/tcl8.4.20/unix/tclUnixChan.c
+--- /nfs/stock/tcl8.4.20/unix/tclUnixChan.c	Mon Nov 19 08:27:16 2012
++++ /u/root/src/tcl8.4.20/unix/tclUnixChan.c	Sat Feb 11 19:26:18 2023
+@@ -15,6 +15,8 @@
+ #include "tclPort.h"	/* Portability features for Tcl. */
+ #include "tclIO.h"	/* To get Channel type declaration. */
+ 
++#define   IXANY   0004000
++
+ /*
+  * sys/ioctl.h has already been included by tclPort.h.	Including termios.h
+  * or termio.h causes a bunch of warning messages because some duplicate

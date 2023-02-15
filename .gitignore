@@ -1,2 +1,5 @@
 /core
 
+# downloaded cacert temp
+/cacert.pem
+

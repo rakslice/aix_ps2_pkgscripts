@@ -14,5 +14,9 @@ shift
 
 cd /u/root/src/$pkgname
 
+if [ ! -z "$CONFIG_SUBDIR" ]; then
+	cd $CONFIG_SUBDIR
+fi
+
 CONFIG_SHELL=/archive/bash2 SHELL=/archive/bash2 /archive/bash2 ./configure "$@"
 

@@ -88,3 +88,9 @@ sh expat.sh
 # really big. might require alternate filesystem arrangements than the default
 # (i.e. don't build, install to a destdir, and tar up the destdir all on the same mountpoint)
 #sh python.sh
+
+sh tcl.sh
+
+# much of this has bugs we haven't sorted out yet, e.g. df du chmod
+# we just want it for its modern style bin/install at this point
+#sh coreutils.sh
