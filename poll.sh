@@ -29,6 +29,6 @@ prefixvar=PREFIX
 createdirs $pkgdir/lib
 createdirs $pkgdir/include/sys
 
-leave_source=true
+#leave_source=true
 
 . $pkgscripts/common-end.inc

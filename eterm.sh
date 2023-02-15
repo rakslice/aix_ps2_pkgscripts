@@ -34,6 +34,6 @@ $make
 
 prefixvar=DESTDIR
 
-leave_source=true
+#leave_source=true
 
 . $pkgscripts/common-end.inc

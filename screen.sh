@@ -24,6 +24,6 @@ $make CC=gcc 2>&1 | grep -v "has no section"
 
 prefixvar=DESTDIR
 
-leave_source=true
+#leave_source=true
 
 . $pkgscripts/common-end.inc
