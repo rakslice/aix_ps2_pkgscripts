@@ -1,0 +1,12 @@
+diff -ur --exclude Makefile /nfs/stock/screen-3.9.15/Makefile.in /u/root/src/screen-3.9.15/Makefile.in
+--- /nfs/stock/screen-3.9.15/Makefile.in	Thu Mar 13 03:19:53 2003
++++ /u/root/src/screen-3.9.15/Makefile.in	Tue Feb 14 18:49:45 2023
+@@ -78,7 +78,7 @@
+ # This doesn't work if $(bindir)/screen is a symlink
+ 	-if [ -f $(DESTDIR)$(bindir)/screen ] && [ ! -f $(DESTDIR)$(bindir)/screen.old ]; then mv $(DESTDIR)$(bindir)/screen $(DESTDIR)$(bindir)/screen.old; fi
+ 	rm -f $(DESTDIR)$(bindir)/screen
+-	(cd $(DESTDIR)$(bindir) && ln -sf $(SCREEN) screen)
++	(cd $(DESTDIR)$(bindir) && ln -s $(SCREEN) screen)
+ 	cp $(srcdir)/utf8encodings/?? $(DESTDIR)$(SCREENENCODINGS)
+ 
+ ###############################################################################

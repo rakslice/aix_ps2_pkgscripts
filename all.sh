@@ -96,3 +96,5 @@ sh tcl.sh
 # much of this has bugs we haven't sorted out yet, e.g. df du chmod
 # we just want it for its modern style bin/install at this point
 #sh coreutils.sh
+
+sh screen.sh
