@@ -1,0 +1,677 @@
+diff -ur /nfs/stock/git-2.17.0/GIT-VERSION-GEN /u/root/src/git-2.17.0/GIT-VERSION-GEN
+--- /nfs/stock/git-2.17.0/GIT-VERSION-GEN	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/GIT-VERSION-GEN	Sun Feb 12 13:34:35 2023
+@@ -1,4 +1,4 @@
+-#!/bin/sh
++#!/usr/local/bin/bash
+ 
+ GVF=GIT-VERSION-FILE
+ DEF_VER=v2.17.0
+diff -ur /nfs/stock/git-2.17.0/Makefile /u/root/src/git-2.17.0/Makefile
+--- /nfs/stock/git-2.17.0/Makefile	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/Makefile	Sun Feb 12 14:11:35 2023
+@@ -203,6 +203,8 @@
+ # inet_ntop and inet_pton additionally reside there.
+ #
+ # Define NO_MMAP if you want to avoid mmap.
++
++NO_MMAP=1
+ #
+ # Define MMAP_PREVENTS_DELETE if a file that is currently mmapped cannot be
+ # deleted or cannot be replaced using rename().
+@@ -244,6 +246,9 @@
+ # sockaddr_storage.
+ #
+ # Define NO_ICONV if your libc does not properly support iconv.
++
++NO_ICONV=1
++
+ #
+ # Define OLD_ICONV if your library has an old iconv(), where the second
+ # (input buffer pointer) parameter is declared with type (const char **).
+@@ -435,6 +440,8 @@
+ # When cross-compiling, define HOST_CPU as the canonical name of the CPU on
+ # which the built Git will run (for instance "x86_64").
+ 
++SHELL_PATH=/usr/local/bin/bash
++
+ GIT-VERSION-FILE: FORCE
+ 	@$(SHELL_PATH) ./GIT-VERSION-GEN
+ -include GIT-VERSION-FILE
+@@ -538,7 +545,7 @@
+ XDIFF_OBJS =
+ VCSSVN_OBJS =
+ GENERATED_H =
+-EXTRA_CPPFLAGS =
++EXTRA_CPPFLAGS=
+ LIB_OBJS =
+ PROGRAM_OBJS =
+ PROGRAMS =
+@@ -1038,7 +1045,7 @@
+ BUILTIN_OBJS += builtin/write-tree.o
+ 
+ GITLIBS = common-main.o $(LIB_FILE) $(XDIFF_LIB)
+-EXTLIBS =
++EXTLIBS = -lpoll
+ 
+ GIT_USER_AGENT = git/$(GIT_VERSION)
+ 
+@@ -1292,21 +1299,6 @@
+ 	LIB_4_CRYPTO += -framework Security -framework CoreFoundation
+ endif
+ endif
+-ifdef NEEDS_LIBICONV
+-	ifdef ICONVDIR
+-		BASIC_CFLAGS += -I$(ICONVDIR)/include
+-		ICONV_LINK = -L$(ICONVDIR)/$(lib) $(CC_LD_DYNPATH)$(ICONVDIR)/$(lib)
+-	else
+-		ICONV_LINK =
+-	endif
+-	ifdef NEEDS_LIBINTL_BEFORE_LIBICONV
+-		ICONV_LINK += -lintl
+-	endif
+-	EXTLIBS += $(ICONV_LINK) -liconv
+-endif
+-ifdef NEEDS_LIBGEN
+-	EXTLIBS += -lgen
+-endif
+ ifndef NO_GETTEXT
+ ifndef LIBC_CONTAINS_LIBINTL
+ 	EXTLIBS += -lintl
+@@ -1344,7 +1336,10 @@
+ endif
+ ifdef SNPRINTF_RETURNS_BOGUS
+ 	COMPAT_CFLAGS += -DSNPRINTF_RETURNS_BOGUS
+-	COMPAT_OBJS += compat/snprintf.o
++	COMPAT_OBJS += compat/snprintf.o c99_snprintf.o
++compat/snprintf.o: COMPAT_CFLAGS += -Dvsnprintf=rpl_vsnprintf
++c99_snprintf.o: COMPAT_CFLAGS += -DHAVE_CONFIG_H -Dvasprintf=rpl_vasprintf -include cache.h -include /usr/include/float.h
++compat/hstrerror.o: COMPAT_CFLAGS += -Dsnprintf=rpl_snprintf
+ endif
+ ifdef FREAD_READS_DIRECTORIES
+ 	COMPAT_CFLAGS += -DFREAD_READS_DIRECTORIES
+@@ -2098,7 +2093,7 @@
+ 
+ ifeq ($(COMPUTE_HEADER_DEPENDENCIES),yes)
+ $(dep_dirs):
+-	@mkdir -p $@
++	mkdir $@
+ 
+ missing_dep_dirs := $(filter-out $(wildcard $(dep_dirs)),$(dep_dirs))
+ dep_file = $(dir $@).depend/$(notdir $@).d
+@@ -2306,7 +2301,7 @@
+ endif
+ 
+ po/build/locale/%/LC_MESSAGES/git.mo: po/%.po
+-	$(QUIET_MSGFMT)mkdir -p $(dir $@) && $(MSGFMT) -o $@ $<
++	$(QUIET_MSGFMT)mkdir $(dir $@) && $(MSGFMT) -o $@ $<
+ 
+ LIB_PERL := $(wildcard perl/Git.pm perl/Git/*.pm perl/Git/*/*.pm perl/Git/*/*/*.pm)
+ LIB_PERL_GEN := $(patsubst perl/%.pm,perl/build/lib/%.pm,$(LIB_PERL))
+@@ -2322,14 +2317,12 @@
+ endif
+ 
+ perl/build/lib/%.pm: perl/%.pm
+-	$(QUIET_GEN)mkdir -p $(dir $@) && \
+-	sed -e 's|@@LOCALEDIR@@|$(localedir_SQ)|g' \
++	$(QUIET_GEN)sed -e 's|@@LOCALEDIR@@|$(localedir_SQ)|g' \
+ 	    -e 's|@@NO_PERL_CPAN_FALLBACKS@@|$(NO_PERL_CPAN_FALLBACKS_SQ)|g' \
+ 	< $< > $@
+ 
+ perl/build/man/man3/Git.3pm: perl/Git.pm
+-	$(QUIET_GEN)mkdir -p $(dir $@) && \
+-	pod2man $< $@
++	$(QUIET_GEN)pod2man $< $@
+ 
+ FIND_SOURCE_FILES = ( \
+ 	git ls-files \
+@@ -2465,7 +2458,6 @@
+ all:: $(NO_INSTALL)
+ 
+ bin-wrappers/%: wrap-for-bin.sh
+-	@mkdir -p bin-wrappers
+ 	$(QUIET_GEN)sed -e '1s|#!.*/sh|#!$(SHELL_PATH_SQ)|' \
+ 	     -e 's|@@BUILD_DIR@@|$(shell pwd)|' \
+ 	     -e 's|@@PROG@@|$(patsubst test-%,t/helper/test-%,$(@F))|' < $< > $@ && \
+@@ -2680,7 +2672,7 @@
+ dist: git-archive$(X) configure
+ 	./git-archive --format=tar \
+ 		--prefix=$(GIT_TARNAME)/ HEAD^{tree} > $(GIT_TARNAME).tar
+-	@mkdir -p $(GIT_TARNAME)
++	mkdir $(GIT_TARNAME)
+ 	@cp configure $(GIT_TARNAME)
+ 	@echo $(GIT_VERSION) > $(GIT_TARNAME)/version
+ 	@$(MAKE) -C git-gui TARDIR=../$(GIT_TARNAME)/git-gui dist-version
+@@ -2689,7 +2681,7 @@
+ 		$(GIT_TARNAME)/version \
+ 		$(GIT_TARNAME)/git-gui/version
+ ifdef DC_SHA1_SUBMODULE
+-	@mkdir -p $(GIT_TARNAME)/sha1collisiondetection/lib
++	mkdir $(GIT_TARNAME)/sha1collisiondetection/lib
+ 	@cp sha1collisiondetection/LICENSE.txt \
+ 		$(GIT_TARNAME)/sha1collisiondetection/
+ 	@cp sha1collisiondetection/LICENSE.txt \
+@@ -2722,7 +2714,7 @@
+ 	gzip -n -9 -f $(htmldocs).tar
+ 	:
+ 	$(RM) -r .doc-tmp-dir
+-	mkdir -p .doc-tmp-dir/man1 .doc-tmp-dir/man5 .doc-tmp-dir/man7
++	mkdir .doc-tmp-dir/man1 .doc-tmp-dir/man5 .doc-tmp-dir/man7
+ 	$(MAKE) -C Documentation DESTDIR=./ \
+ 		man1dir=../.doc-tmp-dir/man1 \
+ 		man5dir=../.doc-tmp-dir/man5 \
+diff -ur /nfs/stock/git-2.17.0/apply.c /u/root/src/git-2.17.0/apply.c
+--- /nfs/stock/git-2.17.0/apply.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/apply.c	Sun Feb 12 13:34:35 2023
+@@ -21,6 +21,10 @@
+ #include "rerere.h"
+ #include "apply.h"
+ 
++#if defined(_AIX) && defined(__i386__)
++#include "strtoul.c"
++#endif
++
+ static void git_apply_config(void)
+ {
+ 	git_config_get_string_const("apply.whitespace", &apply_default_whitespace);
+diff -ur /nfs/stock/git-2.17.0/archive-tar.c /u/root/src/git-2.17.0/archive-tar.c
+--- /nfs/stock/git-2.17.0/archive-tar.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/archive-tar.c	Sun Feb 12 13:34:35 2023
+@@ -31,7 +31,7 @@
+ #else
+ #define USTAR_MAX_SIZE 077777777777UL
+ #endif
+-#if TIME_MAX == 0xFFFFFFFF
++#if 0 /* TIME_MAX == 0xFFFFFFFF */
+ #define USTAR_MAX_MTIME TIME_MAX
+ #else
+ #define USTAR_MAX_MTIME 077777777777ULL
+diff -ur /nfs/stock/git-2.17.0/builtin/config.c /u/root/src/git-2.17.0/builtin/config.c
+--- /nfs/stock/git-2.17.0/builtin/config.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/builtin/config.c	Sun Feb 12 13:34:35 2023
+@@ -11,6 +11,10 @@
+ 	NULL
+ };
+ 
++#ifndef PRId64
++#define PRId64 "lld"
++#endif
++
+ static char *key;
+ static regex_t *key_regexp;
+ static regex_t *regexp;
+diff -ur /nfs/stock/git-2.17.0/compat/mkdtemp.c /u/root/src/git-2.17.0/compat/mkdtemp.c
+--- /nfs/stock/git-2.17.0/compat/mkdtemp.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/compat/mkdtemp.c	Sun Feb 12 13:34:35 2023
+@@ -2,7 +2,8 @@
+ 
+ char *gitmkdtemp(char *template)
+ {
+-	if (!*mktemp(template) || mkdir(template, 0700))
++	mktemp(template);
++	if ((*template == '\0') || mkdir(template, 0700))
+ 		return NULL;
+ 	return template;
+ }
+diff -ur /nfs/stock/git-2.17.0/compat/regex/regex.c /u/root/src/git-2.17.0/compat/regex/regex.c
+--- /nfs/stock/git-2.17.0/compat/regex/regex.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/compat/regex/regex.c	Sun Feb 12 13:34:35 2023
+@@ -21,6 +21,8 @@
+ #include "config.h"
+ #endif
+ 
++#include "../../memmove.h"
++
+ /* Make sure no one compiles this code with a C++ compiler.  */
+ #ifdef __cplusplus
+ # error "This is C code, use a C compiler"
+diff -ur /nfs/stock/git-2.17.0/compat/snprintf.c /u/root/src/git-2.17.0/compat/snprintf.c
+--- /nfs/stock/git-2.17.0/compat/snprintf.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/compat/snprintf.c	Sun Feb 12 13:34:35 2023
+@@ -16,7 +16,6 @@
+ #endif
+ #endif
+ 
+-#undef vsnprintf
+ int git_vsnprintf(char *str, size_t maxsize, const char *format, va_list ap)
+ {
+ 	va_list cp;
+diff -ur /nfs/stock/git-2.17.0/compat/strtoimax.c /u/root/src/git-2.17.0/compat/strtoimax.c
+--- /nfs/stock/git-2.17.0/compat/strtoimax.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/compat/strtoimax.c	Sun Feb 12 13:34:35 2023
+@@ -1,5 +1,53 @@
+ #include "../git-compat-util.h"
+ 
++#if defined(_AIX) && defined(__i386__)
++
++long long strtoll(const char *s, char **endptr, int base) {
++  long long sum = 0;
++  int neg = FALSE;
++  if ('+' == *s) {
++        ++s;
++  } else if ('-' == *s) {
++        ++s;
++	neg = TRUE;
++  }
++  if (base == 0) {
++        if ('0' == *s) {
++                ++s;
++                if ('x' == *s || 'X' == *s) {
++                        ++s;
++                        base = 16;
++                } else {
++                        base = 8;
++                }
++        } else {
++                base = 10;
++        }
++  }
++  while (*s) {
++    int dig;
++    if (*s >= '0' && *s <= '9') {
++        dig = *s++ - '0';
++    } else if (*s >= 'a' && *s <= 'z') {
++        dig = *s++ - 'a' + 10;
++    } else if (*s >= 'A' && *s <= 'Z') {
++        dig = *s++ - 'A' + 10;
++    } else {
++        return 0LL;
++    }   
++
++    if (dig >= base) return 0LL;
++
++    sum = sum*base + dig;
++  }
++  if (neg)
++	sum = -sum;
++  return sum;
++}
++
++#endif
++
++
+ intmax_t gitstrtoimax (const char *nptr, char **endptr, int base)
+ {
+ #if defined(NO_STRTOULL)
+diff -ur /nfs/stock/git-2.17.0/compat/strtoumax.c /u/root/src/git-2.17.0/compat/strtoumax.c
+--- /nfs/stock/git-2.17.0/compat/strtoumax.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/compat/strtoumax.c	Sun Feb 12 13:34:35 2023
+@@ -1,5 +1,48 @@
+ #include "../git-compat-util.h"
+ 
++#if defined(_AIX) && defined(__i386__)
++
++unsigned long long strtoull(const char *s, char **endptr, int base) {
++  unsigned long long sum = 0;
++  if ('+' == *s) {
++	++s;
++  } else if ('-' == *s) {
++	++s;
++  }
++  if (base == 0) {
++	if ('0' == *s) {
++		++s;
++		if ('x' == *s || 'X' == *s) {
++			++s;
++			base = 16;
++		} else {
++			base = 8;
++		}	
++	} else {
++		base = 10;
++	}
++  }
++  while (*s) {
++    int dig;
++    if (*s >= '0' && *s <= '9') {
++	dig = *s++ - '0';
++    } else if (*s >= 'a' && *s <= 'z') {
++	dig = *s++ - 'a' + 10;
++    } else if (*s >= 'A' && *s <= 'Z') {
++	dig = *s++ - 'A' + 10;
++    } else {
++	return 0ULL;
++    }
++
++    if (dig >= base) return 0ULL;
++
++    sum = sum*base + dig;
++  }
++  return sum;
++}
++
++#endif
++
+ uintmax_t gitstrtoumax (const char *nptr, char **endptr, int base)
+ {
+ #if defined(NO_STRTOULL)
+diff -ur /nfs/stock/git-2.17.0/daemon.c /u/root/src/git-2.17.0/daemon.c
+--- /nfs/stock/git-2.17.0/daemon.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/daemon.c	Sun Feb 12 13:34:35 2023
+@@ -9,6 +9,10 @@
+ #define initgroups(x, y) (0) /* nothing */
+ #endif
+ 
++#ifndef INET_ADDRSTRLEN
++#define INET_ADDRSTRLEN 16
++#endif
++
+ static enum log_destination {
+ 	LOG_DESTINATION_UNSET = -1,
+ 	LOG_DESTINATION_NONE = 0,
+diff -ur /nfs/stock/git-2.17.0/date.c /u/root/src/git-2.17.0/date.c
+--- /nfs/stock/git-2.17.0/date.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/date.c	Sun Feb 12 13:34:35 2023
+@@ -6,6 +6,29 @@
+ 
+ #include "cache.h"
+ 
++
++#if defined(_AIX) && defined(__i386__)
++
++struct tm *localtime_r(const time_t * timer, struct tm *buf) {
++	struct tm * global_buf;
++	if (NULL == buf) return NULL;
++	global_buf = localtime(timer);
++	if (NULL == global_buf) return NULL;
++	memcpy(buf, global_buf, sizeof(struct tm));
++	return buf;
++}
++
++struct tm *gmtime_r(const time_t * timer, struct tm *buf) {
++        struct tm * global_buf;
++        if (NULL == buf) return NULL;
++        global_buf = gmtime(timer);
++        if (NULL == global_buf) return NULL;
++        memcpy(buf, global_buf, sizeof(struct tm));
++        return buf;
++}
++
++#endif
++
+ /*
+  * This is like mktime, but without normalization of tm_wday and tm_yday.
+  */
+diff -ur /nfs/stock/git-2.17.0/git-compat-util.h /u/root/src/git-2.17.0/git-compat-util.h
+--- /nfs/stock/git-2.17.0/git-compat-util.h	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/git-compat-util.h	Sun Feb 12 13:34:35 2023
+@@ -3,6 +3,21 @@
+ 
+ #define _FILE_OFFSET_BITS 64
+ 
++#if defined(_AIX) && defined(__i386__)
++
++#define SHUT_WR 2
++#define SIZE_MAX LONG_MAX
++
++#include "memmove.h"
++extern unsigned long strtoul(const char * str, char **ptr, int base);
++
++#define getpgid getpgrp 
++
++#ifndef UINT32_MAX
++#define UINT32_MAX ULONG_MAX
++#endif
++
++#endif
+ 
+ /* Derived from Linux "Features Test Macro" header
+  * Convenience macros to test the versions of gcc (or
+@@ -166,6 +181,9 @@
+ #ifdef HAVE_STRINGS_H
+ #include <strings.h> /* for strcasecmp() */
+ #endif
++
++int strcasecmp(const char *a, const char *b);
++
+ #include <errno.h>
+ #include <limits.h>
+ #ifdef NEEDS_SYS_PARAM_H
+@@ -180,11 +198,13 @@
+ #include <regex.h>
+ #include <utime.h>
+ #include <syslog.h>
++
+ #ifndef NO_SYS_POLL_H
+ #include <sys/poll.h>
+ #else
+ #include <poll.h>
+ #endif
++
+ #ifdef HAVE_BSD_SYSCTL
+ #include <sys/sysctl.h>
+ #endif
+@@ -381,7 +401,7 @@
+ #if defined(__HP_cc) && (__HP_cc >= 61000)
+ #define NORETURN __attribute__((noreturn))
+ #define NORETURN_PTR
+-#elif defined(__GNUC__) && !defined(NO_NORETURN)
++#elif 0 && defined(__GNUC__) && !defined(NO_NORETURN) 
+ #define NORETURN __attribute__((__noreturn__))
+ #define NORETURN_PTR __attribute__((__noreturn__))
+ #elif defined(_MSC_VER)
+@@ -390,7 +410,7 @@
+ #else
+ #define NORETURN
+ #define NORETURN_PTR
+-#ifndef __GNUC__
++#if 1 /* ifndef __GNUC__ */
+ #ifndef __attribute__
+ #define __attribute__(x)
+ #endif
+@@ -443,8 +463,8 @@
+ {
+ 	return -1;
+ }
+-#define error(...) (error(__VA_ARGS__), const_error())
+-#define error_errno(...) (error_errno(__VA_ARGS__), const_error())
++#define error(__VA_ARGS__...) (error(##__VA_ARGS__), const_error())
++#define error_errno(__VA_ARGS__...) (error_errno(##__VA_ARGS__), const_error())
+ #endif
+ 
+ extern void set_die_routine(NORETURN_PTR void (*routine)(const char *err, va_list params));
+@@ -645,6 +665,10 @@
+ extern int git_lstat(const char *, struct stat *);
+ #endif
+ 
++#if defined(_AIX) && defined(__i386__)
++typedef long int ssize_t;
++#endif
++
+ #define DEFAULT_PACKED_GIT_LIMIT \
+ 	((1024L * 1024L) * (size_t)(sizeof(void*) >= 8 ? (32 * 1024L * 1024L) : 256))
+ 
+@@ -1114,7 +1138,7 @@
+ #ifdef HAVE_VARIADIC_MACROS
+ __attribute__((format (printf, 3, 4))) NORETURN
+ void BUG_fl(const char *file, int line, const char *fmt, ...);
+-#define BUG(...) BUG_fl(__FILE__, __LINE__, __VA_ARGS__)
++#define BUG(__VA_ARGS__...) BUG_fl(__FILE__, __LINE__, ##__VA_ARGS__)
+ #else
+ __attribute__((format (printf, 1, 2))) NORETURN
+ void BUG(const char *fmt, ...);
+@@ -1213,5 +1237,7 @@
+ #else
+ #define UNLEAK(var) do {} while (0)
+ #endif
++
++typedef int sig_atomic_t;
+ 
+ #endif
+diff -ur /nfs/stock/git-2.17.0/git-gui/Makefile /u/root/src/git-2.17.0/git-gui/Makefile
+--- /nfs/stock/git-2.17.0/git-gui/Makefile	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/git-gui/Makefile	Sun Feb 12 13:34:35 2023
+@@ -11,9 +11,9 @@
+ 	@$(SHELL_PATH) ./GIT-VERSION-GEN
+ -include GIT-VERSION-FILE
+ 
+-uname_S := $(shell sh -c 'uname -s 2>/dev/null || echo not')
+-uname_O := $(shell sh -c 'uname -o 2>/dev/null || echo not')
+-uname_R := $(shell sh -c 'uname -r 2>/dev/null || echo not')
++uname_S := $(shell $(SHELL_PATH) -c 'uname -s 2>/dev/null || echo not')
++uname_O := $(shell $(SHELL_PATH) -c 'uname -o 2>/dev/null || echo not')
++uname_R := $(shell $(SHELL_PATH) -c 'uname -r 2>/dev/null || echo not')
+ 
+ SCRIPT_SH = git-gui.sh
+ GITGUI_MAIN := git-gui
+@@ -71,7 +71,7 @@
+ 	QUIET          = @
+ 	QUIET_GEN      = $(QUIET)echo '   ' GEN '$@' &&
+ 	QUIET_INDEX    = $(QUIET)echo '   ' INDEX $(dir $@) &&
+-	QUIET_MSGFMT0  = $(QUIET)printf '    MSGFMT %12s ' $@ && v=`
++	QUIET_MSGFMT0  = $(QUIET)echo '    MSGFMT %12s ' $@ && v=`
+ 	QUIET_MSGFMT1  = 2>&1` && echo "$$v" | sed -e 's/fuzzy translations/fuzzy/' | sed -e 's/ messages*//g'
+ 	QUIET_2DEVNULL = 2>/dev/null
+ 
+diff -ur /nfs/stock/git-2.17.0/run-command.c /u/root/src/git-2.17.0/run-command.c
+--- /nfs/stock/git-2.17.0/run-command.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/run-command.c	Sun Feb 12 13:34:35 2023
+@@ -92,7 +92,9 @@
+ 	children_to_clean = p;
+ 
+ 	if (!installed_child_cleanup_handler) {
++#if 0
+ 		atexit(cleanup_children_on_exit);
++#endif
+ 		sigchain_push_common(cleanup_children_on_signal);
+ 		installed_child_cleanup_handler = 1;
+ 	}
+@@ -1087,8 +1089,10 @@
+ 	ALLOC_GROW(git_atexit_hdlrs.handlers, git_atexit_hdlrs.nr + 1, git_atexit_hdlrs.alloc);
+ 	git_atexit_hdlrs.handlers[git_atexit_hdlrs.nr++] = handler;
+ 	if (!git_atexit_installed) {
++#if 0
+ 		if (atexit(&git_atexit_dispatch))
+ 			return -1;
++#endif
+ 		git_atexit_installed = 1;
+ 	}
+ 	return 0;
+diff -ur /nfs/stock/git-2.17.0/strbuf.h /u/root/src/git-2.17.0/strbuf.h
+--- /nfs/stock/git-2.17.0/strbuf.h	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/strbuf.h	Sun Feb 12 13:34:35 2023
+@@ -332,7 +332,7 @@
+ /**
+  * Add a formatted string to the buffer.
+  */
+-__attribute__((format (printf,2,3)))
++__attribute__((format (printf,2,3))) 
+ extern void strbuf_addf(struct strbuf *sb, const char *fmt, ...);
+ 
+ /**
+diff -ur /nfs/stock/git-2.17.0/templates/Makefile /u/root/src/git-2.17.0/templates/Makefile
+--- /nfs/stock/git-2.17.0/templates/Makefile	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/templates/Makefile	Sun Feb 12 13:34:35 2023
+@@ -33,13 +33,14 @@
+ 
+ bpsrc = $(filter-out %~,$(wildcard *--*))
+ boilerplates.made : $(bpsrc)
+-	$(QUIET)umask 022 && ls *--* 2>/dev/null | \
++	$(QUIET)(mkdir blt || true); \
++	umask 022 && ls *--* 2>/dev/null | \
+ 	while read boilerplate; \
+ 	do \
+-		case "$$boilerplate" in *~) continue ;; esac && \
++		case "$$boilerplate" in *~ ) continue ;; esac && \
+ 		dst=`echo "$$boilerplate" | sed -e 's|^this|.|;s|--|/|g'` && \
+ 		dir=`expr "$$dst" : '\(.*\)/'` && \
+-		mkdir -p blt/$$dir && \
++		(mkdir blt/$$dir || true) && \
+ 		case "$$boilerplate" in \
+ 		*--) continue;; \
+ 		esac && \
+diff -ur /nfs/stock/git-2.17.0/trace.h /u/root/src/git-2.17.0/trace.h
+--- /nfs/stock/git-2.17.0/trace.h	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/trace.h	Sun Feb 12 13:34:35 2023
+@@ -80,20 +80,20 @@
+  * comma, but this is non-standard.
+  */
+ 
+-#define trace_printf_key(key, ...)					    \
++#define trace_printf_key(key, __VA_ARGS__...)					    \
+ 	do {								    \
+ 		if (trace_pass_fl(key))					    \
+ 			trace_printf_key_fl(TRACE_CONTEXT, __LINE__, key,   \
+-					    __VA_ARGS__);		    \
++					    ##__VA_ARGS__);		    \
+ 	} while (0)
+ 
+-#define trace_printf(...) trace_printf_key(&trace_default_key, __VA_ARGS__)
++#define trace_printf(__VA_ARGS__...) trace_printf_key(&trace_default_key, __VA_ARGS__)
+ 
+-#define trace_argv_printf(argv, ...)					    \
++#define trace_argv_printf(argv, __VA_ARGS__...)					    \
+ 	do {								    \
+ 		if (trace_pass_fl(&trace_default_key))			    \
+ 			trace_argv_printf_fl(TRACE_CONTEXT, __LINE__,	    \
+-					    argv, __VA_ARGS__);		    \
++					    argv, ##__VA_ARGS__);		    \
+ 	} while (0)
+ 
+ #define trace_strbuf(key, data)						    \
+@@ -102,19 +102,19 @@
+ 			trace_strbuf_fl(TRACE_CONTEXT, __LINE__, key, data);\
+ 	} while (0)
+ 
+-#define trace_performance(nanos, ...)					    \
++#define trace_performance(nanos, __VA_ARGS__...)					    \
+ 	do {								    \
+ 		if (trace_pass_fl(&trace_perf_key))			    \
+ 			trace_performance_fl(TRACE_CONTEXT, __LINE__, nanos,\
+-					     __VA_ARGS__);		    \
++					     ##__VA_ARGS__);		    \
+ 	} while (0)
+ 
+-#define trace_performance_since(start, ...)				    \
++#define trace_performance_since(start, __VA_ARGS__...)				    \
+ 	do {								    \
+ 		if (trace_pass_fl(&trace_perf_key))			    \
+ 			trace_performance_fl(TRACE_CONTEXT, __LINE__,       \
+ 					     getnanotime() - (start),	    \
+-					     __VA_ARGS__);		    \
++					     ##__VA_ARGS__);		    \
+ 	} while (0)
+ 
+ /* backend functions, use non-*fl macros instead */
+diff -ur /nfs/stock/git-2.17.0/wrapper.c /u/root/src/git-2.17.0/wrapper.c
+--- /nfs/stock/git-2.17.0/wrapper.c	Mon Apr  2 17:44:04 2018
++++ /u/root/src/git-2.17.0/wrapper.c	Sun Feb 12 13:34:35 2023
+@@ -291,6 +291,38 @@
+ 	}
+ }
+ 
++ssize_t pread(int fd, void *buf, size_t len, off_t offset) {
++	ssize_t out;
++	ssize_t cur_offset;
++	ssize_t read_errno;
++
++	cur_offset = lseek(fd, 0,  SEEK_CUR);
++	if (-1 == cur_offset)
++		return -1;
++
++	if (-1 == lseek(fd, offset, SEEK_SET))
++		return -1;
++	
++	out = read(fd, buf, len);
++	read_errno = errno;
++
++	if (-1 == lseek(fd, cur_offset, SEEK_SET)) {
++	  if (-1 == lseek(fd, cur_offset, SEEK_SET)) {
++	    if (-1 == lseek(fd, cur_offset, SEEK_SET)) {
++		if (out == -1) { // read failed
++			errno = read_errno; // use the errno from the read
++		} else {
++			// use the errno from the failed last seek
++		}
++		return -1;
++	    }
++	  }
++	}
++
++	errno = read_errno;
++	return out;
++}
++
+ /*
+  * xpread() is the same as pread(), but it automatically restarts pread()
+  * operations with a recoverable error (EAGAIN and EINTR). xpread() DOES
