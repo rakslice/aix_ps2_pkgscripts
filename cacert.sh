@@ -5,7 +5,11 @@ set -x
 
 url=https://curl.se/ca/cacert.pem
 
-openssl_dir_write=/nfs/nfsroot/usr/local/ssl
+openssl_dir_write=/usr/local/ssl
+
+# if the ssl directory is mounted read-only over NFS but we have some other path we can write it through,
+# override the path here
+#openssl_dir_write=/nfs/nfsroot/usr/local/ssl
 
 /usr/local/bin/python -c '
 import ssl
