@@ -3,6 +3,21 @@ set -e
 set -x
 
 # this is a script to build the existing samples on the system
+pkgscripts=`pwd`
+patches=$pkgscripts/patches
+
+[ -d $patches ] || exit 1
+
+patch=/usr/local/bin/patch
+
+[ -f $patch ] || exit 1
+
+
+# 0. patch the sources
+cd /usr/lpp/X11/samples
+ls -l
+$patch -p1 -i $patches/x11_samples.patch
+
 
 # 1. build imake
 cd /usr/lpp/X11/samples/config
@@ -38,4 +53,11 @@ cd /usr/lpp/X11/samples/clients/$client
 make
 make install
 done
+
+
+# install xdm config
+
+mkdir /usr/lib/X11/xdm
+
+cp -r /usr/lpp/X11/samples/clients/xdm/config/* /usr/lib/X11/xdm/
 
