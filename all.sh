@@ -23,20 +23,20 @@ sh gawk.sh
 # limit if not
 
 
-sh gdb.sh
+#sh gdb.sh
 
-fi
 
 sh grep.sh
 
 
 sh grep-2.5.4.sh
 
-
 sh perl.sh
+
 
 sh makedepend.sh
 
+fi
 
 sh openssl.sh
 sh pcre.sh
